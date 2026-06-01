@@ -1,0 +1,30 @@
+
+@use './variables.scss' as *;
+
+.app {
+    display: grid;
+    grid-template-rows: repeat(40, 1fr);
+    background-color: $bg;
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+}
+
+.topbar {
+    grid-row: 1 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content {
+    grid-row: 4 / 38;
+    overflow: auto;
+    display: flex;
+    height: 100%;
+}
+
+.navbar {
+    grid-row: 38 / 42;
+}
+

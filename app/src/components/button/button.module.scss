@@ -1,0 +1,29 @@
+@use '../../variables.scss' as *;
+
+
+.button {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    color: $text-primary;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-radius: 1rem;
+}
+
+.primary {
+    background: $accent;
+    color: black;
+}
+
+.secondary {
+    background: $surface;
+}
+
+.success {
+    background: $accent-2;
+    
+}
+
+.fail {
+    background: $err-bg;
+}

@@ -1,0 +1,66 @@
+
+@use '../../variables.scss' as *;
+
+.drawer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: $bg;
+    z-index: 999;
+    overflow: visible;
+    touch-action: none;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.drawerHandle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    user-select: none;
+    min-height: 6rem;
+
+    &:active {
+        cursor: grabbing;
+    }
+
+    &::before {
+        content: '';
+        display: block;
+        width: 4rem;
+        height: 0.4rem;
+        background: white;
+        border-radius: 0.2rem;
+        margin-bottom: 0.8rem;
+    }
+}
+
+.drawerTitle {
+    color: white;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+}
+
+.drawerContent {
+    padding: 1.6rem;
+    color: white;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+
+.handleIcon {
+    color: white;
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    padding: 2rem;
+}

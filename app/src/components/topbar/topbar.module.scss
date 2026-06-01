@@ -1,0 +1,82 @@
+@use '../../variables.scss' as *;
+
+// 1rem = 10px
+
+.topbar {
+  // reset button styles
+  appearance: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  height: 80%;
+
+  background: $bg;
+  border-radius: 2rem;
+  border: 0.1rem solid #1e2535;
+  box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.4);
+  padding: 0 1.4rem 0 1.8rem;
+  gap: 1rem;
+  overflow: hidden;
+
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: #161a24;
+    border-color: #2a3045;
+  }
+
+  &:active {
+    background: #0d0f14;
+    transform: scale(0.99);
+  }
+}
+
+.pulseDot {
+}
+
+// ── Name ──────────────────────────────────────────────────────────────────────
+.name {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #e8f5ee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Right cluster ─────────────────────────────────────────────────────────────
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
+.iconErr {
+  color: #f07070;
+  flex-shrink: 0;
+}
+
+.iconWarn {
+  color: #f0b040;
+  flex-shrink: 0;
+}
+
+.iconDocked {
+  color: #66b3ff;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.chevron {
+  color: #2e3548;
+  flex-shrink: 0;
+}
