@@ -1,50 +1,49 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { PersistentMap, Robot } from '../types/robot'
 import { Http } from '../http'
-import { COMMANDS } from '../http/commands'
-import { RobotAction, RobotState } from '../types/state'
+import { GEN3_COMMANDS } from '../http/gen3'
 import type { UseState } from '../pages/map/types'
-
+import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
+import { GEN4_COMMANDS } from '../http/gen4'
+import { OrbitalServices, type AnyEvent } from '../types/neato/gen4'
 
 interface AppContextType {
-    robot: Robot,
+    robot?: Robot,
+    robots?: QuickRobotInfo,
+    selectRobot: (serial: string) => void,
     lastHeartbeat?: number,
-    
-    persistentMaps?: PersistentMap[]
-    setPersistentMaps: UseState<PersistentMap[] | undefined>
 
+    persistentMaps?: (Neato.Gen3.PersistentMap[] | Neato.Gen4.Floorplan[])
+    promotedFloorplan?: Neato.Gen4.Floorplan, // derived, no separate setter exposed
 
-    // User/Session
+    setPersistentMaps: UseState<(Neato.Gen3.PersistentMap[] | Neato.Gen4.Floorplan[]) | undefined>
+
+    cleanings?: Neato.Gen4.Cleaning[]
+    setCleanings: UseState<Neato.Gen4.Cleaning[] | undefined>
+
     userId: string | null
     setUserId: (id: string | null) => void
 
-    // App settings
     isDarkMode: boolean
     setIsDarkMode: (dark: boolean) => void
 
-    // Loading states
     isLoading: boolean
     setIsLoading: (loading: boolean) => void
     loadingState: { isLoading: boolean, message?: string }
     setLoadingState: (state: { isLoading: boolean, message?: string }) => void
 
-    // Notifications/Messages
     message: string | null
     setMessage: (msg: string | null) => void
-
-    // Add more global state as needed
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-
-    const [selectedRobotSerial, setSelectedRobotSerial] = useState<string | undefined>()
     const [robot, setRobot] = useState<Robot>()
+    const [robots, setRobots] = useState<QuickRobotInfo>()
     const [lastHeartbeat, setLastHeartbeat] = useState<number | undefined>()
     const [persistentMaps, setPersistentMaps] = useState<PersistentMap[]>()
-
+    const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[]>()
 
     const [userId, setUserId] = useState<string | null>(null)
     const [isDarkMode, setIsDarkMode] = useState(false)
@@ -52,37 +51,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [loadingState, setLoadingState] = useState<{ isLoading: boolean, message?: string }>({ isLoading: false })
     const [message, setMessage] = useState<string | null>(null)
 
-    // Set up axios interceptor callback
     useEffect(() => {
         Http.setLoadingStateCallback(setLoadingState)
     }, [])
 
-    useEffect(() => {
-        Http.getRobots().then((res) => {
-            const data = res.data
-            setSelectedRobotSerial('GPC23118-40bd32d13ac7')
-            setRobot({
-                serial: 'GPC23118-40bd32d13ac7',
-                name: data['GPC23118-40bd32d13ac7'].name,
-                state: RobotState.INVALID,
-                action: RobotAction.INVALID
-            })
-        });
-    }, [])
+    const connectToRobot = (serial: string, type: RobotType) => {
+        setRobot(undefined)
 
-    useEffect(() => {
-        if (!selectedRobotSerial) return;
-
-        const events = new EventSource(
-            `http://${location.hostname}:8080/app/robot/${selectedRobotSerial}/connect`,
-        );
-
-        events.onopen = () => {
-            console.log(selectedRobotSerial, Http.sendCmd, COMMANDS.uploadLogs, COMMANDS.getLogsUploadState, COMMANDS.getLocalStats)
-            COMMANDS.getRobotState(selectedRobotSerial).then((res) => {
-                if (!robot) return;
+        if (type === RobotType.NeatoGen3) {
+            GEN3_COMMANDS.getRobotState(serial).then((res) => {
                 setRobot({
-                    ...robot,
+                    type: RobotType.NeatoGen3,
+                    serial,
+                    name: robots?.[serial]?.name ?? serial,
                     availableCommands: res.data.availableCommands,
                     details: res.data.details,
                     alert: res.data.alert,
@@ -90,45 +71,149 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     state: res.data.state,
                     action: res.data.action,
                 })
-            });
+            })
+        } else if (type === RobotType.NeatoGen4) {
+            GEN4_COMMANDS.getRobotState(serial).then((res) => {
+                const body = res.data.body
+                setRobot({
+                    type: RobotType.NeatoGen4,
+                    serial,
+                    name: robots?.[serial]?.name ?? serial,
+                    availableCommands: body.available_commands,
+                    details: body.details,
+                    errors: body.errors ?? undefined,
+                    state: body.state,
+                    action: body.action,
+                })
+            })
+        }
+    }
+
+    const selectRobot = (serial: string) => {
+        const target = robots?.[serial]
+        if (!target || !target.connected) return; // guard: can't select an offline/unknown robot
+        connectToRobot(serial, target.type)
+    }
+
+    // fetch floorplans/persistent maps whenever the connected robot changes
+    useEffect(() => {
+        if (!robot) return;
+
+        Http.getPersistentMaps(robot.serial)
+            .then(res => setPersistentMaps(res.data))
+            .catch(err => console.error('Failed to fetch floorplans', err))
+    }, [robot?.serial, robot?.type])
+
+    const promotedFloorplan = robot?.type === RobotType.NeatoGen4
+        ? (persistentMaps as Neato.Gen4.Floorplan[] | undefined)?.find(fp => fp.promoted)
+        : undefined
+
+
+    useEffect(() => {
+        Http.getRobots().then((res) => {
+            setRobots(res.data)
+            const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
+            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type)
+        });
+    }, [])
+
+    useEffect(() => {
+        if (!robot) return;
+
+        const events = new EventSource(
+            `http://${location.hostname}:8080/app/robot/${robot.serial}/connect`,
+        );
+
+        events.onopen = () => {
+            if (robot.type === RobotType.NeatoGen3) {
+                GEN3_COMMANDS.getRobotState(robot.serial).then((res) => {
+                    setRobot(cur => cur ? {
+                        ...cur,
+                        type: RobotType.NeatoGen3,
+                        availableCommands: res.data.availableCommands,
+                        details: res.data.details,
+                        alert: res.data.alert,
+                        error: res.data.error,
+                        state: res.data.state,
+                        action: res.data.action,
+                    } : cur)
+                });
+            } else if (robot.type === RobotType.NeatoGen4) {
+                GEN4_COMMANDS.getRobotState(robot.serial).then((res) => {
+                    const body = res.data.body;
+                    setRobot(cur => cur ? {
+                        ...cur,
+                        type: RobotType.NeatoGen4,
+                        availableCommands: body.available_commands,
+                        details: body.details,
+                        errors: body.errors != null ? body.errors : undefined,
+                        state: body.state,
+                        action: body.action,
+                    } : cur)
+                })
+            }
+        }
+
+        interface VacuulaRobotEvent {
+            serial: string,
+            ts: number,
+            type: RobotType,
+            data: AnyEvent
         }
 
         events.onmessage = (event) => {
             setLastHeartbeat(Date.now());
-            const wrapper = JSON.parse(event.data);
+            const wrapper: VacuulaRobotEvent = JSON.parse(event.data);
 
-            console.log("STREAM:", wrapper);
-            if (wrapper?.data?.type !== "state" && wrapper?.data?.eventId !== "77") {
-                console.log("Received non-state event:", wrapper.data);
+            if (wrapper.type === RobotType.NeatoGen4) {
+                type EventByService = {
+                    [E in AnyEvent as E["to"]["service"]]: E
+                };
+
+                const handlers: {
+                    [K in keyof EventByService]?: (body: EventByService[K]["body"]) => void
+                } = {
+                    [OrbitalServices.PEER_STATE]: (body) => {
+                        setRobot(cur => cur?.type === RobotType.NeatoGen4 ? {
+                            ...cur,
+                            availableCommands: body.available_commands,
+                            details: body.details,
+                            errors: body.errors != null ? body.errors : undefined,
+                            state: body.state,
+                            action: body.action,
+                        } : cur)
+                    },
+                    [OrbitalServices.ROBOTS_ERROR_CODES]: (body) => console.log('new errors', body),
+                };
+
+                const handler = handlers[wrapper.data.to.service];
+                handler?.(wrapper.data.body as any); // !TODO any allowed in this case, maybe fix later
                 return;
             }
 
-            console.log("Received state event:", wrapper.data);
+            if (wrapper?.data?.type !== "state" && wrapper?.data?.eventId !== "77") {
+                return;
+            }
 
-            if (!robot) return;
-            console.log("Updating robot state with:", wrapper.data.data.details);
-            setRobot({
-                ...robot,
+            setRobot(cur => cur ? {
+                ...cur,
                 availableCommands: wrapper.data.data.availableCommands,
                 details: wrapper.data.data.details,
                 alert: wrapper.data.data.alert,
                 error: wrapper.data.data.error,
                 state: wrapper.data.data.state,
                 action: wrapper.data.data.action,
-            })
+            } : cur)
         };
 
         events.onerror = (err) => {
-            alert(JSON.stringify(err));
             console.error("SSE error:", err);
         };
 
         return () => {
             events.close();
         };
-    }, [selectedRobotSerial]);
-
-
+    }, [robot?.serial, robot?.type]);
 
     const value: AppContextType = {
         userId,
@@ -141,11 +226,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setLoadingState,
         message,
         setMessage,
-        robot: robot!,
+        robot,
+        robots,
+        selectRobot,
         lastHeartbeat,
 
         persistentMaps,
-        setPersistentMaps
+        setPersistentMaps,
+        cleanings,
+        setCleanings,
+
+
+
+        promotedFloorplan
     }
 
     return (
@@ -155,8 +248,4 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
 }
 
-export function useApp() {
-    const context = useContext(AppContext)
-    if (!context) throw new Error('useApp must be used within AppProvider')
-    return context
-}
+export { AppContext }

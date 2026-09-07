@@ -13,7 +13,11 @@ type ButtonProps= BaseInputProps
 export default (prop: ButtonProps) => {
 
     return (
-        <button className={`${styles.button} ${styles[prop.style]}`} onClick={prop.onClick}>
+        <button className={`${styles.button} ${styles[prop.style]}`} onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            prop.onClick()
+        }}>
             <span>{prop.text}</span>
         </button>
     )

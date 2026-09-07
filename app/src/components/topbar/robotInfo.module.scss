@@ -1,0 +1,22 @@
+.info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-shrink: 0;
+}
+
+.iconErr {
+    color: #f07070;
+    flex-shrink: 0;
+}
+
+.iconWarn {
+    color: #f0b040;
+    flex-shrink: 0;
+}
+
+.iconDocked {
+    color: #66b3ff;
+    opacity: 0.9;
+    flex-shrink: 0;
+}

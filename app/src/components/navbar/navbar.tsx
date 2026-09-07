@@ -6,7 +6,7 @@ export default () => {
 
     return (
         <div className={styles.navbar}>
-            <Link to="/stats">
+            <Link to="/runs">
                 <IoBarChartOutline size={30} />
             </Link>
             <Link to="/map">

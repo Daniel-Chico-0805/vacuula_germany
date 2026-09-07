@@ -9,14 +9,23 @@ import Input from '../../components/input/input'
 import { PiBoundingBox } from "react-icons/pi";
 import { biEnum } from '../../types/.helpers'
 import Button from '../../components/button/button'
-import { COMMANDS } from '../../http/commands'
-import { CleaningMode, CleaningNavigationMode } from '../../types/state'
+import { GEN3_COMMANDS } from '../../http/gen3'
+import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { Http } from '../../http'
-import { useApp } from '../../context/AppContext'
-import { RobotDay } from '../../types/api'
+import { useApp } from '../../context/useApp'
+import { RobotDay } from '../../types/neato/gen3/api'
 import type { UseState } from '../map/types'
+import { GEN4_COMMANDS } from '../../http/gen4'
+import { RobotType } from '../../types'
+import Scheudle_gen4 from './scheudle_gen4'
 
 export default () => {
+
+    const { robot, persistentMaps } = useApp()
+
+    if (robot?.type === RobotType.NeatoGen4) return <Scheudle_gen4 />
+
+
     const [schedule, setSchedule] = useState<GetSchedule>()
     const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -27,13 +36,12 @@ export default () => {
         mode: 0
     })
 
-    const { robot, persistentMaps } = useApp()
-
-
     const getSchedule = () => {
-        COMMANDS.getSchedule(robot.serial).then(res => {
+        GEN3_COMMANDS.getSchedule(robot.serial).then(res => {
             setSchedule(res.data.data)
         })
+
+        GEN4_COMMANDS.getSchedule(robot.serial);
     }
 
     useEffect(() => {
@@ -44,7 +52,7 @@ export default () => {
     const removeEvent = (index: number) => {
         if (!schedule) return;
         schedule.events.splice(index, 1)
-        COMMANDS.setSchedule(robot.serial, schedule.events).finally(() => getSchedule())
+        GEN3_COMMANDS.setSchedule(robot.serial, schedule.events).finally(() => getSchedule())
     }
 
     const updateForm = <T extends object>(update: UseState<T>, patch: Partial<T>) => {
@@ -66,8 +74,8 @@ export default () => {
                     </div>
                     <Input type="switch" skipSection={true} value={schedule.enabled} onChange={() => {
                         console.log('schedule', schedule)
-                        let cmd = COMMANDS.enableSchedule;
-                        if (schedule.enabled) cmd = COMMANDS.disableSchedule;
+                        let cmd = GEN3_COMMANDS.enableSchedule;
+                        if (schedule.enabled) cmd = GEN3_COMMANDS.disableSchedule;
                         cmd(robot.serial).then(() => getSchedule());
                     }} />
                 </div>
@@ -144,7 +152,7 @@ export default () => {
 
                     <Button text="Save" style='success' onClick={() => {
                         setDrawerOpen(false)
-                        COMMANDS.setSchedule(robot.serial, [scheduleForm, ...schedule.events]).finally(() => getSchedule())
+                        GEN3_COMMANDS.setSchedule(robot.serial, [scheduleForm, ...schedule.events]).finally(() => getSchedule())
                     }} />
                 </div>
 

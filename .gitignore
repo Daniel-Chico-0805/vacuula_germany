@@ -219,5 +219,6 @@ __marimo__/
 
 # Vacuula
 ssl/*.pem
+server/ssl/*.pem
 uploads/
 vacuula.db

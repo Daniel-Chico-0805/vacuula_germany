@@ -5,46 +5,28 @@ import Drawer from '../../components/drawer/drawer'
 
 import { DRAWING } from './constants'
 import type { NoGoLine, Zone, Point, SetZone, UseState } from './types'
-import { decodeRLE, getTouchDistance, getTouchAngle, getCrosshairWorldCoords, getWorldCoords, calcRelevancy, upsertPreserveOrder } from './utils'
-import { drawMap, drawZones, drawNoGoLines, drawInProgressPolyline, drawCrosshair } from './drawingFunctions'
+// import { decodeRLE, getTouchDistance, getTouchAngle, getCrosshairWorldCoords, getWorldCoords, calcRelevancy, upsertPreserveOrder } from './utils'
 import { FaPlus, FaTimes, FaUndo, FaPen, FaCheckCircle, FaCircle } from 'react-icons/fa'
 import Input from '../../components/input/input'
 import { PiBoundingBox } from "react-icons/pi";
 import { biEnum } from '../../types/.helpers'
 import Button from '../../components/button/button'
-import { COMMANDS } from '../../http/commands'
-import { CleaningMode, CleaningNavigationMode } from '../../types/state'
+import { GEN3_COMMANDS } from '../../http/gen3'
+import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { Http } from '../../http'
-import { useApp } from '../../context/AppContext'
+import { useApp } from '../../context/useApp'
 import { useCanvasViewport } from './useCanvasViewport'
+import { RobotType } from '../../types'
+
+import { useMap } from '../../components/map/useMap'
+import { drawZones, drawNoGoLines, drawInProgressPolyline, drawCrosshair, drawBase } from './drawingFunctions'
+import { getCrosshairWorldCoords, upsertPreserveOrder } from './utils'
+import { GEN4_COMMANDS } from '../../http/gen4'
+
 
 export default () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-
     const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
     const [drawerOpen, setDrawerOpen] = useState(true)
-    const cellsRef = useRef<number[] | null>(null)
-
-    const {
-        zoom,
-        offset,
-        isDragging,
-        hasMoved,
-        handleMouseDown,
-        handleMouseMove,
-        handleMouseUp,
-        handleWheel,
-        handleTouchStart,
-        handleTouchMove,
-        handleTouchEnd,
-        centerView
-    } = useCanvasViewport({
-        initialZoom: 4,
-        initialOffset: {
-            x: window.innerWidth / 2 - (mapData.width * 4) / 2,
-            y: window.innerHeight / 2 - (mapData.height * 4) / 2
-        }
-    })
 
     const [editForm, setEditForm] = useState({
         startTime: '',
@@ -59,13 +41,90 @@ export default () => {
     const [currentLinePoints, setCurrentLinePoints] = useState<Point[]>([])
     const [closedAsPolygon, setClosedAsPolygon] = useState(false)
     const [persistentMap, setPersistentMap] = useState<string>()
-    const [mapSize, setMapSize] = useState<{ width: number, height: number }>()
 
     const [mode, setMode] = useState<'maps' | 'map-edit' | 'boundaries' | 'boundary-info' | 'boundary-edit'>('maps')
     const [returnFromEditMode, SetReturnFromEditMode] = useState<'boundaries' | 'boundary-info'>('boundaries')
     const [activeBoundaryId, setActiveBoundaryId] = useState<string | undefined>(undefined);
 
     const { robot, persistentMaps, setPersistentMaps } = useApp()
+
+    const skipNextPostRef = useRef(false)
+
+    if (persistentMap) console.log(Http.test.bind(this, robot.serial, persistentMap))
+
+
+    const extraDraw = useCallback((ctx, canvas, currentZoom, currentOffset, mapSize) => {
+        const showBoundaries = mode === 'boundary-edit'
+            ? boundaries.filter(b => b.id !== activeBoundaryId)
+            : boundaries
+
+        drawZones(ctx, showBoundaries.filter(b => b.type === 'polygon'), currentZoom, currentOffset, mapSize)
+        drawNoGoLines(ctx, showBoundaries.filter(b => b.type === 'polyline'), currentZoom, currentOffset, mapSize)
+
+        const map = persistentMaps?.find(p => p.id === persistentMap)
+        const basicdata = map?.base
+        const NO_BASE = 2147483647
+        if (basicdata && basicdata[0] !== NO_BASE && basicdata[1] !== NO_BASE) {
+            const [originX, originY] = map.origin
+            const resolution = map.resolution
+            const [imgW, imgH] = map.imgsize
+            const normX = ((basicdata[0] - originX) / resolution) / imgW
+            const normY = ((basicdata[1] - originY) / resolution) / imgH
+            drawBase(ctx, { x: normX, y: normY, width: 4 / imgW, height: 4 / imgH }, currentZoom, currentOffset, mapSize)
+        }
+
+        if (mode === 'boundary-edit') {
+            drawCrosshair(ctx, canvas)
+            if (closedAsPolygon) {
+                drawZones(ctx, [{ vertices: currentLinePoints, name: '', color: editForm.color, type: 'polygon', id: '', enabled: true }], currentZoom, currentOffset, mapSize)
+            } else {
+                drawInProgressPolyline(ctx, currentLinePoints, currentZoom, currentOffset, mapSize)
+            }
+        }
+    }, [boundaries, activeBoundaryId, mode, currentLinePoints, closedAsPolygon, editForm.color, persistentMaps, persistentMap])
+
+    const { canvasRef, mapSize, zoom, offset, isDragging, hasMoved, canvasHandlers } = useMap({
+        serial: robot.serial,
+        mapId: persistentMap,
+        extraDraw,
+        redrawKey: extraDraw // any change to the deps above re-triggers a draw
+    })
+
+    const addPointAtCrosshair = () => {
+        const coords = getCrosshairWorldCoords(canvasRef, offset, zoom, mapSize)
+        setCurrentLinePoints(prev => [...prev, coords])
+    }
+
+    // Fetch boundaries when persistentMap changes — unchanged from your current code,
+    // just drop the old cellsRef/setMapSize/centerView/draw calls since useMap now owns that:
+    useEffect(() => {
+        if (!persistentMap) return
+        skipNextPostRef.current = true
+        if (robot.type === RobotType.NeatoGen4) {
+            Http.getBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.boundaries))
+        } else {
+            GEN3_COMMANDS.getMapBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.data.boundaries))
+        }
+        setMode('boundaries')
+    }, [persistentMap])
+
+    // ...postBoundaries effect on [boundaries] unchanged...
+
+    // onTouchMove/onTouchEnd wrap canvasHandlers instead of the old handleTouchMove/handleTouchEnd directly:
+    const onTouchMove = (e: React.TouchEvent) => {
+        canvasHandlers.onTouchMove(e)
+        if (currentLinePoints.length > 1 && mapSize) {
+            const coords = getCrosshairWorldCoords(canvasRef, offset, zoom, mapSize)
+            const [fx, fy] = currentLinePoints[0]
+            const distance = Math.sqrt((coords[0] - fx) ** 2 + (coords[1] - fy) ** 2)
+            setShowCloseAsPolygon(distance < DRAWING.CLOSE_THRESHOLD)
+        }
+    }
+
+    const onTouchEnd = () => {
+        canvasHandlers.onTouchEnd()
+        if (mode === 'boundary-edit' && !hasMoved) addPointAtCrosshair()
+    }
 
 
     const getPersistentMaps = () => {
@@ -89,92 +148,35 @@ export default () => {
         getPersistentMaps();
     }, [robot])
 
-    const getMapBoundaries = () => {
-        if (!persistentMap) return;
-        COMMANDS.getMapBoundaries(robot.serial, persistentMap).then(res => {
-            setBoundaries(res.data.data.boundaries)
-        })
-    }
-
     useEffect(() => {
         if (!persistentMap) return;
-        Http.getPersistentMap(robot.serial, persistentMap).then(res => {
-            console.log(res.data, Http.updatePersistentMap, Http.updateRobot);
-            cellsRef.current = decodeRLE(res.data.rle)
-            setMapSize({ height: res.data.height, width: res.data.width })
-            centerView(res.data.width, res.data.height, 4)
-            console.warn("hehe")
-            draw();
-            getMapBoundaries();
-            setMode('boundaries')
-        })
-    }, [persistentMap])
 
-    useEffect(() => {
-        if (!persistentMap) return;
-        const updatedBoundaries = boundaries.map(boundary =>
-            boundary.type === 'polygon'
-                ? {
-                    ...boundary,
-                    relevancy: calcRelevancy(boundary.vertices)
-                }
-                : boundary
-        );
-        COMMANDS.setMapBoundaries(robot.serial, persistentMap, updatedBoundaries).catch((err) => {
-            console.log(err.response?.data)
-            getMapBoundaries();
-        });
+
+        if (skipNextPostRef.current) {
+            skipNextPostRef.current = false
+            return
+        }
+
+
+
+        console.log(boundaries);
+        Http.postBoundaries(robot.serial, persistentMap, boundaries);
+
+
+        // GEN3 code, dont delete yet!!!
+        // const updatedBoundaries = boundaries.map(boundary =>
+        //     boundary.type === 'polygon'
+        //         ? {
+        //             ...boundary,
+        //             relevancy: calcRelevancy(boundary.vertices)
+        //         }
+        //         : boundary
+        // );
+        // GEN3_COMMANDS.setMapBoundaries(robot.serial, persistentMap, updatedBoundaries).catch((err) => {
+        //     console.log(err.response?.data)
+        //     getMapBoundaries();
+        // });
     }, [boundaries]);
-
-    // Main draw function with memoization
-    const draw = useCallback((currentZoom: number = zoom, currentOffset = offset) => {
-        const canvas = canvasRef.current
-        if (!canvas || !cellsRef.current || !mapSize) return
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        drawMap(ctx, canvas, cellsRef.current, currentZoom, currentOffset, mapSize)
-        const showBoundaries = mode === 'boundary-edit' ? boundaries.filter(b => b.id !== activeBoundaryId) : boundaries
-        drawZones(ctx, showBoundaries.filter(b => b.type === 'polygon'), currentZoom, currentOffset, mapSize)
-        drawNoGoLines(ctx, showBoundaries.filter(b => b.type === 'polyline'), currentZoom, currentOffset, mapSize)
-
-        if (mode === 'boundary-edit') {
-            drawCrosshair(ctx, canvas)
-            if (closedAsPolygon) drawZones(ctx, [{ vertices: currentLinePoints, name: '', color: editForm.color, type: 'polygon', id: '', enabled: true }], currentZoom, currentOffset, mapSize)
-            else drawInProgressPolyline(ctx, currentLinePoints, currentZoom, currentOffset, mapSize)
-        }
-    }, [boundaries, currentLinePoints, closedAsPolygon, mode])
-
-    // Optimized redraw using requestAnimationFrame
-    useEffect(() => {
-        const frameId = requestAnimationFrame(() => draw(zoom, offset))
-        return () => cancelAnimationFrame(frameId)
-    }, [zoom, offset, draw])
-
-
-    const handleAddPoint = (coords: Point) => {
-        setCurrentLinePoints([...currentLinePoints, coords])
-    }
-
-    const addPointAtCrosshair = () => {
-        const coords = getCrosshairWorldCoords(canvasRef, offset, zoom, mapSize)
-        handleAddPoint(coords)
-    }
-
-    // Canvas sizing
-    useEffect(() => {
-        const canvas = canvasRef.current
-        if (!canvas) return
-        const handleResize = () => {
-            canvas.width = window.innerWidth
-            canvas.height = window.innerHeight
-            draw()
-        }
-        handleResize()
-        window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
-    }, [])
 
     const undo = () => {
         // If we have closed as polygon, undo the close
@@ -192,38 +194,6 @@ export default () => {
     const closeAsPolyon = () => {
         setClosedAsPolygon(true)
         setDrawerOpen(true)
-    }
-
-    const onTouchMove = (e: React.TouchEvent) => {
-        handleTouchMove(e)
-
-        if (currentLinePoints.length > 1 && mapSize) {
-            const coords = getCrosshairWorldCoords(
-                canvasRef,
-                offset,
-                zoom,
-                mapSize
-            )
-
-            const firstPoint = currentLinePoints[0]
-
-            const distance = Math.sqrt(
-                Math.pow(coords[0] - firstPoint[0], 2) +
-                Math.pow(coords[1] - firstPoint[1], 2)
-            )
-
-            setShowCloseAsPolygon(
-                distance < DRAWING.CLOSE_THRESHOLD
-            )
-        }
-    }
-
-    const onTouchEnd = () => {
-        handleTouchEnd()
-
-        if (mode === 'boundary-edit' && !hasMoved) {
-            addPointAtCrosshair()
-        }
     }
 
     // mode changes
@@ -330,12 +300,12 @@ export default () => {
             <canvas
                 ref={canvasRef}
                 className={styles.canvas}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
-                onTouchStart={handleTouchStart}
+                onMouseDown={canvasHandlers.onMouseDown}
+                onMouseMove={canvasHandlers.onMouseMove}
+                onMouseUp={canvasHandlers.onMouseUp}
+                onMouseLeave={canvasHandlers.onMouseLeave}
+                onWheel={canvasHandlers.onWheel}
+                onTouchStart={canvasHandlers.onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
                 style={{
@@ -379,18 +349,28 @@ export default () => {
                             <div key={i} className={styles.item} onClick={() => setPersistentMap(item.id)}>
                                 <div className={styles.info}>
                                     <span>{item.name}</span>
-                                    <span className={styles.type}>{new Date(item.id).toLocaleString()}</span>
+                                    <span className={styles.type}>{new Date(robot.type === RobotType.NeatoGen4 ? item.created_at : item.id).toLocaleString()}</span>
                                 </div>
-                                <Input type="switch" skipSection={true} value={item.enabled} onChange={() => {
-                                    updatePersistentMap({ name: item.name, enabled: !item.enabled }, item.id);
-                                }} />
+                                {'enabled' in item ? (
+                                    <Input type="switch" skipSection={true} value={item.enabled} onChange={() => {
+                                        updatePersistentMap({ name: item.name, enabled: !item.enabled }, item.id);
+                                    }} />
+                                ) : (
+                                    <Button text={item.promoted ? 'Demote' : 'Promote'} onClick={() => {
+                                        if (robot.type === RobotType.NeatoGen4) {
+                                            if (item.promoted) Http.demoteFloorplan(robot.serial, item.id).finally(() => getPersistentMaps())
+                                            else Http.test(robot.serial, item.id).finally(() => getPersistentMaps());
+                                            // Http.test(robot.serial, item.id);
+                                        }
+                                    }} style={item.promoted ? 'fail' : 'success'} />
+                                )}
                             </div>
                         ))}
                         {persistentMaps?.length === 0 && (
                             <span style={{ textAlign: 'center' }}>You don't have any explored maps yet, start an exploration to draw boundaries!</span>
                         )}
                         <hr style={{ width: '90%' }} />
-                        <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => COMMANDS.startPersistentMapExploration(robot.serial)}>
+                        <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
                             <div className={styles.info}>
                                 <span>New map</span>
                                 <span className={styles.type}>Explore new map</span>
@@ -472,7 +452,7 @@ export default () => {
                                     </div>
                                     {item.type === 'polyline' && (<Input type="switch" skipSection={true} value={item.enabled} onChange={() => toggleNoGoLine(item)} />)}
                                     {item.type === 'polygon' && (<Button style='primary' text='Clean zone' onClick={() => {
-                                        COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
+                                        GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
                                     }} />)}
                                 </div>
                             ))}

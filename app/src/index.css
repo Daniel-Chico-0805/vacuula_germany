@@ -14,3 +14,9 @@ html {
 body {
     font-size: 1.6rem;
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

@@ -1,6 +1,6 @@
-import type { NoGoLine, Zone } from "../pages/map/types";
-import type { GetSchedule } from "../pages/schedule/types";
-import { biEnum } from "./.helpers";
+import type { NoGoLine, Zone } from "../../../pages/map/types";
+import type { GetSchedule } from "../../../pages/schedule/types";
+import { biEnum } from "../../.helpers";
 
 
 export const RobotApiResult = biEnum({

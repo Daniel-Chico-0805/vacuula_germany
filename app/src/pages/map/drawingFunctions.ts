@@ -310,3 +310,23 @@ export function drawCrosshair(
     ctx.arc(cx, cy, DRAWING.CROSSHAIR_CENTER_RADIUS, 0, Math.PI * 2)
     ctx.fill()
 }
+
+export function drawBase(
+    ctx: CanvasRenderingContext2D,
+    coords: { x: number; y: number; width: number; height: number },
+    zoom: number,
+    offset: { x: number; y: number },
+    mapSize: { height: number, width: number },
+) {
+    const sx = mapSize.width * zoom
+    const sy = mapSize.height * zoom
+
+    const x = offset.x + coords.x * sx
+    const y = offset.y + coords.y * sy
+    const w = coords.width * sx
+    const h = coords.height * sy
+
+    ctx.fillStyle = 'red'
+    console.log(x, y, w, h)
+    ctx.fillRect(x, y, w, h)
+}

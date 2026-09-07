@@ -1,35 +1,5 @@
 
-import { biEnum } from './.helpers'
-import type { AvailableCommands, Details, RobotAction, RobotAlert, RobotError, RobotState } from './state';
-
-
-export interface QuickRobotInfo {
-    [serial: string]: {
-        name: string,
-        connected: boolean,
-    }
-}
-
-export interface Robot {
-    serial: string,
-    name: string,
-    error?: RobotError,
-    alert?: RobotAlert,
-    availableCommands?: AvailableCommands
-    details?: Details
-    state: RobotState
-    action: RobotAction
-}
-
-export interface PersistentMap {
-    id: string
-    name: string
-    enabled: boolean
-    baseX: number
-    baseY: number
-}
-
-
+import { biEnum } from '../../.helpers'
 
 export const ServiceLevel = biEnum({
     MACRO1: 'macro-1',

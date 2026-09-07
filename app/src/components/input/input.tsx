@@ -14,6 +14,13 @@ interface SelectInputProps<T> {
     onChange: (value: T) => void,
 }
 
+interface MultiSelectInputProps<T> {
+    type: 'multi-select',
+    options: { value: T, label: string }[],
+    value: T[],
+    onChange: (value: T[]) => void,
+}
+
 interface SwitchInputProps {
     type: 'switch',
     value: boolean,
@@ -31,7 +38,7 @@ interface BaseInputProps {
     skipSection?: true,
 }
 
-type InputProps<T> = (TextInputProps | SelectInputProps<T> | SwitchInputProps | CustomInputProps) & BaseInputProps
+type InputProps<T> = (TextInputProps | SelectInputProps<T> | MultiSelectInputProps<T> | SwitchInputProps | CustomInputProps) & BaseInputProps
 
 export default function Input<T>(props: InputProps<T>) {
 
@@ -55,6 +62,27 @@ export default function Input<T>(props: InputProps<T>) {
                             onClick={(e) => {
                                 e.preventDefault();
                                 props.onChange(option.value);
+                            }}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {props.type === 'multi-select' && (
+                <div className={styles.selectButtons}>
+                    {props.options.map((option, i) => (
+                        <button
+                            key={i}
+                            className={`${styles.selectButton} ${props.value.includes(option.value) ? styles.activeSelectButton : ''}`}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                props.onChange(
+                                    props.value.includes(option.value) ? 
+                                    props.value.filter(value => value !== option.value) : 
+                                    [ ...props.value, option.value ]
+                                )
                             }}
                         >
                             {option.label}

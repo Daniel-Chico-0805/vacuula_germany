@@ -1,4 +1,4 @@
-import { useApp } from '../../context/AppContext'
+import { useApp } from '../../context/useApp'
 import Spinner from '../spinner/spinner'
 
 export default function AppLoadingIndicator() {

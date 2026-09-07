@@ -1,8 +1,8 @@
 import { Http } from "../http"
 import type { NoGoLine, SetZone, Zone } from "../pages/map/types"
 import type { ScheduleEvent } from "../pages/schedule/types"
-import type { GetMapBoundariesResponse, GetScheduleResponse, RobotBaseResponse } from "../types/api"
-import { CleaningCategory, CleaningMode, CleaningNavigationMode, type GetRobotStateResponse } from "../types/state"
+import type { GetMapBoundariesResponse, GetScheduleResponse, RobotBaseResponse } from "../types/neato/gen3/api"
+import { CleaningCategory, CleaningMode, CleaningNavigationMode, type GetRobotStateResponse } from "../types/neato/gen3/state"
 
 
 
@@ -146,7 +146,7 @@ function disableSchedule(serial: string) {
     return Http.sendCmd<RobotBaseResponse>(serial, { cmd: "disableSchedule" })
 }
 
-export const COMMANDS = {
+export const GEN3_COMMANDS = {
     getLocalStats,
     getRobotState,
     getGeneralInfo,

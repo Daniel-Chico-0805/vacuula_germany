@@ -1,11 +1,17 @@
 import axios from "axios";
-import type { PersistentMap, QuickRobotInfo } from "./types/robot";
+// import type { PersistentMap, QuickRobotInfo } from "./types/robot";
+import { EVENT_CALLBACKS } from "./http/events";
+import { Neato, type QuickRobotInfo } from "./types";
+import type * as Gen3 from './types/neato/gen3'
+import type * as Gen4 from './types/neato/gen4'
+import type { NoGoLine, Zone } from "./pages/map/types";
 
 // Store for loading state callback - will be set by AppContext
 let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
   baseURL: `http://${location.hostname}:8080/app`,
+  // baseURL: 'https://lz233vf1-8080.euw.devtunnels.ms/app'
 });
 
 
@@ -47,7 +53,7 @@ export class Http {
   }
 
   static getPersistentMaps(serial: string) {
-    return instance.get<PersistentMap[]>(`/robot/${serial}/maps`)
+    return instance.get<Neato.Gen3.PersistentMap[]>(`/robot/${serial}/maps`)
   }
 
   static getPersistentMap(serial: string, mapId: string) {
@@ -56,6 +62,30 @@ export class Http {
 
   static updatePersistentMap(serial: string, mapId: string, data: { name?: string, enabled?: boolean }) {
     return instance.post(`/robot/${serial}/maps/${mapId}`, data)
+  }
+
+  static postBoundaries(serial: string, mapId: string, data: (NoGoLine | Zone)[]) {
+    return instance.post(`/robot/${serial}/maps/${mapId}/boundaries`, data)
+  }
+
+  static getBoundaries(serial: string, mapId: string) {
+    return instance.get(`/robot/${serial}/maps/${mapId}/boundaries`)
+  }
+
+  static test(serial: string, mapId: string) {
+    return instance.get(`/robot/${serial}/maps/${mapId}/test`)
+  }
+
+  static getCleanings(serial: string) {
+    return instance.get(`/robot/${serial}/runs`)
+  }
+
+  static getCleaning(serial: string, runId: string) {
+    return instance.get(`/robot/${serial}/run/${runId}`)
+  }
+
+  static demoteFloorplan(serial: string, mapId: string) {
+    return instance.delete(`/robot/${serial}/maps/${mapId}`)
   }
 
   static getRobots() {
