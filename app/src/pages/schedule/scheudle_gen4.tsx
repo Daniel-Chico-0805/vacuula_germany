@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import styles from './schedule.module.scss'
-import mapData from '../../assets/map-test.json'
 import Drawer from '../../components/drawer/drawer'
 
 import type { GetSchedule, ScheduleEvent } from './types'

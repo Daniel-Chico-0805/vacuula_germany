@@ -1,6 +1,5 @@
 import styles from './settings.module.scss'
 import { useRef, useEffect, useState, useCallback } from 'react'
-import mapData from '../../assets/map-test.json'
 import Drawer from '../../components/drawer/drawer'
 
 import type { GetSchedule, ScheduleEvent } from './types'
