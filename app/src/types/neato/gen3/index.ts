@@ -2,6 +2,7 @@ export * from './state'
 export * from './robot'
 export * from './api'
 export * from './strings'
+export * from './settings'
 
 
 export interface PersistentMap {

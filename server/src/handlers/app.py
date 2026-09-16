@@ -114,7 +114,8 @@ def get_maps(req: RouterHandler, serial: str) -> None:
     with get_session() as session:
         maps: Sequence[FloorPlan] = session.execute(
             select(FloorPlan)
-            .where(FloorPlan.robot == serial)
+            .where(FloorPlan.robot == serial, FloorPlan.in_maps_list == True)
+
         ).scalars().all()
 
     data = [
@@ -150,6 +151,11 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
         req.send_internal_error("Failed to read map")
         return
 
+    with get_session() as session:
+        floorplan = session.get(FloorPlan, map_id)
+    
+    data["in_maps_list"] = floorplan.in_maps_list
+
     req.send_ok(data)
 
 def post_map(req: RouterHandler, serial: str, map_id: str) -> None:
@@ -167,6 +173,12 @@ def post_map(req: RouterHandler, serial: str, map_id: str) -> None:
             update(PersistentMap)
             .where(PersistentMap.id == map_id, PersistentMap.robot == serial)
             .values(name=name, enabled=enabled)
+        )
+
+        session.execute(
+            update(FloorPlan)
+            .where(FloorPlan.id == map_id, FloorPlan.robot == serial)
+            .values(name=name)
         )
         session.commit()
     

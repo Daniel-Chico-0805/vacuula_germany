@@ -10,6 +10,7 @@ export interface Zone {
     type: 'polygon'
     vertices: Point[]
     enabled: boolean
+    function: 'nogo' | 'cleaning' // only gen4, TODO: better system to separate them but meh
 }
 
 export interface SetZone extends Zone {

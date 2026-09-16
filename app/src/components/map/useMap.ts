@@ -5,6 +5,7 @@ import { decodeRLE, calcFitZoomAndOffset } from './utils'
 import { drawMap, computeIgnoredRunValues, colorForPathValue, type CellShape } from './drawingFunctions'
 import { Http } from '../../http'
 import type { Offset } from './types'
+import { useCleaning, usePersistentMap } from '../../loaders/resources'
 
 export interface MapSize { width: number; height: number }
 
@@ -17,8 +18,7 @@ export type ExtraDrawFn = (
 ) => void
 
 interface UseMapOptions {
-    serial: string
-    mapId?: string
+    mapId: string
     runId?: string
     shape?: CellShape
     fitOnLoad?: boolean
@@ -29,7 +29,6 @@ interface UseMapOptions {
 }
 
 export function useMap({
-    serial,
     mapId,
     runId,
     shape = 'circle',
@@ -37,7 +36,7 @@ export function useMap({
     extraDraw,
     redrawKey
 }: UseMapOptions) {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const canvasRef = useRef<HTMLCanvasElement | undefined>(undefined)
     const cellsRef = useRef<number[] | null>(null)
     const runCellsRef = useRef<number[] | null>(null)
     const runIgnoreSetRef = useRef<Set<number>>(new Set())
@@ -82,37 +81,34 @@ export function useMap({
         handleWheel(e)
     }, [handleWheel])
 
+    const { data: persistantMapData, refresh: updatePersistantMapData } = usePersistentMap(mapId);
+    const { data: cleaningData, refresh: updateCleaningData } = useCleaning(runId ?? '');
+
+    useEffect(() => {
+        updatePersistantMapData();
+    }, [mapId])
+
+    useEffect(() => {
+        if (!runId) return;
+        updateCleaningData()
+    }, [runId])
+    
+
     // Load floor map
     useEffect(() => {
-        if (!mapId) return
-        Http.getPersistentMap(serial, mapId).then(res => {
-            cellsRef.current = decodeRLE(res.data.rle)
-            runCellsRef.current = null
-            runIgnoreSetRef.current = new Set()
-            setMapSize({ height: res.data.height, width: res.data.width })
-        })
-    }, [serial, mapId])
+        if (!persistantMapData) return
+        cellsRef.current = decodeRLE(persistantMapData.rle)
+        setMapSize({ height: persistantMapData.height, width: persistantMapData.width })
+    }, [persistantMapData])
 
-    // Load run overlay
     useEffect(() => {
-        if (!mapId || !runId) {
-            runCellsRef.current = null
-            runIgnoreSetRef.current = new Set()
-            draw()
-            return
-        }
-        Http.getCleaning(serial, runId).then(res => {
-            const runCells = decodeRLE(res.data.rle)
-            if (mapSize && (res.data.width !== mapSize.width || res.data.height !== mapSize.height)) {
-                console.warn('Run map size mismatch, skipping overlay')
-                runCellsRef.current = null
-            } else {
-                runCellsRef.current = runCells
-            }
-            runIgnoreSetRef.current = computeIgnoredRunValues(runCellsRef.current, 2)
-            draw()
-        })
-    }, [serial, mapId, runId, mapSize])
+        // TODO: should size be matched?
+        if (!cleaningData) return;
+        const runCells = decodeRLE(cleaningData.rle);
+        runCellsRef.current = runCells;
+        runIgnoreSetRef.current = computeIgnoredRunValues(runCellsRef.current, 1)
+        draw()
+    }, [cleaningData])
 
     // Redraw on viewport change, or when caller's overlay-relevant state changes
     useEffect(() => {
@@ -153,6 +149,11 @@ export function useMap({
         ro.observe(parent)
         return () => ro.disconnect()
     }, [mapSize, fitOnLoad])
+
+    // Selecting a different map should auto-fit, not inherit the previous map's pan/zoom.
+    useEffect(() => {
+        userInteractedRef.current = false
+    }, [mapId])
 
     const resetView = useCallback(() => {
         userInteractedRef.current = false

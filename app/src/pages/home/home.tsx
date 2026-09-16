@@ -82,22 +82,6 @@ export default function Home() {
     const { lastHeartbeat } = useApp()
     const { robot } = useRobot();
 
-    // TODO: fix the cleaninginfo!
-    // useEffect(() => {
-    //     if (robot.action === Neato.Gen4.RobotAction.CLEANING) {
-    //         if (interval) return;
-    //         interval = setInterval(() => {
-    //             GEN4_COMMANDS.cleaningInfo(robot.serial);
-    //         }, 3000)
-    //     } else {
-    //         clearInterval(interval)
-    //         interval = undefined;
-    //     }
-
-    //     if (robot) GEN4_COMMANDS.getSettings(robot.serial, { operation: Neato.Gen4.SettingsCleaningOptionsOperation.GET })
-    // }, [robot])
-
-
     return (
         <div className={styles.home}>
 
@@ -174,17 +158,19 @@ export default function Home() {
                         }}
                     />
 
+                    <CtrlBtn icon={
+                        gen3__cleaningCategory === CleaningCategory.HOUSE ? <FaHouse size={22} /> :
+                            gen3__cleaningCategory === CleaningCategory.SPOT ? <BiTargetLock size={22} /> :
+                                gen3__cleaningCategory === CleaningCategory.MAP ? <HiMap size={22} /> : <TbAdjustments size={22} />
+                    } onClick={() => setCategoryDrawerOpen(true)} label={
+                        gen3__cleaningCategory === CleaningCategory.HOUSE ? 'House' :
+                            gen3__cleaningCategory === CleaningCategory.SPOT ? 'Spot' :
+                                gen3__cleaningCategory === CleaningCategory.MAP ? 'Map' : '...'
+                    } />
+
+
                     {robot.type === RobotType.NeatoGen3 && (
                         <>
-                            <CtrlBtn icon={
-                                gen3__cleaningCategory === CleaningCategory.HOUSE ? <FaHouse size={22} /> :
-                                    gen3__cleaningCategory === CleaningCategory.SPOT ? <BiTargetLock size={22} /> :
-                                        gen3__cleaningCategory === CleaningCategory.MAP ? <HiMap size={22} /> : <TbAdjustments size={22} />
-                            } onClick={() => setCategoryDrawerOpen(true)} label={
-                                gen3__cleaningCategory === CleaningCategory.HOUSE ? 'House' :
-                                    gen3__cleaningCategory === CleaningCategory.SPOT ? 'Spot' :
-                                        gen3__cleaningCategory === CleaningCategory.MAP ? 'Map' : '...'
-                            } />
 
                             {gen3__navigationMode === CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.EXTRA_CARE)} label="Normal" />)}
                             {gen3__navigationMode === CleaningNavigationMode.EXTRA_CARE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.DEEP)} label="Extra Care" />)}

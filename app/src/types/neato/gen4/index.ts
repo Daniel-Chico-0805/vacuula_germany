@@ -14,4 +14,5 @@ export interface Floorplan {
     alignment: number,
     imgsize: [number, number],
     created_at: string
+    in_maps_list: boolean
 }

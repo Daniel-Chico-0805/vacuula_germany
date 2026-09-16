@@ -1,5 +1,6 @@
 import { Http } from "../http"
 import type { Neato } from "../types"
+import type { RobotBaseResponse } from "../types/neato/gen3"
 
 
 function getRobotState(serial: string) {
@@ -66,6 +67,12 @@ function setSettings<Op extends Neato.Gen4.SettingsSetOperation>(serial: string,
     })
 }
 
+function factoryReset(serial: string) {
+    return Http.sendCmd<Neato.Gen4.GetRobotScheduleResponse>(serial, {
+        ability: "settings.factory_reset"
+    })
+}
+
 function demoteFloorplan(serial: string, id: string) {
     return Http.sendCmd<Neato.Gen4.GetRobotScheduleResponse>(serial, {
         ability: "maps.demote_floorplan",
@@ -74,16 +81,16 @@ function demoteFloorplan(serial: string, id: string) {
 }
 
 
-function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode) {
+function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode, temp_track_id: string) {
     return Http.sendCmd(serial, {
         ability: "cleaning.start",
         runs: [{
-            // map: {
-            //     "rank_id":      "338e289b-0a3d-406f-9247-902623b1b455",
-            //     "track_id":     null,
-            //     "nogo_enabled": true,
-            // },
-            map: null,
+            map: {
+                "rank_id":     "894e115c-7934-4519-bc62-2f64db633136", // "338e289b-0a3d-406f-9247-902623b1b455",
+                "track_id":     temp_track_id, //"e79742d6-4517-4734-9dce-55d9d618d469",
+                "nogo_enabled": false,
+            },
+            // map: null,
             settings: {
                 mode,
                 navigation_mode: navigationMode
@@ -93,7 +100,7 @@ function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigation
 }
 
 function cleaningInfo(serial: string) {
-    return Http.sendCmd(serial, {
+    return Http.sendCmd<RobotBaseResponse<Neato.Gen4.Cleaning>>(serial, {
         ability: "cleaning.show",
     })
 }
@@ -116,4 +123,6 @@ export const GEN4_COMMANDS = {
     
     getRobotState,
     findMe,
+
+    factoryReset
 }

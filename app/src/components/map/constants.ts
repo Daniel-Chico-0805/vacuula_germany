@@ -27,5 +27,6 @@ export const DRAWING = {
     ZOOM_FACTOR: 1.1,
     PINCH_ZOOM_POWER: 0.5,
     MIN_MOVEMENT: 5, // Pixels before considering it a drag vs click
-    RUN_OVERLAY_OPACITY: 0.55
+    RUN_OVERLAY_OPACITY: 0.55,
+    MIN_PINCH_DISTANCE: 10,
 } as const

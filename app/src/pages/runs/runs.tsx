@@ -12,13 +12,16 @@ import { GEN3_COMMANDS } from '../../http/gen3'
 import { Http } from '../../http'
 import { useApp } from '../../context/useApp'
 import type { UseState } from '../map/types'
-import type { Neato } from '../../types'
+import { RobotType, type Neato } from '../../types'
 import { IoMdTime, IoMdCheckmarkCircle, IoMdCloseCircleOutline } from "react-icons/io";
 import { SlEnergy } from "react-icons/sl";
 import Map from '../../components/map/map'
+import { useRobot } from '../../context/useRobot'
+import { usePersistentMap } from '../../loaders/resources'
 
 export default () => {
-    const { robot, persistentMaps, setCleanings, cleanings } = useApp()
+    const { setCleanings, cleanings } = useApp()
+    const { robot } = useRobot()
     const [selectedCleaning, setSelectedCleaning] = useState<Neato.Gen4.Cleaning>();
     const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -39,8 +42,6 @@ export default () => {
     useEffect(() => {
         setDrawerOpen(!!selectedCleaning);
     }, [selectedCleaning])
-
-    const totalArea = selectedCleaning?.runs.map(r => r.stats.area).reduce((a, v) => a + v, 0)
 
     if (!cleanings) return
 
@@ -100,7 +101,7 @@ export default () => {
 
                     <Map mapId={selectedCleaning?.floorplan || ''} runId={selectedCleaning?.floorplan || ''} />
 
-                    &lt; info about colors etc &gt;
+                    {/* TODO: Explain the differnet colors meaning */}
 
                     <hr style={{ width: '100%' }} />
                     

@@ -71,7 +71,8 @@ def maps_create(serial: str, data: dict):
                 resolution=floormap_meta["metadata"]["resolution"],
                 alignment=floormap_meta["metadata"]["alignment"],
                 imgsize=floormap_meta["img_size"],
-                created_at=body["timing"]["end"]
+                created_at=body["timing"]["end"],
+                in_maps_list=False
             ))
 
             session.add(Gen4__Run(
@@ -103,38 +104,43 @@ def maps_create(serial: str, data: dict):
 
 
 
-serial = "2046LB01A11113365-2"
+serial = "2046LB01A11113365"
 import json
 with get_session() as session:
-    # session.add(Robot(
-    #     name='fake robot',
-    #     serial=serial,
-    # )
-    # )
-    # session.commit()
-
-    # robot: Robot | None = session.get(Robot, serial)
-    # print(robot.name)
-
+    session.add(Robot(
+        name='gen4 robot',
+        serial=serial,
+    )
+    )
+    session.add(Robot(
+        name='fake-robot',
+        serial="fake-serial",
+    )
+    )
 
     session.add(Robot(
         name='gen3-robot',
         serial='GPC23118-40bd32d13ac7',
-        password='C1B195E7412356F3669277D96E86F5A196A1315CA0BE8DEB591FAF3DEF60A40FCEFF95804AC65F0DEDA1ABB5387BB6EAFF601149ABFF452F8A7C3E9B62063BA198EC66252D9F2BCB0AF7D138A8D3A0C3617A1DB600955F22FC83AEA70C1F5A85F0D95C93D752C1CF15130B8E4AB78FD7276A11E90A69F220A49D392FE87F6163'
+        password='A69F6B356A832B3CDB3038AD309CF659906EE347668C87D49F400205C663E7D07E553D630F2B24E249052402D4D6BA7676D8BB0F18C80AC879F1B3CEC86E879D31AC9BAFA81C75AD826AF5C95053ECF93FC501CC9EE1514FAC7DC98E3107F5D80437912D0E973B9258F8BECDA667231F834A71B3321961E541199310089D06BF'
     )
     )
+    session.commit()
+
+    robot: Robot | None = session.get(Robot, serial)
+    print(robot.name)
 
 
-    # for path in os.walk(f'uploads/maps/{serial}'):
-    #     if not 'msg.json' in path[2]:
-    #         print('Missing msg.json!')
-    #         print(path)
-    #         continue
 
-    #     msg = path[0] + f'/msg.json'
-    #     with open(msg, 'r') as f:
-    #         data = json.load(f)
+    for path in os.walk(f'uploads/maps/{serial}'):
+        if not 'msg.json' in path[2]:
+            print('Missing msg.json!')
+            print(path)
+            continue
 
-    #     maps_create(serial, data)
-    #     print(data); 
+        msg = path[0] + f'/msg.json'
+        with open(msg, 'r') as f:
+            data = json.load(f)
+
+        maps_create(serial, data)
+        print(data); 
 

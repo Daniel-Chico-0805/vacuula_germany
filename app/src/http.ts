@@ -53,11 +53,19 @@ export class Http {
   }
 
   static getPersistentMaps(serial: string) {
-    return instance.get<Neato.Gen3.PersistentMap[]>(`/robot/${serial}/maps`)
+    return instance.get<Neato.Gen3.PersistentMap[] | Neato.Gen4.Floorplan[]>(`/robot/${serial}/maps`)
   }
 
   static getPersistentMap(serial: string, mapId: string) {
-    return instance.get<PersistentMap[]>(`/robot/${serial}/maps/${mapId}`)
+    return instance.get<rle_data>(`/robot/${serial}/maps/${mapId}`) // TODO: type!
+  }
+
+  static postUseMapAsFloorPlan(serial: string, mapId: string) {
+    return instance.post(`/robot/${serial}/maps/${mapId}/use`)
+  }
+
+  static postUnuseMapAsFloorPlan(serial: string, mapId: string) {
+    return instance.post(`/robot/${serial}/maps/${mapId}/unuse`)
   }
 
   static updatePersistentMap(serial: string, mapId: string, data: { name?: string, enabled?: boolean }) {

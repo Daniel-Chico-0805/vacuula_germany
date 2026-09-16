@@ -98,10 +98,10 @@ class RouterHandler(BaseHTTPRequestHandler):
 
     # Success helpers
     def send_ok(self, data=None, close=True):
-        self.send_response_data(data or "OK", close, status=200)
+        self.send_response_data(data if data is not None else "OK", close, status=200)
 
     def send_created(self, data=None, close=True):
-        self.send_response_data(data or "Created",close, status=201)
+        self.send_response_data(data if data is not None else "Created",close, status=201)
 
     # Error helpers
     def send_bad_request(self, message="Bad Request"):

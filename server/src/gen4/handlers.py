@@ -235,7 +235,8 @@ def maps_create(rc: RobotConn, data: dict):
                 resolution=floormap_meta["metadata"]["resolution"],
                 alignment=floormap_meta["metadata"]["alignment"],
                 imgsize=floormap_meta["img_size"],
-                created_at=body["timing"]["end"]
+                created_at=body["timing"]["end"],
+                in_maps_list=False
             ))
 
             session.add(Gen4__Run(

@@ -28,7 +28,7 @@
     border-radius: 1rem;
     background: $surface;
     color: $text-primary;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     border: none;
 }
@@ -95,7 +95,7 @@
         }
     }
 
-    input[type="checkbox"]:checked + .slider {
+    input[type="checkbox"]:checked+.slider {
         background: rgba($accent, 0.3);
 
         &::before {
@@ -104,4 +104,39 @@
             box-shadow: 0 3px 8px rgba($accent, 0.3);
         }
     }
+}
+
+.dropdownWrapper {
+    position: relative;
+    display: flex;
+}
+
+.dropdown {
+    width: 100%;
+    padding: 0.9rem 2.8rem 0.9rem 1rem;
+    border-radius: 1rem;
+    background: $surface;
+    color: $text-primary;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+
+    // Options render via the OS/browser's native popup — not much stylable cross-browser,
+    // but keep them at least readable on dark surfaces.
+    option {
+        background: $surface;
+        color: $text-primary;
+    }
+}
+
+.dropdownIcon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $text-primary;
+    pointer-events: none;
 }

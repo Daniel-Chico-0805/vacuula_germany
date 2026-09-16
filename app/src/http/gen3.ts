@@ -1,7 +1,8 @@
 import { Http } from "../http"
 import type { NoGoLine, SetZone, Zone } from "../pages/map/types"
 import type { ScheduleEvent } from "../pages/schedule/types"
-import type { GetMapBoundariesResponse, GetScheduleResponse, RobotBaseResponse } from "../types/neato/gen3/api"
+import type { Preferences } from "../types/neato/gen3"
+import type { GetMapBoundariesResponse, GetPreferencesResponse, GetScheduleResponse, RobotBaseResponse } from "../types/neato/gen3/api"
 import { CleaningCategory, CleaningMode, CleaningNavigationMode, type GetRobotStateResponse } from "../types/neato/gen3/state"
 
 
@@ -113,9 +114,15 @@ function startCleaningZones(serial: string, zoneIds: string[], mode: CleaningMod
 
 
 
-function getPreferences() {
-    return { cmd: "getPreferences" }
+
+function getPreferences(serial: string) {
+    return Http.sendCmd<GetPreferencesResponse>(serial, { cmd: "getPreferences" })
 }
+
+function setPreferences(serial: string, preferences: Preferences) {
+    return Http.sendCmd(serial, { cmd: "setPreferences", params: preferences})
+}
+
 
 function startPersistentMapExploration(serial: string) {
     return Http.sendCmd(serial, { cmd: "startPersistentMapExploration" })
@@ -161,6 +168,7 @@ export const GEN3_COMMANDS = {
     startCleaningZone,
     startCleaningZones,
     getPreferences,
+    setPreferences,
     findMe,
     getMapBoundaries,
     setMapBoundaries,

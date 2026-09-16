@@ -4,7 +4,6 @@ import Drawer from '../../components/drawer/drawer'
 
 import { DRAWING } from './constants'
 import type { NoGoLine, Zone, Point, SetZone, UseState } from './types'
-// import { decodeRLE, getTouchDistance, getTouchAngle, getCrosshairWorldCoords, getWorldCoords, calcRelevancy, upsertPreserveOrder } from './utils'
 import { FaPlus, FaTimes, FaUndo, FaPen, FaCheckCircle, FaCircle } from 'react-icons/fa'
 import Input from '../../components/input/input'
 import { PiBoundingBox } from "react-icons/pi";
@@ -13,14 +12,16 @@ import Button from '../../components/button/button'
 import { GEN3_COMMANDS } from '../../http/gen3'
 import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { Http } from '../../http'
-import { useApp } from '../../context/useApp'
-import { useCanvasViewport } from './useCanvasViewport'
-import { RobotType } from '../../types'
+import { Neato, RobotType, type Robot } from '../../types'
 
-import { useMap } from '../../components/map/useMap'
+import MapCanvas, { type MapMode } from './MapCanvas'
 import { drawZones, drawNoGoLines, drawInProgressPolyline, drawCrosshair, drawBase } from './drawingFunctions'
-import { getCrosshairWorldCoords, upsertPreserveOrder } from './utils'
+import { upsertPreserveOrder } from './utils'
 import { GEN4_COMMANDS } from '../../http/gen4'
+import { useRobot } from '../../context/useRobot'
+import { usePersistentMaps } from '../../loaders/resources'
+import type { Floorplan } from '../../types/neato/gen4'
+import { v4 as uuidv4 } from 'uuid';
 
 
 export default () => {
@@ -28,29 +29,28 @@ export default () => {
     const [drawerOpen, setDrawerOpen] = useState(true)
 
     const [editForm, setEditForm] = useState({
-        startTime: '',
-        color: ''
+        name: '',
+        color: '',
+        zoneType: BoundaryTypes.NOGO_LINE
     });
 
     const [mapEditform, setMapEditForm] = useState({
-        startTime: '',
+        name: '',
         enabled: true
     })
-    const [showCloseAsPolygon, setShowCloseAsPolygon] = useState(false)
+
     const [currentLinePoints, setCurrentLinePoints] = useState<Point[]>([])
     const [closedAsPolygon, setClosedAsPolygon] = useState(false)
     const [persistentMap, setPersistentMap] = useState<string>()
 
-    const [mode, setMode] = useState<'maps' | 'map-edit' | 'boundaries' | 'boundary-info' | 'boundary-edit'>('maps')
+    const [mode, setMode] = useState<MapMode>('maps')
     const [returnFromEditMode, SetReturnFromEditMode] = useState<'boundaries' | 'boundary-info'>('boundaries')
     const [activeBoundaryId, setActiveBoundaryId] = useState<string | undefined>(undefined);
 
-    const { robot, persistentMaps, setPersistentMaps } = useApp()
-
+    const { robot } = useRobot()
     const skipNextPostRef = useRef(false)
 
-    if (persistentMap) console.log(Http.test.bind(this, robot.serial, persistentMap))
-
+    const { data: persistentMaps, refresh: updatePersistentMaps } = usePersistentMaps()
 
     const extraDraw = useCallback((ctx, canvas, currentZoom, currentOffset, mapSize) => {
         const showBoundaries = mode === 'boundary-edit'
@@ -82,118 +82,41 @@ export default () => {
         }
     }, [boundaries, activeBoundaryId, mode, currentLinePoints, closedAsPolygon, editForm.color, persistentMaps, persistentMap])
 
-    const { canvasRef, mapSize, zoom, offset, isDragging, hasMoved, canvasHandlers } = useMap({
-        serial: robot.serial,
-        mapId: persistentMap,
-        extraDraw,
-        redrawKey: extraDraw // any change to the deps above re-triggers a draw
-    })
-
-    const addPointAtCrosshair = () => {
-        const coords = getCrosshairWorldCoords(canvasRef, offset, zoom, mapSize)
-        setCurrentLinePoints(prev => [...prev, coords])
-    }
-
-    // Fetch boundaries when persistentMap changes — unchanged from your current code,
-    // just drop the old cellsRef/setMapSize/centerView/draw calls since useMap now owns that:
+    // Fetch boundaries when persistentMap changes
     useEffect(() => {
         if (!persistentMap) return
         skipNextPostRef.current = true
         if (robot.type === RobotType.NeatoGen4) {
-            Http.getBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.boundaries))
+            Http.getBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data))
         } else {
             GEN3_COMMANDS.getMapBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.data.boundaries))
         }
         setMode('boundaries')
     }, [persistentMap])
 
-    // ...postBoundaries effect on [boundaries] unchanged...
-
-    // onTouchMove/onTouchEnd wrap canvasHandlers instead of the old handleTouchMove/handleTouchEnd directly:
-    const onTouchMove = (e: React.TouchEvent) => {
-        canvasHandlers.onTouchMove(e)
-        if (currentLinePoints.length > 1 && mapSize) {
-            const coords = getCrosshairWorldCoords(canvasRef, offset, zoom, mapSize)
-            const [fx, fy] = currentLinePoints[0]
-            const distance = Math.sqrt((coords[0] - fx) ** 2 + (coords[1] - fy) ** 2)
-            setShowCloseAsPolygon(distance < DRAWING.CLOSE_THRESHOLD)
-        }
-    }
-
-    const onTouchEnd = () => {
-        canvasHandlers.onTouchEnd()
-        if (mode === 'boundary-edit' && !hasMoved) addPointAtCrosshair()
-    }
-
-
-    const getPersistentMaps = () => {
-        Http.getPersistentMaps(robot.serial).then(res => {
-            setPersistentMaps(res.data)
-            // setPersistentMaps([])
-        })
-    }
-
     const updatePersistentMap = (data: { name: string, enabled: boolean }, mapToChange?: string) => {
         const map = mapToChange || persistentMap;
-        if (!map) return; // If this happens, we have done something bad in the code
+        if (!map) return;
         Http.updatePersistentMap(robot.serial, map, data).finally(() => {
-            getPersistentMaps();
+            updatePersistentMaps()
             if (persistentMap) setMode('boundaries')
         })
     }
 
     useEffect(() => {
         if (!robot) return;
-        getPersistentMaps();
+        updatePersistentMaps();
     }, [robot])
 
     useEffect(() => {
         if (!persistentMap) return;
-
-
         if (skipNextPostRef.current) {
             skipNextPostRef.current = false
             return
         }
-
-
-
         console.log(boundaries);
         Http.postBoundaries(robot.serial, persistentMap, boundaries);
-
-
-        // GEN3 code, dont delete yet!!!
-        // const updatedBoundaries = boundaries.map(boundary =>
-        //     boundary.type === 'polygon'
-        //         ? {
-        //             ...boundary,
-        //             relevancy: calcRelevancy(boundary.vertices)
-        //         }
-        //         : boundary
-        // );
-        // GEN3_COMMANDS.setMapBoundaries(robot.serial, persistentMap, updatedBoundaries).catch((err) => {
-        //     console.log(err.response?.data)
-        //     getMapBoundaries();
-        // });
     }, [boundaries]);
-
-    const undo = () => {
-        // If we have closed as polygon, undo the close
-        if (closedAsPolygon) {
-            setClosedAsPolygon(false)
-            return;
-        }
-
-        // If we are not as a polygon (zone), just remove the last point
-        if (currentLinePoints.length > 0) {
-            setCurrentLinePoints(currentLinePoints.slice(0, -1))
-        }
-    }
-
-    const closeAsPolyon = () => {
-        setClosedAsPolygon(true)
-        setDrawerOpen(true)
-    }
 
     // mode changes
     useEffect(() => {
@@ -202,21 +125,23 @@ export default () => {
             const pmap = persistentMaps?.find(p => p.id === persistentMap)
             if (!pmap) return;
             setMapEditForm({
-                startTime: pmap.name,
-                enabled: pmap.enabled
+                name: pmap.name,
+                enabled: 'enabled' in pmap ? pmap.enabled : false // TODO: meh fix
             })
         }
         if (mode !== 'boundary-edit') {
             setCurrentLinePoints([])
             setClosedAsPolygon(false)
-            // setDrawerOpen(false)
             return
         }
         const existingBoundary = boundaries.find(b => b.id === activeBoundaryId);
-        // edit enable
         setEditForm({
-            startTime: existingBoundary?.name ?? '',
-            color: existingBoundary?.color ?? `#${Math.floor(Math.random() * 16777215).toString(16)}`
+            name: existingBoundary?.name ?? '',
+            color: existingBoundary?.color ?? `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+            zoneType: existingBoundary?.type === 'polygon' ?
+                (existingBoundary?.function === 'cleaning' ?
+                    BoundaryTypes.CLEANING_ZONE : BoundaryTypes.NOGO_ZONE
+                ) : BoundaryTypes.NOGO_LINE
         });
         setCurrentLinePoints(existingBoundary?.vertices || [])
         setClosedAsPolygon(existingBoundary?.type === 'polygon')
@@ -224,39 +149,29 @@ export default () => {
 
     const saveEditBoundary = () => {
         setMode(returnFromEditMode);
-
-        const id = activeBoundaryId ?? Date.now().toString();
-
+        const id = activeBoundaryId ?? uuidv4();
         const updated = {
             id,
             name: editForm.name,
             color: editForm.color,
+            function: closedAsPolygon ? (editForm.zoneType === BoundaryTypes.CLEANING_ZONE ? 'cleaning' : 'nogo') : 'nogo',
             type: closedAsPolygon ? 'polygon' as const : 'polyline' as const,
             vertices: currentLinePoints,
             enabled: true
         };
-
         setBoundaries(prev => upsertPreserveOrder(prev, updated));
     };
 
     const updateForm = <T extends object>(update: UseState<T>, patch: Partial<T>) => {
-        update(prev => ({
-            ...prev,
-            ...patch
-        }))
+        update(prev => ({ ...prev, ...patch }))
     }
 
     const toggleNoGoLine = (item: NoGoLine) => {
-        setBoundaries(prev => upsertPreserveOrder(prev, {
-            ...item,
-            enabled: !item.enabled
-        }));
+        setBoundaries(prev => upsertPreserveOrder(prev, { ...item, enabled: !item.enabled }));
     };
 
     const deleteBoundary = (id: string) => {
-        setBoundaries(prev =>
-            prev.filter(boundary => boundary.id !== id)
-        );
+        setBoundaries(prev => prev.filter(boundary => boundary.id !== id));
         setMode('boundaries')
     };
 
@@ -296,40 +211,25 @@ export default () => {
 
     return (
         <div className={styles.container}>
-            <canvas
-                ref={canvasRef}
-                className={styles.canvas}
-                onMouseDown={canvasHandlers.onMouseDown}
-                onMouseMove={canvasHandlers.onMouseMove}
-                onMouseUp={canvasHandlers.onMouseUp}
-                onMouseLeave={canvasHandlers.onMouseLeave}
-                onWheel={canvasHandlers.onWheel}
-                onTouchStart={canvasHandlers.onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                style={{
-                    cursor: mode === 'boundary-edit' ? 'crosshair' : isDragging ? 'grabbing' : 'grab',
-                    touchAction: 'none'
-                }}
-            />
+            {persistentMap ? (
+                <MapCanvas
+                    mapId={persistentMap}
+                    mode={mode}
+                    extraDraw={extraDraw}
+                    redrawKey={extraDraw}
+                    currentLinePoints={currentLinePoints}
+                    setCurrentLinePoints={setCurrentLinePoints}
+                    closedAsPolygon={closedAsPolygon}
+                    setClosedAsPolygon={setClosedAsPolygon}
+                    setDrawerOpen={setDrawerOpen}
+                />
+            ) : (
+                <canvas className={styles.canvas} />
+            )}
 
             {mode === 'maps' && (
                 <div className={styles.selectMap}>
                     <span>Select a map</span>
-                </div>
-            )}
-
-            {mode === 'boundary-edit' && (
-                <div className={styles.actionButtons}>
-                    <div onClick={undo} className={styles.undo}>
-                        <FaUndo size={20} color="#fff" />
-                    </div>
-                    <div onClick={addPointAtCrosshair} className={`${styles.add} ${closedAsPolygon ? styles.disabled : ''}`}>
-                        <FaPlus size={40} color="#fff" />
-                    </div>
-                    <div onClick={closeAsPolyon} className={`${styles.closePolygon} ${(showCloseAsPolygon && !closedAsPolygon) ? '' : styles.disabled}`}>
-                        <PiBoundingBox size={20} color="#fff" />
-                    </div>
                 </div>
             )}
 
@@ -355,13 +255,7 @@ export default () => {
                                         updatePersistentMap({ name: item.name, enabled: !item.enabled }, item.id);
                                     }} />
                                 ) : (
-                                    <Button text={item.promoted ? 'Demote' : 'Promote'} onClick={() => {
-                                        if (robot.type === RobotType.NeatoGen4) {
-                                            if (item.promoted) Http.demoteFloorplan(robot.serial, item.id).finally(() => getPersistentMaps())
-                                            else Http.test(robot.serial, item.id).finally(() => getPersistentMaps());
-                                            // Http.test(robot.serial, item.id);
-                                        }
-                                    }} style={item.promoted ? 'fail' : 'success'} />
+                                    <PromoteDemoteBtn robot={robot} map={item} onSuccess={updatePersistentMaps} />
                                 )}
                             </div>
                         ))}
@@ -378,17 +272,30 @@ export default () => {
                     </div>
                 )}
 
-                {mode === 'map-edit' && mapEditform && (
+                {mode === 'map-edit' && mapEditform && persistentMap && (
                     <div>
                         <Input
                             type="text"
                             label="Name"
                             value={mapEditform.name}
                             onChange={(name) => updateForm(setMapEditForm, { name })} />
-                        <Input type="switch" label='Enabled' value={mapEditform.enabled} onChange={(enabled) => updateForm(setMapEditForm, { enabled })} />
+                        {robot.type === RobotType.NeatoGen3 && (
+                            <Input type="switch" label='Enabled' value={mapEditform.enabled} onChange={(enabled) => updateForm(setMapEditForm, { enabled })} />
+                        )}
                         <Button text="Save" style='success' onClick={() => {
                             updatePersistentMap(mapEditform);
                         }} />
+                        {robot.type === RobotType.NeatoGen4 &&
+                            (persistentMaps?.find(p => p.id === persistentMap) as Floorplan)?.in_maps_list &&
+                            !(persistentMaps?.find(p => p.id === persistentMap) as Floorplan)?.promoted && (
+                                <div style={{ padding: '1rem 0' }}>
+                                    <Button text='Stop using as floormap' style='fail' onClick={() =>
+                                        Http.postUnuseMapAsFloorPlan(robot.serial, persistentMap).then(() => {
+                                            setMode('maps')
+                                            updatePersistentMaps()
+                                        })} />
+                                </div>
+                            )}
                     </div>
                 )}
 
@@ -400,11 +307,14 @@ export default () => {
                         save={saveEditBoundary}
                         name={editForm.name}
                         color={editForm.color}
+                        zoneType={editForm.zoneType}
                         setName={(name) => updateForm(setEditForm, { name })}
                         setColor={(color) => updateForm(setEditForm, { color })}
+                        setZoneType={(zoneType) => updateForm(setEditForm, { zoneType })}
                         cancel={() => {
                             setMode(returnFromEditMode)
                         }}
+                        supportsZoneType={robot.type === RobotType.NeatoGen4}
                     />
                 )}
 
@@ -421,25 +331,18 @@ export default () => {
 
                 {mode === 'boundaries' && (
                     <div>
-
-
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
-                            <span>{persistentMaps?.find(p => p.id === persistentMap)?.enabled ? 'Enabled' : 'Disabled'}</span>
-                            <Button text="Edit map details" style='primary' onClick={() => {
-                                // setEditBoundaryId(Date.now().toString())
-                                setMode('map-edit');
-                                // openEdit(Date.now().toString())
-                                // setReturnMode(mode)
-                            }} />
+                            {robot.type === RobotType.NeatoGen4 ? (
+                                <PromoteDemoteBtn robot={robot} map={persistentMaps?.find(p => p.id === persistentMap) as Floorplan} onSuccess={updatePersistentMaps} />
+                            ) : (
+                                <span>{(persistentMaps?.find(p => p.id === persistentMap) as Neato.Gen3.PersistentMap)?.enabled ? 'Enabled' : 'Disabled'}</span>
+                            )}
+
+                            <Button text="Edit map details" style='primary' onClick={() => setMode('map-edit')} />
                         </div>
                         <hr />
                         <div className={styles.buttonContainer}>
-                            <Button text="Add feature" style='primary' onClick={() => {
-                                // setEditBoundaryId(Date.now().toString())
-                                // setMode('edit');
-                                openEdit(Date.now().toString())
-                                // setReturnMode(mode)
-                            }} />
+                            <Button text="Add feature" style='primary' onClick={() => openEdit(uuidv4())} />
                         </div>
 
                         <div className={styles.featureList}>
@@ -447,21 +350,21 @@ export default () => {
                                 <div key={i} className={styles.item} style={{ background: `${item.color || 'red'}22` }} onClick={() => openInfo(item.id)}>
                                     <div className={styles.info}>
                                         <span>{item.name}</span>
-                                        <span className={styles.type} style={{ color: item.color }}>{item.type === 'polygon' ? 'Zone' : 'No-Go Line'}</span>
+                                        <span className={styles.type} style={{ color: item.color }}>
+                                            {item.type === 'polygon' ? 'Zone' : 'No-Go Line'}
+                                        </span>
                                     </div>
                                     {item.type === 'polyline' && (<Input type="switch" skipSection={true} value={item.enabled} onChange={() => toggleNoGoLine(item)} />)}
                                     {item.type === 'polygon' && (<Button style='primary' text='Clean zone' onClick={() => {
-                                        GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
+                                        // GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
+                                        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, item.id)
                                     }} />)}
                                 </div>
                             ))}
                         </div>
-
                     </div>
                 )}
-
             </Drawer>
-
         </div>
     )
 }
@@ -498,10 +401,11 @@ const BoundaryDetails = (props: BoundaryDetailsProps) => {
 }
 
 
-const BoundaryTypes = biEnum({
-    NO_GO_LINE: 'no-go',
-    ZONE: 'zone',
-})
+enum BoundaryTypes {
+    NOGO_LINE = 'nogo-line',
+    NOGO_ZONE = 'nogo-zone',
+    CLEANING_ZONE = 'cleaning-zone',
+}
 
 interface EditBoundaryDetailsProps {
     currentLinePoints: Point[]
@@ -510,9 +414,12 @@ interface EditBoundaryDetailsProps {
     setName: (name: string) => void;
     color: string,
     setColor: (color: string) => void;
+    zoneType: BoundaryTypes;
+    setZoneType: (zoneType: BoundaryTypes) => void;
     save: () => void
     cancel: () => void
-    setDrawerOpen: (open: boolean) => void
+    setDrawerOpen: (open: boolean) => void;
+    supportsZoneType: boolean
 }
 
 const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
@@ -529,15 +436,19 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
                 {props.currentLinePoints.length > 1 ? (
                     <Input
                         type="select"
-                        label="Type"
+                        label={props.supportsZoneType && props.closedAsPolygon ? "Zone type" : "Type"}
                         options={[
                             {
-                                value: props.closedAsPolygon ? BoundaryTypes.ZONE : BoundaryTypes.NO_GO_LINE,
-                                label: props.closedAsPolygon ? 'Zone' : 'No-Go Line'
-                            }
+                                value: props.closedAsPolygon ? BoundaryTypes.CLEANING_ZONE : BoundaryTypes.NOGO_LINE,
+                                label: props.closedAsPolygon ? (props.supportsZoneType ? 'Cleaning' : 'Zone') : 'No-Go Line'
+                            },
+                            ...((props.supportsZoneType && props.closedAsPolygon) ? [{ value: BoundaryTypes.NOGO_ZONE, label: "No-Go" }] : [])
                         ]}
-                        value={props.closedAsPolygon ? BoundaryTypes.ZONE : BoundaryTypes.NO_GO_LINE}
-                        onChange={() => { }}
+                        value={props.closedAsPolygon ? (props.supportsZoneType ? props.zoneType : BoundaryTypes.CLEANING_ZONE) : BoundaryTypes.NOGO_LINE}
+                        onChange={(zoneType) => {
+                            if (!props.supportsZoneType) return;
+                            props.setZoneType(zoneType)
+                        }}
                         extraInfo={
                             props.closedAsPolygon ?
                                 "To make a no-go line, don't press the button to close the polygon." :
@@ -569,3 +480,14 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
         </div>
     )
 }
+
+interface PromoteDemoteBtnProps {
+    robot: Robot,
+    map: Floorplan
+    onSuccess: () => void
+}
+const PromoteDemoteBtn = ({ robot, map, onSuccess }: PromoteDemoteBtnProps) =>
+    <Button text={map.promoted ? 'Demote' : 'Promote'} onClick={() => {
+        if (map.promoted) Http.demoteFloorplan(robot.serial, map.id).finally(() => onSuccess())
+        else Http.test(robot.serial, map.id).finally(() => onSuccess());
+    }} style={map.promoted ? 'fail' : 'success'} />

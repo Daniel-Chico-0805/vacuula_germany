@@ -3,9 +3,9 @@
 import re
 from typing import Callable, Optional, Tuple, List
 
-from gen4.app import delete_demote_floorplan, get_test
+from gen4.app import delete_demote_floorplan, get_boundaries, get_test, post_boundaries, post_update_floorplan_in_unuse, post_update_floorplan_in_use
 
-from .app import get_boundaries, get_robots, get_maps, get_map, get_run, post_boundaries, post_map, post_robot, get_runs, connect_robot, post_robot_command
+from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command
 # gen3
 from gen3.handlers.beehive import post_links, persistent_maps, upload_init, upload_finish
 from gen3.handlers.nucleo import nucleo_init
@@ -36,6 +36,8 @@ APP_ROUTES: List[Tuple[str, str, Handler]] = [
     ("GET", r"/app/robot/(.+)/maps/(.+)/test", get_test),
     ("GET", r"/app/robot/(.+)/maps/(.+)", get_map),
     ("POST", r"/app/robot/(.+)/maps/(.+)/boundaries", post_boundaries),
+    ("POST", r"/app/robot/(.+)/maps/(.+)/use", post_update_floorplan_in_use),
+    ("POST", r"/app/robot/(.+)/maps/(.+)/unuse", post_update_floorplan_in_unuse),
     ("POST", r"/app/robot/(.+)/maps/(.+)", post_map),
     ("POST", r"/app/robot/(.+)/command", post_robot_command),
     ("POST", r"/app/robot/(.+)", post_robot),

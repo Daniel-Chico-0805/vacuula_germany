@@ -6,11 +6,13 @@ import type { UseState } from '../pages/map/types'
 import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
 import { GEN4_COMMANDS } from '../http/gen4'
 import { OrbitalServices, type AnyEvent } from '../types/neato/gen4'
+import { persistentMapsLoader } from '../loaders/resources'
 
 interface AppContextType {
     robot?: Robot,
     robots?: QuickRobotInfo,
     selectRobot: (serial: string) => void,
+    updateRobotName: (name: string) => Promise<void>
     lastHeartbeat?: number,
 
     persistentMaps?: (Neato.Gen3.PersistentMap[] | Neato.Gen4.Floorplan[])
@@ -42,7 +44,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [robot, setRobot] = useState<Robot>()
     const [robots, setRobots] = useState<QuickRobotInfo>()
     const [lastHeartbeat, setLastHeartbeat] = useState<number | undefined>()
-    const [persistentMaps, setPersistentMaps] = useState<PersistentMap[]>()
+    // const [persistentMaps, setPersistentMaps] = useState<PersistentMap[]>()
     const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[]>()
 
     const [userId, setUserId] = useState<string | null>(null)
@@ -51,11 +53,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [loadingState, setLoadingState] = useState<{ isLoading: boolean, message?: string }>({ isLoading: false })
     const [message, setMessage] = useState<string | null>(null)
 
+    const { data: persistentMaps } = persistentMapsLoader.useValue(robot?.serial ?? '')
+
     useEffect(() => {
         Http.setLoadingStateCallback(setLoadingState)
     }, [])
 
-    const connectToRobot = (serial: string, type: RobotType) => {
+    const connectToRobot = (serial: string, type: RobotType, name: string) => {
         setRobot(undefined)
 
         if (type === RobotType.NeatoGen3) {
@@ -63,7 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 setRobot({
                     type: RobotType.NeatoGen3,
                     serial,
-                    name: robots?.[serial]?.name ?? serial,
+                    name: name,
                     availableCommands: res.data.availableCommands,
                     details: res.data.details,
                     alert: res.data.alert,
@@ -78,7 +82,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 setRobot({
                     type: RobotType.NeatoGen4,
                     serial,
-                    name: robots?.[serial]?.name ?? serial,
+                    name: name,
                     availableCommands: body.available_commands,
                     details: body.details,
                     errors: body.errors ?? undefined,
@@ -92,28 +96,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const selectRobot = (serial: string) => {
         const target = robots?.[serial]
         if (!target || !target.connected) return; // guard: can't select an offline/unknown robot
-        connectToRobot(serial, target.type)
+        connectToRobot(serial, target.type, target.name)
+    }
+
+    // Renames the currently-selected robot. Updates `robot` and `robots` immediately
+    // (optimistic) so every consumer — this component, the robots list, headers, etc. —
+    // reflects the new name right away rather than waiting on a refetch. Rolls both back
+    // if the request fails.
+    const updateRobotName = async (name: string) => {
+        if (!robot) return
+        const serial = robot.serial
+        const previousName = robot.name
+
+        setRobot(cur => cur && cur.serial === serial ? { ...cur, name } : cur)
+        setRobots(cur => {
+            if (!cur || !cur[serial]) return cur
+            return { ...cur, [serial]: { ...cur[serial], name } }
+        })
+
+        try {
+            await Http.updateRobot(serial, { name })
+        } catch (err) {
+            console.error('Failed to update robot name', err)
+            setRobot(cur => cur && cur.serial === serial ? { ...cur, name: previousName } : cur)
+            setRobots(cur => {
+                if (!cur || !cur[serial]) return cur
+                return { ...cur, [serial]: { ...cur[serial], name: previousName } }
+            })
+        }
     }
 
     // fetch floorplans/persistent maps whenever the connected robot changes
     useEffect(() => {
         if (!robot) return;
-
-        Http.getPersistentMaps(robot.serial)
-            .then(res => setPersistentMaps(res.data))
-            .catch(err => console.error('Failed to fetch floorplans', err))
+        persistentMapsLoader.request(robot.serial).catch(err => console.error('Failed to fetch floorplans', err))
     }, [robot?.serial, robot?.type])
 
-    const promotedFloorplan = robot?.type === RobotType.NeatoGen4
-        ? (persistentMaps as Neato.Gen4.Floorplan[] | undefined)?.find(fp => fp.promoted)
-        : undefined
+    // const promotedFloorplan = robot?.type === RobotType.NeatoGen4
+    //     ? (persistentMaps as Neato.Gen4.Floorplan[] | undefined)?.find(fp => fp.promoted)
+    //     : undefined
 
+    const promotedFloorplan = undefined
+    // console.log("FLOORPLAN PROMOTED!", promotedFloorplan)
 
     useEffect(() => {
         Http.getRobots().then((res) => {
             setRobots(res.data)
             const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
-            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type)
+            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         });
     }, [])
 
@@ -231,11 +261,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         selectRobot,
         lastHeartbeat,
 
-        persistentMaps,
-        setPersistentMaps,
+        // persistentMaps,
+        // setPersistentMaps,
         cleanings,
         setCleanings,
 
+        updateRobotName,
 
 
         promotedFloorplan

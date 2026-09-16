@@ -26,6 +26,7 @@ class FloorPlan(Base):
     robot: Mapped[str] = mapped_column(String, ForeignKey("robot.serial", ondelete='CASCADE'), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     promoted: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    in_maps_list: Mapped[bool] = mapped_column(Boolean, nullable=False)
     base: Mapped[Tuple[float, float, float]] = mapped_column(JSON, nullable=False) # x, y, dir
     origin: Mapped[Point] = mapped_column(JSON, nullable=False) # x, y
     resolution: Mapped[float] = mapped_column(Float, nullable=False)
@@ -50,7 +51,8 @@ class Boundary(Base):
     floorplan: Mapped[str] = mapped_column(String, ForeignKey("gen4__floor_plan.id", ondelete='CASCADE'), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     color: Mapped[str] = mapped_column(String, nullable=False)
-    type: Mapped[str] = mapped_column(String, nullable=False)
+    type: Mapped[str] = mapped_column(String, nullable=False) # polygon/polyline, compatible with gen3 system
+    function: Mapped[str] = mapped_column(String, nullable=False) # cleaning/nogo
     vertices: Mapped[List[Point]] = mapped_column(JSON, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
 

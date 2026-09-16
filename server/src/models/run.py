@@ -39,9 +39,8 @@ class Gen4__Run(Base):
     robot: Mapped[str] = mapped_column(String, ForeignKey("robot.serial", ondelete='CASCADE'), nullable=False)
     floorplan: Mapped[str] = mapped_column(String, ForeignKey("gen4__floor_plan.id", ondelete='CASCADE'), nullable=True)
 
-    started_by: Mapped[str] = mapped_column(String, nullable=False) # app, schedule, robot?
+    started_by: Mapped[str] = mapped_column(String, nullable=False)
     battery_consumed: Mapped[int] = mapped_column(Integer, nullable=False)
-    # error: Mapped[str] = mapped_column(String, nullable=True)
 
     cleaning_complete: Mapped[bool] = mapped_column(Boolean, nullable=False)
     timing: Mapped[dict[str, Any]] = mapped_column(
@@ -55,13 +54,3 @@ class Gen4__Run(Base):
         nullable=False,
         default=list,
     )
-
-    # category: Mapped[int] = mapped_column(Integer, nullable=False)
-    # mode: Mapped[int] = mapped_column(Integer, nullable=False)
-    # navigation_mode: Mapped[int] = mapped_column(Integer, nullable=False)
-
-    # start_at: Mapped[int] = mapped_column(Integer, nullable=False)
-    # end_at: Mapped[int] = mapped_column(Integer, nullable=False)
-    # charge_at_start: Mapped[int] = mapped_column(Integer, nullable=False)
-    # charge_at_end: Mapped[int] = mapped_column(Integer, nullable=False)
-    # cleaned_area: Mapped[float] = mapped_column(Float, nullable=False)

@@ -27,18 +27,23 @@ export const useCanvasViewport = ({
         }))
     }
 
+    // Nests the offset update inside the zoom update's functional form so both always read
+    // the truly-latest committed state, rather than the `zoom`/`offset` closed over when
+    // this render's handleTouchMove was created — matters during fast pinches, where several
+    // touchmove events can fire before React re-renders in between.
     const zoomAt = (newZoom: number, centerX: number, centerY: number) => {
-        setOffset(prev => {
-            const worldX = (centerX - prev.x) / zoom
-            const worldY = (centerY - prev.y) / zoom
+        setZoom(prevZoom => {
+            setOffset(prevOffset => {
+                const worldX = (centerX - prevOffset.x) / prevZoom
+                const worldY = (centerY - prevOffset.y) / prevZoom
 
-            return {
-                x: centerX - worldX * newZoom,
-                y: centerY - worldY * newZoom
-            }
+                return {
+                    x: centerX - worldX * newZoom,
+                    y: centerY - worldY * newZoom
+                }
+            })
+            return newZoom
         })
-
-        setZoom(newZoom)
     }
 
     // ─────────────────────────────
@@ -104,12 +109,16 @@ export const useCanvasViewport = ({
         if (t.length === 1) {
             setIsDragging(true)
             setDragStart({ x: t[0].clientX, y: t[0].clientY })
+            setTouchStart(null)
             setHasMoved(false)
         } else if (t.length === 2) {
-            setTouchStart({
-                distance: getTouchDistance(t[0], t[1]),
-                angle: getTouchAngle(t[0], t[1])
-            })
+            const distance = getTouchDistance(t[0], t[1])
+            // Guard: fingers landing almost on top of each other give a near-zero
+            // distance, which would blow up the ratio in handleTouchMove on the very
+            // first move and snap zoom to an extreme it then gets stuck at.
+            setTouchStart(distance > DRAWING.MIN_PINCH_DISTANCE
+                ? { distance, angle: getTouchAngle(t[0], t[1]) }
+                : null)
             setIsDragging(false)
         }
     }
@@ -138,26 +147,48 @@ export const useCanvasViewport = ({
         if (t.length === 2 && touchStart) {
             const rect = e.currentTarget.getBoundingClientRect()
             const distance = getTouchDistance(t[0], t[1])
-            const ratio = distance / touchStart.distance
 
-            const newZoom = Math.max(
-                DRAWING.MIN_ZOOM,
-                Math.min(DRAWING.MAX_ZOOM, zoom * Math.pow(ratio, DRAWING.PINCH_ZOOM_POWER))
-            )
+            // Same guard as touchstart — fingers sliding to briefly overlap mid-gesture
+            // shouldn't divide by near-zero either.
+            if (distance > DRAWING.MIN_PINCH_DISTANCE) {
+                const ratio = distance / touchStart.distance
 
-            const centerX = (t[0].clientX + t[1].clientX) / 2 - rect.left
-            const centerY = (t[0].clientY + t[1].clientY) / 2 - rect.top
+                const newZoom = Math.max(
+                    DRAWING.MIN_ZOOM,
+                    Math.min(DRAWING.MAX_ZOOM, zoom * Math.pow(ratio, DRAWING.PINCH_ZOOM_POWER))
+                )
 
-            zoomAt(newZoom, centerX, centerY)
+                const centerX = (t[0].clientX + t[1].clientX) / 2 - rect.left
+                const centerY = (t[0].clientY + t[1].clientY) / 2 - rect.top
 
-            setTouchStart({ distance, angle: getTouchAngle(t[0], t[1]) })
+                zoomAt(newZoom, centerX, centerY)
+
+                setTouchStart({ distance, angle: getTouchAngle(t[0], t[1]) })
+            }
         }
     }
 
-    const handleTouchEnd = () => {
-        setIsDragging(false)
-        setTouchStart(null)
-        setHasMoved(false)
+    // *** The main fix ***
+    // Previously this unconditionally cleared everything, so lifting either finger out of
+    // a pinch a moment before the other (the normal case — hands don't lift in perfect
+    // sync) killed the gesture. Now it checks what's still down: with one finger
+    // remaining, hand off cleanly into a single-finger pan from its current position
+    // instead of losing tracking until every finger comes up.
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const remaining = e.touches
+
+        if (remaining.length === 1) {
+            setIsDragging(true)
+            setDragStart({ x: remaining[0].clientX, y: remaining[0].clientY })
+            setTouchStart(null)
+        } else {
+            setIsDragging(false)
+            setTouchStart(null)
+        }
+
+        if (remaining.length === 0) {
+            setHasMoved(false)
+        }
     }
 
     const centerView = (

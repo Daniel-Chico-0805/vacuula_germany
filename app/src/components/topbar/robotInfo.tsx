@@ -1,4 +1,3 @@
-// components/topbar/robotInfo.tsx
 import styles from './robotInfo.module.scss'
 import { MdCleaningServices, MdError, MdWarning } from 'react-icons/md'
 import { IoMdPause } from 'react-icons/io'

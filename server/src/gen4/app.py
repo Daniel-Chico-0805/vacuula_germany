@@ -18,11 +18,42 @@ if TYPE_CHECKING:
     from router import RouterHandler
 
 
+def post_update_floorplan_in_use(req: RouterHandler, serial: str, map_id: str) -> None:
+    """POST /robot/<serial>/maps/<map_id>/use - update map data"""
+    with get_session() as session:
+        existing = session.get(FloorPlan, map_id)
+        if existing:
+            existing.in_maps_list = True
+        # else:
+        #     # TODO: error
+
+        if not db_commit(session, req):
+            # TODO: error
+            return
+
+    req.send_ok()
+
+def post_update_floorplan_in_unuse(req: RouterHandler, serial: str, map_id: str) -> None:
+    """POST /robot/<serial>/maps/<map_id>/unuse - update map data"""
+    with get_session() as session:
+        existing = session.get(FloorPlan, map_id)
+        if existing:
+            existing.in_maps_list = False
+        # else:
+        #     # TODO: error
+
+        if not db_commit(session, req):
+            # TODO: error
+            return
+
+    req.send_ok()
+
 
 
 def post_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
-    """POST /robot/<serial>/maps/<map_id>/boundaries - update map data"""
-    if not (data := req.read_json()):
+    """POST /robot/<serial>/maps/<map_id>/boundaries - replace map boundaries."""
+    data = req.read_json()
+    if data is None:
         return
 
     keys_required = {
@@ -32,25 +63,36 @@ def post_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
         "type",
         "vertices",
         "enabled",
+        "function",
     }
 
     for boundary in data:
-        boundary_keys = {x for x in boundary}
-        if keys_required != boundary_keys:
+        if set(boundary) != keys_required:
             req.send_bad_request("not all required keys")
             return
 
     with get_session() as session:
-        for boundary in data:
-            existing = session.get(Boundary, boundary["id"])
+        existing = session.query(Boundary).filter(
+            Boundary.floorplan == map_id
+        ).all()
 
-            if existing:
-                existing.floorplan = map_id
-                existing.name = boundary["name"]
-                existing.color = boundary["color"]
-                existing.type = boundary["type"]
-                existing.vertices = boundary["vertices"]
-                existing.enabled = boundary["enabled"]
+        existing_by_id = {boundary.id: boundary for boundary in existing}
+        incoming_ids = {boundary["id"] for boundary in data}
+
+        for boundary in existing:
+            if boundary.id not in incoming_ids:
+                session.delete(boundary)
+
+        for boundary in data:
+            current = existing_by_id.get(boundary["id"])
+
+            if current:
+                current.name = boundary["name"]
+                current.color = boundary["color"]
+                current.type = boundary["type"]
+                current.vertices = boundary["vertices"]
+                current.enabled = boundary["enabled"]
+                current.function = boundary["function"]
             else:
                 session.add(Boundary(
                     id=boundary["id"],
@@ -60,13 +102,14 @@ def post_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
                     type=boundary["type"],
                     vertices=boundary["vertices"],
                     enabled=boundary["enabled"],
+                    function=boundary["function"],
                 ))
 
         if not db_commit(session, req):
-            # TODO: error
             return
 
     req.send_ok()
+
 
 
 def get_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
@@ -84,6 +127,7 @@ def get_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
         "enabled": b.enabled,
         "color": b.color,
         "vertices": b.vertices,
+        "function": b.function,
         "type": b.type,
     } for b in boundaries])
 
@@ -149,7 +193,7 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
 
         boundaries: Sequence[Boundary] = session.execute(
             select(Boundary)
-            .where(Boundary.floorplan == map_id)
+            .where(Boundary.floorplan == map_id, Boundary.enabled == True)
         ).scalars().all()
 
         promoted_map_id = session.scalar(
@@ -162,20 +206,47 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
 
     if promoted_map_id is not None: demote_floorplan(serial, promoted_map_id)
 
-    img = Image.new("L", floorplan.imgsize, BG_PIXEL)
-    draw = ImageDraw.Draw(img)
-
-    for boundary in boundaries:
-        pts = [(p[0] * floorplan.imgsize[0], p[1] * floorplan.imgsize[1]) for p in boundary.vertices]
-        draw.line(pts, fill=FG_PIXEL, width=LINE_WIDTH_PX, joint="curve")
-
-    raw = _build_pgm_bytes(img, floorplan)
-
-    with open('./test.pgm', 'wb') as f:
-        f.write(raw)
-
-
+    
     import base64, zlib
+
+    cleaning_zones = [b for b in boundaries if b.function == "cleaning"]
+    nogo_zones     = [b for b in boundaries if b.function == "nogo"]
+
+    nogo_img = Image.new("L", floorplan.imgsize, BG_PIXEL)
+    nogo_draw = ImageDraw.Draw(nogo_img)
+    for boundary in nogo_zones:
+        pts = [(p[0] * floorplan.imgsize[0], p[1] * floorplan.imgsize[1]) for p in boundary.vertices]
+        if (boundary.type == "polyline"):
+            nogo_draw.line(pts, fill=FG_PIXEL, width=LINE_WIDTH_PX, joint="curve")
+        elif (boundary.type == "polygon"):
+            nogo_draw.polygon(pts, fill=FG_PIXEL, outline=FG_PIXEL)
+    nogo_raw = _build_pgm_bytes(nogo_img, floorplan)
+
+    cleaning_tracks = []
+    for boundary in cleaning_zones:
+        clean_img = Image.new("L", floorplan.imgsize, BG_PIXEL)
+        clean_draw = ImageDraw.Draw(clean_img)
+        pts = [(p[0] * floorplan.imgsize[0], p[1] * floorplan.imgsize[1]) for p in boundary.vertices]
+        if (boundary.type == "polyline"):
+            clean_draw.line(pts, fill=FG_PIXEL, width=LINE_WIDTH_PX, joint="curve")
+        elif (boundary.type == "polygon"):
+            clean_draw.polygon(pts, fill=FG_PIXEL, outline=FG_PIXEL)
+        clean_raw = _build_pgm_bytes(clean_img, floorplan)
+        
+        cleaning_tracks.append({
+            "track_uuid": boundary.id,
+            "binary":     base64.b64encode(zlib.compress(clean_raw, level=9)).decode("ascii"),
+        })
+
+        with open(f'./clean_raw_{boundary.id}.pgm', 'wb') as f:
+            f.write(clean_raw)
+        
+
+    with open('./nogo_raw.pgm', 'wb') as f:
+        f.write(nogo_raw)
+
+
+
 
 
     with open(f'uploads/maps/{serial}/{map_id}/rank_binary.pgm.nz', 'rb') as rank:
@@ -194,9 +265,9 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
                 "date_created":    floorplan.created_at,
                 "nogo_track":      {
                     "track_uuid": "a5730f32-3214-4fa8-bfc4-92ca4f83abcf",
-                    "binary":     base64.b64encode(zlib.compress(raw, level=9)).decode("ascii"),
+                    "binary":     base64.b64encode(zlib.compress(nogo_raw, level=9)).decode("ascii"),
                 },
-                "cleaning_tracks": [],
+                "cleaning_tracks": cleaning_tracks,
             }
 
             print(payload)
