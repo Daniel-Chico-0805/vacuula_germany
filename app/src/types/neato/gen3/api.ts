@@ -29,14 +29,13 @@ export type GetPreferencesResponse = RobotBaseResponse<Preferences>;
 
 
 
-export const RobotDay = biEnum({
-    SUNDAY: 0,
-    MONDAY: 1,
-    TUESDAY: 2,
-    WEDNESDAY: 3,
-    THURSDAY: 4,
-    FRIDAY: 5,
-    SATURDAY: 6
-});
-export type RobotDay = typeof RobotDay[keyof typeof RobotDay];
+export enum RobotDay {
+    SUNDAY = 0,
+    MONDAY = 1,
+    TUESDAY = 2,
+    WEDNESDAY = 3,
+    THURSDAY = 4,
+    FRIDAY = 5,
+    SATURDAY = 6
+}
 

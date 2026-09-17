@@ -95,7 +95,7 @@ export default () => {
                     <div key={i} className={styles.item} onClick={() => alert(item)}>
                         <div className={styles.info}>
                             <span>{item.startTime}</span>
-                            <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(RobotDay[item.day])}`), mode: CleaningMode[item.mode] })}</span>
+                            <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(item.day)}`), mode: CleaningMode[item.mode] })}</span>
                         </div>
                         <FaTrash onClick={() => removeEvent(i)} />
                     </div>
