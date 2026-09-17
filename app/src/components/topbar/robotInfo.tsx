@@ -13,6 +13,7 @@ import Battery from '../battery/Battery'
 import { useRobot } from '../../context/useRobot'
 import { RobotType, type Robot } from '../../types'
 import { BasicState, resolveRobotState } from '../../utils/state'
+import { useTranslation } from 'react-i18next'
 
 const basicStateIcons: Record<BasicState, IconType> = {
     [BasicState.INVALID]: MdError,
@@ -51,13 +52,14 @@ export function RobotStateIcon() {
 
 // trailing slot — sits after the name, before the chevron
 export function RobotStatusBadges() {
+    const { t } = useTranslation()
     const { robot } = useRobot()
     return (
         <div className={styles.status}>
             {robot.error && <MdError size={16} className={styles.iconErr} />}
             {robot.alert && <MdWarning size={16} className={styles.iconWarn} />}
             {isDocked(robot) && (
-                <TbChargingPile size={15} className={styles.iconDocked} title="Docked" />
+                <TbChargingPile size={15} className={styles.iconDocked} title={t('topbar.docked')} />
             )}
             <Battery percentage={robot.details?.charge} isCharging={isCharging(robot)} />
         </div>

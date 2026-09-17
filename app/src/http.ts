@@ -1,4 +1,5 @@
 import axios from "axios";
+import i18n from "./i18n";
 // import type { PersistentMap, QuickRobotInfo } from "./types/robot";
 import { EVENT_CALLBACKS } from "./http/events";
 import { Neato, type QuickRobotInfo } from "./types";
@@ -19,7 +20,7 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     if (loadingStateCallback) {
-      loadingStateCallback({ isLoading: true, message: 'Sending command...' });
+      loadingStateCallback({ isLoading: true, message: i18n.t('common.sendingCommand') });
     }
     return config;
   },

@@ -16,18 +16,22 @@ import type { UseState } from '../map/types'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { Neato } from '../../types'
 import type { CommandEvent } from '../../types/neato/gen4'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
+import { dayKey } from '../../i18n/days'
 
 // For now schduling will be only for cleaning.start for ONE run, later on scheduling can be more advanced
 
-function getDayText(days: Neato.Gen4.Days[]) {
+function getDayText(days: Neato.Gen4.Days[], t: TFunction) {
     const set = new Set(days);
-    if (set.size === 7) return "everyday"
-    if (set.size === 2 && set.has(Neato.Gen4.Days.SATURDAY) && set.has(Neato.Gen4.Days.SATURDAY)) return "on weekends"
-    if (set.size === 5 && !set.has(Neato.Gen4.Days.SATURDAY) && !set.has(Neato.Gen4.Days.SATURDAY)) return "on weekdays"
-    return days.join(', ')
+    if (set.size === 7) return t('schedule.everyday')
+    if (set.size === 2 && set.has(Neato.Gen4.Days.SATURDAY) && set.has(Neato.Gen4.Days.SUNDAY)) return t('schedule.weekends')
+    if (set.size === 5 && !set.has(Neato.Gen4.Days.SATURDAY) && !set.has(Neato.Gen4.Days.SUNDAY)) return t('schedule.weekdays')
+    return days.map(d => t(`days.${dayKey(d)}`)).join(', ')
 }
 
 export default () => {
+    const { t } = useTranslation()
     const [schedule, setSchedule] = useState<Neato.Gen4.ScheduledCommands>()
     const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -108,8 +112,8 @@ export default () => {
 
                 <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => openCleanForm()}>
                     <div className={styles.info}>
-                        <span>New schedule</span>
-                        <span className={styles.type}>Add one more schedule</span>
+                        <span>{t('schedule.newSchedule')}</span>
+                        <span className={styles.type}>{t('schedule.addOneMore')}</span>
                     </div>
                 </div>
 
@@ -117,7 +121,7 @@ export default () => {
                     <div key={i} className={styles.item} onClick={() => setFormFromEvent(item)}>
                         <div className={styles.info}>
                             <span>{item.time}</span>
-                            <span className={styles.type}>Runs {getDayText(item.days)} | {item.command.runs[0].settings.mode} mode | {item.command.runs[0].settings.navigation_mode} nav </span>
+                            <span className={styles.type}>{t('schedule.gen4Summary', { when: getDayText(item.days, t), mode: item.command.runs[0].settings.mode, navigation: item.command.runs[0].settings.navigation_mode })}</span>
                         </div>
                         <Input type="switch" skipSection={true} value={item.enabled} onChange={() => {
                             item.enabled = !item.enabled;
@@ -126,7 +130,7 @@ export default () => {
                     </div>
                 ))}
                 {persistentMaps?.length === 0 && (
-                    <span style={{ textAlign: 'center' }}>You don't have any schedules yet, why not add one?</span>
+                    <span style={{ textAlign: 'center' }}>{t('schedule.noSchedules')}</span>
                 )}
             </div>
             <Drawer
@@ -134,21 +138,21 @@ export default () => {
                 handle={false}
                 onOpenChange={setDrawerOpen}
                 openHeightPercent={70}
-                title={'Add event'}
+                title={t('schedule.addEvent')}
             >
 
                 <div>
                     <Input
                         type="multi-select"
-                        label="Day"
+                        label={t('common.day')}
                         options={[
-                            { value: Neato.Gen4.Days.MONDAY, label: "MONDAY" },
-                            { value: Neato.Gen4.Days.TUESDAY, label: "TUESDAY" },
-                            { value: Neato.Gen4.Days.WEDNESDAY, label: "WEDNESDAY" },
-                            { value: Neato.Gen4.Days.THURSDAY, label: "THURSDAY" },
-                            { value: Neato.Gen4.Days.FRIDAY, label: "FRIDAY" },
-                            { value: Neato.Gen4.Days.SATURDAY, label: "SATURDAY" },
-                            { value: Neato.Gen4.Days.SUNDAY, label: "SUNDAY" },
+                            { value: Neato.Gen4.Days.MONDAY, label: t('days.monday') },
+                            { value: Neato.Gen4.Days.TUESDAY, label: t('days.tuesday') },
+                            { value: Neato.Gen4.Days.WEDNESDAY, label: t('days.wednesday') },
+                            { value: Neato.Gen4.Days.THURSDAY, label: t('days.thursday') },
+                            { value: Neato.Gen4.Days.FRIDAY, label: t('days.friday') },
+                            { value: Neato.Gen4.Days.SATURDAY, label: t('days.saturday') },
+                            { value: Neato.Gen4.Days.SUNDAY, label: t('days.sunday') },
                         ]}
                         value={scheduleForm.days}
                         onChange={(days) => updateForm(setScheduleForm, { days })}
@@ -156,12 +160,12 @@ export default () => {
 
                     <Input
                         type="select"
-                        label="Mode"
+                        label={t('common.mode')}
                         options={[
-                            { value: Neato.Gen4.CleaningMode.AUTO, label: "AUTO" },
-                            { value: Neato.Gen4.CleaningMode.ECO, label: "ECO" },
-                            { value: Neato.Gen4.CleaningMode.MAX, label: "MAX" },
-                            { value: Neato.Gen4.CleaningMode.TURBO, label: "TURBO" },
+                            { value: Neato.Gen4.CleaningMode.AUTO, label: t('modes.auto') },
+                            { value: Neato.Gen4.CleaningMode.ECO, label: t('modes.eco') },
+                            { value: Neato.Gen4.CleaningMode.MAX, label: t('modes.max') },
+                            { value: Neato.Gen4.CleaningMode.TURBO, label: t('modes.turbo') },
                         ]}
                         value={scheduleFormCleaningMode}
                         onChange={(mode) => setScheduleCleaningMode(mode)}
@@ -169,10 +173,10 @@ export default () => {
 
                     <Input
                         type="select"
-                        label="Navigation"
+                        label={t('schedule.navigation')}
                         options={[
-                            { value: Neato.Gen4.CleaningNavigationMode.NORMAL, label: "NORMAL" },
-                            { value: Neato.Gen4.CleaningNavigationMode.GENTLE, label: "GENTLE" },
+                            { value: Neato.Gen4.CleaningNavigationMode.NORMAL, label: t('modes.normal') },
+                            { value: Neato.Gen4.CleaningNavigationMode.GENTLE, label: t('modes.gentle') },
                         ]}
                         value={scheduleFormNavigationMode}
                         onChange={(mode) => setScheduleFormNavigationMode(mode)}
@@ -180,7 +184,7 @@ export default () => {
 
                     <Input
                         type="text"
-                        label="Time"
+                        label={t('common.time')}
                         value={scheduleForm.time}
                         onChange={(time) => updateForm(setScheduleForm, { time })} />
 
@@ -190,7 +194,7 @@ export default () => {
                         value={scheduleForm.boundaryId}
                         onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })} /> */}
 
-                    <Button text="Save" style='success' onClick={() => {
+                    <Button text={t('common.save')} style='success' onClick={() => {
                         if (!scheduleFormNavigationMode || !scheduleFormCleaningMode) return;
 
                         GEN4_COMMANDS.updateOrAddSchduledEvent(robot.serial, {
@@ -215,7 +219,7 @@ export default () => {
                     }} />
 
                     {scheduleForm.id && (
-                        <Button text="Delete" style='fail' onClick={() => removeEvent(scheduleForm.id!)} /> // Allowed here because check on row above
+                        <Button text={t('common.delete')} style='fail' onClick={() => removeEvent(scheduleForm.id!)} /> // Allowed here because check on row above
                     )}
                 </div>
 

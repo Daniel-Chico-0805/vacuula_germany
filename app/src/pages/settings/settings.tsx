@@ -10,8 +10,11 @@ import { SiBuymeacoffee, SiKofi } from 'react-icons/si'
 import { Http } from '../../http'
 import { GEN3_COMMANDS } from '../../http/gen3'
 import type { UseState } from '../map/types'
+import { useTranslation } from 'react-i18next'
+import { APP_LANGUAGES, DEFAULT_LANGUAGE } from '../../i18n/languages'
 
 export default () => {
+    const { t, i18n } = useTranslation()
 
     const { robot, updateRobotName } = useRobot()
 
@@ -41,16 +44,16 @@ export default () => {
 
                 <Input
                     type="text"
-                    label="Name"
+                    label={t('common.name')}
                     value={robotName}
                     onChange={setRobotName}
                     extraInfo={(
                         <>
-                            <span>Serial nr: {robot.serial}</span>
+                            <span>{t('settings.serial', { serial: robot.serial })}</span>
                             {robot.type === RobotType.NeatoGen3 && (
                                 <>
                                     <br />
-                                    <span>Birthday: {manufacturingCodeToDate(robot.serial.split('-')[0])?.toLocaleDateString()}</span>
+                                    <span>{t('settings.birthday', { date: manufacturingCodeToDate(robot.serial.split('-')[0])?.toLocaleDateString(i18n.language) ?? '' })}</span>
                                 </>
                             )}
                         </>
@@ -62,9 +65,22 @@ export default () => {
             <hr style={{ width: '95%' }} />
 
             <div className={styles.featureList}>
-                <b>Robot settings</b>
+                <b>{t('settings.robotSettings')}</b>
                 {robot.type === RobotType.NeatoGen4 && <Gen4RobotSettings />}
                 {robot.type === RobotType.NeatoGen3 && <Gen3RobotSettings />}
+            </div>
+
+            <hr style={{ width: '95%' }} />
+
+            <div className={styles.featureList}>
+                <b>{t('settings.appSettings')}</b>
+                <Input
+                    type="dropdown"
+                    label={t('settings.appLanguage')}
+                    options={APP_LANGUAGES.map(lang => ({ value: lang.code, label: lang.label }))}
+                    value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
+                    onChange={(code) => i18n.changeLanguage(code)}
+                />
             </div>
 
             <hr style={{ width: '95%' }} />
@@ -78,7 +94,7 @@ export default () => {
                         <>
                             <span>Vacuula 1.0.0</span>
                             <br />
-                            <span>Lots more coming soon - stay tuned!</span>
+                            <span>{t('settings.comingSoon')}</span>
                         </>
                     )}>
                     <div className={styles.vacuulaInfo}>
@@ -101,6 +117,7 @@ export default () => {
 
 
 const Gen4RobotSettings = () => {
+    const { t } = useTranslation()
     const { robot } = useRobot()
 
     const [cleaningOptions, setCleaningOptions] = useState<Neato.Gen4.SettingsCleaningOptions>()
@@ -137,7 +154,7 @@ const Gen4RobotSettings = () => {
         <>
             <div className={styles.item} style={{ background: '#45d57d22' }}>
                 <div className={styles.info}>
-                    <span>Force floorplan</span>
+                    <span>{t('settings.forceFloorplan')}</span>
                 </div>
                 <Input type="switch" skipSection={true} value={cleaningOptions.force_floorplan} onChange={(value) => {
                     setSettings(Neato.Gen4.SettingsCleaningOptionsOperation.SET, { ...cleaningOptions, force_floorplan: value })
@@ -146,7 +163,7 @@ const Gen4RobotSettings = () => {
 
             <Input
                 type="dropdown"
-                label="Language"
+                label={t('settings.robotLanguage')}
                 options={robotLanguage.available_languages.map(lang => ({ value: lang, label: lang }))}
                 value={robotLanguage.language}
                 onChange={(language) => setSettings(Neato.Gen4.SettingsRobotLanguageOperation.SET, { ...robotLanguage, language })}
@@ -154,8 +171,8 @@ const Gen4RobotSettings = () => {
 
             <Input
                 type="custom"
-                label="Factory reset"
-                extraInfo='(You will be asked to confirm) Factory reset your robot, this means: '>
+                label={t('settings.factoryReset')}
+                extraInfo={t('settings.factoryResetInfo')}>
                 <FactoryResetButton serial={robot.serial} />
             </Input>
         </>
@@ -164,6 +181,7 @@ const Gen4RobotSettings = () => {
 
 
 const Gen3RobotSettings = () => {
+    const { t } = useTranslation()
     const { robot } = useRobot()
 
     const [preferences, setPreferences] = useState<Neato.Gen3.Preferences | undefined>(undefined)
@@ -200,7 +218,7 @@ const Gen3RobotSettings = () => {
         <>
             <div className={styles.item} style={{ background: '#45d57d22' }}>
                 <div className={styles.info}>
-                    <span>Robot sounds</span>
+                    <span>{t('settings.robotSounds')}</span>
                 </div>
                 <Input type="switch" skipSection={true} value={preferences.robotSounds} onChange={(robotSounds) => {
                     updateForm(setPreferences, { robotSounds })
@@ -209,7 +227,7 @@ const Gen3RobotSettings = () => {
 
             <Input
                 type="select"
-                label="Bin reminder interval (min)"
+                label={t('settings.binReminder')}
                 options={[30, 60, 90, 120, 150].map(i => ({ value: i, label: i.toString() }))} // 30-150 is ok
                 value={preferences.dirtbinAlertReminderInterval}
                 onChange={(dirtbinAlertReminderInterval) => updateForm(setPreferences, { dirtbinAlertReminderInterval })}
@@ -217,7 +235,7 @@ const Gen3RobotSettings = () => {
 
             <Input
                 type="select"
-                label="Filter change reminder (month)"
+                label={t('settings.filterReminder')}
                 options={[1, 1.5, 2, 2.5, 3].map(i => ({ value: (i * 30 * 24 * 60), label: i.toString() }))} // 43200-129600 is ok (1-3 month)
                 value={preferences.filterChangeReminderInterval}
                 onChange={(filterChangeReminderInterval) => updateForm(setPreferences, { filterChangeReminderInterval })}
@@ -225,7 +243,7 @@ const Gen3RobotSettings = () => {
 
             <Input
                 type="select"
-                label="Brush change reminder (month)"
+                label={t('settings.brushReminder')}
                 options={[4, 5, 6, 7, 8].map(i => ({ value: (i * 30 * 24 * 60), label: i.toString() }))} // 172800-345600 is ok (4-8 month)
                 value={preferences.brushChangeReminderInterval}
                 onChange={(brushChangeReminderInterval) => updateForm(setPreferences, { brushChangeReminderInterval })}
@@ -243,6 +261,7 @@ interface FactoryResetButtonProps {
 }
 
 const FactoryResetButton = ({ serial }: FactoryResetButtonProps) => {
+    const { t } = useTranslation()
     const [tapCount, setTapCount] = useState(0)
     const [isResetting, setIsResetting] = useState(false)
     const idleResetRef = useRef<ReturnType<typeof setTimeout>>(0)
@@ -279,10 +298,10 @@ const FactoryResetButton = ({ serial }: FactoryResetButtonProps) => {
 
     const remaining = FACTORY_RESET_TAPS_REQUIRED - tapCount
     const text = isResetting
-        ? 'Resetting...'
+        ? t('settings.resetting')
         : tapCount === 0
-            ? 'Click to start'
-            : `Tap ${remaining} more time${remaining === 1 ? '' : 's'} to confirm`
+            ? t('settings.clickToStart')
+            : t('settings.tapToConfirm', { count: remaining })
 
     return <Button text={text} style='fail' onClick={handleClick} disabled={isResetting} />
 }

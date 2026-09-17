@@ -18,8 +18,11 @@ import { SlEnergy } from "react-icons/sl";
 import Map from '../../components/map/map'
 import { useRobot } from '../../context/useRobot'
 import { usePersistentMap } from '../../loaders/resources'
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 
 export default () => {
+    const { t } = useTranslation()
     const { setCleanings, cleanings } = useApp()
     const { robot } = useRobot()
     const [selectedCleaning, setSelectedCleaning] = useState<Neato.Gen4.Cleaning>();
@@ -52,18 +55,18 @@ export default () => {
                 {cleanings.map((item, i) => (
                     <div key={i} className={styles.item} onClick={() => setSelectedCleaning(item)}>
                         <div className={styles.info}>
-                            <span>{item.started_by} cleaning | {new Date(item.timing.start).toLocaleString()}</span>
+                            <span>{t('runs.entryTitle', { startedBy: item.started_by, date: new Date(item.timing.start).toLocaleString(i18n.language) })}</span>
                             <span className={styles.type}>
                                 <IoMdTime /> &nbsp; {formatDuration(item.timing.start, item.timing.end)} &nbsp; |
                                 &nbsp; {calcTotalArea(item)}m² &nbsp; |
-                                &nbsp; <SlEnergy /> &nbsp; {item.battery_consumed}% used
+                                &nbsp; <SlEnergy /> &nbsp; {t('runs.batteryUsed', { percent: item.battery_consumed })}
                             </span>
                         </div>
                         {item.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />}
                     </div>
                 ))}
                 {cleanings?.length === 0 && (
-                    <span style={{ textAlign: 'center' }}>Your robot have not worked yet, make it sweat!</span>
+                    <span style={{ textAlign: 'center' }}>{t('runs.noRuns')}</span>
                 )}
             </div>
 
@@ -72,7 +75,7 @@ export default () => {
                 handle={false}
                 onOpenChange={setDrawerOpen}
                 openHeightPercent={70}
-                title={selectedCleaning && new Date(selectedCleaning.timing.start).toLocaleString()}
+                title={selectedCleaning && new Date(selectedCleaning.timing.start).toLocaleString(i18n.language)}
             >
 
                 <>
@@ -83,15 +86,15 @@ export default () => {
                             <span>{selectedCleaning && selectedCleaning.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} &nbsp;</span>
                         </div>
                         <div className={styles.basicInfo}>
-                            <span>Duration</span>
+                            <span>{t('runs.duration')}</span>
                             <span>{selectedCleaning && formatDuration(selectedCleaning?.timing.start, selectedCleaning?.timing.end)} &nbsp;</span>
                         </div>
                         <div className={styles.basicInfo}>
-                            <span>Area</span>
+                            <span>{t('runs.area')}</span>
                             <span>{selectedCleaning && calcTotalArea(selectedCleaning)} m2</span>
                         </div>
                         <div className={styles.basicInfo}>
-                            <span>Battery</span>
+                            <span>{t('runs.battery')}</span>
                             <span>{selectedCleaning?.battery_consumed} %</span>
                         </div>
                     </div>
@@ -115,10 +118,10 @@ export default () => {
                                     <span className={styles.type}>
                                         {formatArea(run.stats.area)}m² &nbsp; |
                                         &nbsp; {run.settings.mode} {run.settings.navigation_mode} |
-                                        {run.autonomous_dock ? '' : ' not'} docked
+                                        {run.autonomous_dock ? t('runs.docked') : t('runs.notDocked')}
                                     </span>
                                     <span className={styles.type}>
-                                        {run.timing.error}s errored, {run.timing.pause}s paused, {run.timing.charging}s charging, {run.stats.pickup_count} times picked up
+                                        {t('runs.timing', { error: run.timing.error, pause: run.timing.pause, charging: run.timing.charging })}, {t('runs.pickedUp', { count: run.stats.pickup_count })}
                                     </span>
                                 </div>
                                 {/* {run.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} */}
@@ -146,10 +149,10 @@ function formatDuration(startDate: string, endDate: string) {
     const seconds = totalSeconds % 60;
 
     if (hours > 0) {
-        return `${hours}h ${minutes}min ${seconds}sec`;
+        return i18n.t('runs.durationLong', { hours, minutes, seconds });
     }
 
-    return `${minutes}min ${seconds}sec`;
+    return i18n.t('runs.durationShort', { minutes, seconds });
 }
 
 function formatArea(area: number) {

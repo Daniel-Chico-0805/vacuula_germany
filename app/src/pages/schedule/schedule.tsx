@@ -17,8 +17,11 @@ import type { UseState } from '../map/types'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { RobotType } from '../../types'
 import Scheudle_gen4 from './scheudle_gen4'
+import { useTranslation } from 'react-i18next'
+import { dayKey } from '../../i18n/days'
 
 export default () => {
+    const { t } = useTranslation()
 
     const { robot, persistentMaps } = useApp()
 
@@ -69,7 +72,7 @@ export default () => {
             <div className={styles.featureList}>
                 <div className={styles.item} style={{ background: '#45d57d22' }}>
                     <div className={styles.info}>
-                        <span>Schedule</span>
+                        <span>{t('schedule.schedule')}</span>
                     </div>
                     <Input type="switch" skipSection={true} value={schedule.enabled} onChange={() => {
                         console.log('schedule', schedule)
@@ -83,8 +86,8 @@ export default () => {
 
                 <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => setDrawerOpen(true)}>
                     <div className={styles.info}>
-                        <span>New schedule</span>
-                        <span className={styles.type}>Add one more schedule</span>
+                        <span>{t('schedule.newSchedule')}</span>
+                        <span className={styles.type}>{t('schedule.addOneMore')}</span>
                     </div>
                 </div>
 
@@ -92,13 +95,13 @@ export default () => {
                     <div key={i} className={styles.item} onClick={() => alert(item)}>
                         <div className={styles.info}>
                             <span>{item.startTime}</span>
-                            <span className={styles.type}>Runs on: {RobotDay[item.day]} | Mode: {CleaningMode[item.mode]}</span>
+                            <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(RobotDay[item.day])}`), mode: CleaningMode[item.mode] })}</span>
                         </div>
                         <FaTrash onClick={() => removeEvent(i)} />
                     </div>
                 ))}
                 {persistentMaps?.length === 0 && (
-                    <span style={{ textAlign: 'center' }}>You don't have any schedules yet, why not add one?</span>
+                    <span style={{ textAlign: 'center' }}>{t('schedule.noSchedules')}</span>
                 )}
             </div>
             <Drawer
@@ -106,21 +109,21 @@ export default () => {
                 handle={false}
                 onOpenChange={setDrawerOpen}
                 openHeightPercent={70}
-                title={'Add event'}
+                title={t('schedule.addEvent')}
             >
 
                 <div>
                     <Input
                         type="select"
-                        label="Day"
+                        label={t('common.day')}
                         options={[
-                            { value: RobotDay.MONDAY, label: "MONDAY" },
-                            { value: RobotDay.TUESDAY, label: "TUESDAY" },
-                            { value: RobotDay.WEDNESDAY, label: "WEDNESDAY" },
-                            { value: RobotDay.THURSDAY, label: "THURSDAY" },
-                            { value: RobotDay.FRIDAY, label: "FRIDAY" },
-                            { value: RobotDay.SATURDAY, label: "SATURDAY" },
-                            { value: RobotDay.SUNDAY, label: "SUNDAY" },
+                            { value: RobotDay.MONDAY, label: t('days.monday') },
+                            { value: RobotDay.TUESDAY, label: t('days.tuesday') },
+                            { value: RobotDay.WEDNESDAY, label: t('days.wednesday') },
+                            { value: RobotDay.THURSDAY, label: t('days.thursday') },
+                            { value: RobotDay.FRIDAY, label: t('days.friday') },
+                            { value: RobotDay.SATURDAY, label: t('days.saturday') },
+                            { value: RobotDay.SUNDAY, label: t('days.sunday') },
                         ]}
                         value={scheduleForm.day}
                         onChange={(day) => updateForm(SetScheduleForm, { day })}
@@ -128,10 +131,10 @@ export default () => {
 
                     <Input
                         type="select"
-                        label="Mode"
+                        label={t('common.mode')}
                         options={[
-                            { value: CleaningMode.ECO, label: "Eco" },
-                            { value: CleaningMode.NORMAL, label: "NORMAL" },
+                            { value: CleaningMode.ECO, label: t('modes.eco') },
+                            { value: CleaningMode.NORMAL, label: t('modes.normal') },
                         ]}
                         value={scheduleForm.mode}
                         onChange={(mode) => updateForm(SetScheduleForm, { mode })}
@@ -139,17 +142,17 @@ export default () => {
 
                     <Input
                         type="text"
-                        label="Time"
+                        label={t('common.time')}
                         value={scheduleForm.startTime}
                         onChange={(startTime) => updateForm(SetScheduleForm, { startTime })} />
 
                     <Input
                         type="text"
-                        label="boundaryId"
+                        label={t('schedule.boundaryId')}
                         value={scheduleForm.boundaryId}
                         onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })} />
 
-                    <Button text="Save" style='success' onClick={() => {
+                    <Button text={t('common.save')} style='success' onClick={() => {
                         setDrawerOpen(false)
                         GEN3_COMMANDS.setSchedule(robot.serial, [scheduleForm, ...schedule.events]).finally(() => getSchedule())
                     }} />
