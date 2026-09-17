@@ -1,4 +1,5 @@
 import { Neato, RobotType, type Robot } from "../types"
+import i18n from "../i18n"
 
 
 export enum BasicState {
@@ -21,28 +22,34 @@ export enum BasicState {
     SUSPENDED_EXPLORATION, // ?
 }
 
-const basicStateStrings: Record<BasicState, string> = {
-    [BasicState.INVALID]: "INVALID",
-    [BasicState.ERROR]: "Error",
-    [BasicState.PAUSED]: "Paused",
-    [BasicState.IDLE]: "IDLE",
-    [BasicState.DOCKING]: "DOCKING",
-    [BasicState.CLEANING]: "CLEANING",
-    [BasicState.CLEANING_STANDBY]: "charging during clean?",
-    [BasicState.UPDATING]: "UPDATING",
-    [BasicState.TEST]: "TEST",
-    
+const basicStateKeys = {
+    [BasicState.INVALID]: "state.invalid",
+    [BasicState.ERROR]: "state.error",
+    [BasicState.PAUSED]: "state.paused",
+    [BasicState.IDLE]: "state.idle",
+    [BasicState.DOCKING]: "state.docking",
+    [BasicState.CLEANING]: "state.cleaning",
+    [BasicState.CLEANING_STANDBY]: "state.cleaningStandby",
+    [BasicState.UPDATING]: "state.updating",
+    [BasicState.TEST]: "state.test",
+
     // gen3 only
-    [BasicState.COPYING_LOGS]: "COPYING_LOGS",
-    [BasicState.RECOVERING_LOCATION]: "RECOVERING_LOCATION",
-    [BasicState.EXPLORING_MAP]: "EXPLORING_MAP",
-    [BasicState.ACQUIRING_PERSISTENT_MAP_IDS]: "ACQUIRING_PERSISTENT_MAP_IDS",
-    [BasicState.CREATING_UPLOADING_MAP]: "CREATING_UPLOADING_MAP",
-    [BasicState.SUSPENDED_EXPLORATION]: "SUSPENDED_EXPLORATION",
+    [BasicState.COPYING_LOGS]: "state.copyingLogs",
+    [BasicState.RECOVERING_LOCATION]: "state.recoveringLocation",
+    [BasicState.EXPLORING_MAP]: "state.exploringMap",
+    [BasicState.ACQUIRING_PERSISTENT_MAP_IDS]: "state.acquiringPersistentMapIds",
+    [BasicState.CREATING_UPLOADING_MAP]: "state.creatingUploadingMap",
+    [BasicState.SUSPENDED_EXPLORATION]: "state.suspendedExploration",
+} as const satisfies Record<BasicState, string>
+
+// Translation key for the robot's current state; render it with t(getRobotStateKey(robot))
+export function getRobotStateKey(robot: Robot) {
+    return basicStateKeys[resolveRobotState(robot)];
 }
 
-export function getRobotStateString(robot: Robot){
-    return basicStateStrings[resolveRobotState(robot)];
+// Translated state label, for use outside React components
+export function getRobotStateString(robot: Robot) {
+    return i18n.t(getRobotStateKey(robot));
 }
 
 export function resolveRobotState(robot: Robot) {

@@ -17,7 +17,9 @@ import Input from '../../components/input/input'
 import { Neato, RobotType, type Gen4Robot, type Robot } from '../../types'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { useRobot } from '../../context/useRobot'
-import { getRobotStateString } from '../../utils/state'
+import { getRobotStateKey } from '../../utils/state'
+import { useTranslation } from 'react-i18next'
+import { useTimeAgoFormatter } from '../../i18n/timeago'
 
 
 // ── Alert card ────────────────────────────────────────────────────────────────
@@ -37,6 +39,7 @@ function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible 
 }
 
 function Gen4AlertCards({ errors }: { errors: Neato.Gen4.Error[] }) {
+    const { t } = useTranslation()
     return (
         <>
             {errors.map((error, i) =>
@@ -45,7 +48,7 @@ function Gen4AlertCards({ errors }: { errors: Neato.Gen4.Error[] }) {
                     visible={true}
                     type={error.severity}
                     icon={<MdError size={17} />}
-                    title="error"
+                    title={t('home.errorTitle')}
                     sub={error.code}
                 />
             )}
@@ -67,6 +70,8 @@ var interval: number | undefined;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
+    const { t } = useTranslation()
+    const timeAgoFormatter = useTimeAgoFormatter()
     const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false)
 
     const [gen3__cleaningMode, gen3__setCleaningMode] = useState<CleaningMode>(CleaningMode.ECO)
@@ -113,16 +118,16 @@ export default function Home() {
             <div className={styles.mascotZone}>
                 <div className={styles.statusRing}>
                     {/* <RingProgress pct={75} /> */}
-                    <img src={logo} alt="Vacuula icon" className={styles.robotImage} />
+                    <img src={logo} alt={t('home.logoAlt')} className={styles.robotImage} />
                 </div>
                 <div className={styles.statusBadge}>
                     {/* <span className={styles.pulseDot} /> */}
                     <span className={styles.statusLabel}>
-                        {getRobotStateString(robot)}
+                        {t(getRobotStateKey(robot))}
                     </span>
                     <hr />
                     <span className={styles.timeAgo}>
-                        {lastHeartbeat ? <TimeAgo date={lastHeartbeat} /> : 'N/A'}
+                        {lastHeartbeat ? <TimeAgo date={lastHeartbeat} formatter={timeAgoFormatter} /> : t('common.notAvailable')}
                     </span>
                     {/* <span className={styles.statusLabel}>Offline</span> */}
                 </div>
@@ -149,7 +154,7 @@ export default function Home() {
                 <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
                     <CtrlBtn
                         icon={<FaBell size={22} className={bellAnimating ? styles.bellIcon : ''} />}
-                        label="Locate"
+                        label={t('home.locate')}
                         onClick={() => {
                             setBellAnimating(true);
                             (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).findMe(robot.serial);
@@ -163,32 +168,32 @@ export default function Home() {
                             gen3__cleaningCategory === CleaningCategory.SPOT ? <BiTargetLock size={22} /> :
                                 gen3__cleaningCategory === CleaningCategory.MAP ? <HiMap size={22} /> : <TbAdjustments size={22} />
                     } onClick={() => setCategoryDrawerOpen(true)} label={
-                        gen3__cleaningCategory === CleaningCategory.HOUSE ? 'House' :
-                            gen3__cleaningCategory === CleaningCategory.SPOT ? 'Spot' :
-                                gen3__cleaningCategory === CleaningCategory.MAP ? 'Map' : '...'
+                        gen3__cleaningCategory === CleaningCategory.HOUSE ? t('home.house') :
+                            gen3__cleaningCategory === CleaningCategory.SPOT ? t('home.spot') :
+                                gen3__cleaningCategory === CleaningCategory.MAP ? t('home.map') : '...'
                     } />
 
 
                     {robot.type === RobotType.NeatoGen3 && (
                         <>
 
-                            {gen3__navigationMode === CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.EXTRA_CARE)} label="Normal" />)}
-                            {gen3__navigationMode === CleaningNavigationMode.EXTRA_CARE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.DEEP)} label="Extra Care" />)}
-                            {gen3__navigationMode === CleaningNavigationMode.DEEP && (<CtrlBtn icon={<MdAutoAwesome color='#8B5CF6' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.NORMAL)} label="Deep" />)}
+                            {gen3__navigationMode === CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.EXTRA_CARE)} label={t('modes.normal')} />)}
+                            {gen3__navigationMode === CleaningNavigationMode.EXTRA_CARE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.DEEP)} label={t('modes.extraCare')} />)}
+                            {gen3__navigationMode === CleaningNavigationMode.DEEP && (<CtrlBtn icon={<MdAutoAwesome color='#8B5CF6' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.NORMAL)} label={t('modes.deep')} />)}
 
-                            {gen3__cleaningMode === CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen3__setCleaningMode(CleaningMode.NORMAL)} label="Eco" />)}
-                            {gen3__cleaningMode === CleaningMode.NORMAL && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen3__setCleaningMode(CleaningMode.ECO)} label="Normal" />)}
+                            {gen3__cleaningMode === CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen3__setCleaningMode(CleaningMode.NORMAL)} label={t('modes.eco')} />)}
+                            {gen3__cleaningMode === CleaningMode.NORMAL && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen3__setCleaningMode(CleaningMode.ECO)} label={t('modes.normal')} />)}
                         </>
                     )}
 
                     {robot.type === RobotType.NeatoGen4 && (
                         <>
-                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.GENTLE)} label="Normal" />)}
-                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.GENTLE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.NORMAL)} label="Gentle" />)}
+                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.GENTLE)} label={t('modes.normal')} />)}
+                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.GENTLE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.NORMAL)} label={t('modes.gentle')} />)}
 
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.MAX)} label="Eco" />)}
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.MAX && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.TURBO)} label="Max" />)}
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.TURBO && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.ECO)} label="Turbo" />)}
+                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.MAX)} label={t('modes.eco')} />)}
+                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.MAX && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.TURBO)} label={t('modes.max')} />)}
+                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.TURBO && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.ECO)} label={t('modes.turbo')} />)}
                         </>
                     )}
 
@@ -198,13 +203,13 @@ export default function Home() {
                     <CtrlBtn disabled={
                         robot.type === RobotType.NeatoGen3 ? !robot.availableCommands.stop :
                             robot.type === RobotType.NeatoGen4 ? !robot.availableCommands.cancel : true
-                    } icon={<FaStop size={22} />} label="Stop" onClick={() => {
+                    } icon={<FaStop size={22} />} label={t('home.stop')} onClick={() => {
                         (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).stopCleaning(robot.serial);
                     }} />
 
 
                     {robot.availableCommands.pause ? (
-                        <button className={`${styles.start} ${!robot.availableCommands.pause ? styles.disabled : ''}`} aria-label="Pause cleaning" onClick={() => {
+                        <button className={`${styles.start} ${!robot.availableCommands.pause ? styles.disabled : ''}`} aria-label={t('home.pauseCleaning')} onClick={() => {
                             (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).pauseCleaning(robot.serial);
                         }}>
                             <IoMdPause size={34} />
@@ -213,13 +218,13 @@ export default function Home() {
                     ) :
 
                         robot.availableCommands?.resume ? (
-                            <button className={`${styles.start} ${!robot.availableCommands?.resume ? styles.disabled : ''}`} aria-label="Resume cleaning" onClick={() => {
+                            <button className={`${styles.start} ${!robot.availableCommands?.resume ? styles.disabled : ''}`} aria-label={t('home.resumeCleaning')} onClick={() => {
                                 GEN3_COMMANDS.resumeCleaning(robot.serial)
                             }}>
                                 <IoMdPlay size={34} />
                             </button>
                         ) : (
-                            <button className={`${styles.start} ${!robot.availableCommands?.start ? styles.disabled : ''}`} aria-label="Start cleaning" onClick={() => {
+                            <button className={`${styles.start} ${!robot.availableCommands?.start ? styles.disabled : ''}`} aria-label={t('home.startCleaning')} onClick={() => {
 
                                 if (robot.type === RobotType.NeatoGen3) {
                                     if (gen3__cleaningCategory === CleaningCategory.SPOT) {
@@ -250,7 +255,7 @@ export default function Home() {
                     <CtrlBtn disabled={
                         robot.type === RobotType.NeatoGen3 ? !robot.availableCommands?.goToBase :
                             robot.type === RobotType.NeatoGen4 ? !robot.availableCommands?.return_to_base : true
-                    } icon={<TbHome size={22} />} label="Base" onClick={() => {
+                    } icon={<TbHome size={22} />} label={t('home.base')} onClick={() => {
                         (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).sendToBase(robot.serial)
                     }} />
                 </div>
@@ -259,24 +264,24 @@ export default function Home() {
 
             </div>
 
-            <Drawer open={categoryDrawerOpen} handle={false} onOpenChange={(open) => setCategoryDrawerOpen(open)} openHeightPercent={40} title="Select Mode">
+            <Drawer open={categoryDrawerOpen} handle={false} onOpenChange={(open) => setCategoryDrawerOpen(open)} openHeightPercent={40} title={t('home.selectMode')}>
                 <div className={styles.drawerContent}>
                     {/* Category Selection */}
 
                     <Input
                         type="select"
-                        label="Mode"
+                        label={t('common.mode')}
                         options={[
-                            { value: CleaningCategory.MAP, label: "Map" },
-                            { value: CleaningCategory.HOUSE, label: "House" },
-                            { value: CleaningCategory.SPOT, label: "Spot" },
+                            { value: CleaningCategory.MAP, label: t('home.map') },
+                            { value: CleaningCategory.HOUSE, label: t('home.house') },
+                            { value: CleaningCategory.SPOT, label: t('home.spot') },
                         ]}
                         value={gen3__cleaningCategory}
                         onChange={(value) => gen3__setCleaningCategory(value)}
                         extraInfo={
-                            gen3__cleaningCategory === CleaningCategory.MAP ? "Cleans specific zones defined on the map." :
-                                gen3__cleaningCategory === CleaningCategory.HOUSE ? "Cleans the entire area it can, ignoring zones and nogo-lines." :
-                                    gen3__cleaningCategory === CleaningCategory.SPOT ? "Cleans a specific area defined by height and width." : ""
+                            gen3__cleaningCategory === CleaningCategory.MAP ? t('home.modeMapInfo') :
+                                gen3__cleaningCategory === CleaningCategory.HOUSE ? t('home.modeHouseInfo') :
+                                    gen3__cleaningCategory === CleaningCategory.SPOT ? t('home.modeSpotInfo') : ''
                         }
                     />
 
@@ -287,7 +292,7 @@ export default function Home() {
                             {/* Height Slider */}
                             <div className={styles.sliderSection}>
                                 <div className={styles.sliderLabel}>
-                                    Height: <span className={styles.sliderValue}>{spotHeight} cm</span>
+                                    {t('home.height')}: <span className={styles.sliderValue}>{spotHeight} cm</span>
                                 </div>
                                 <input
                                     type="range"
@@ -302,7 +307,7 @@ export default function Home() {
                             {/* Width Slider */}
                             <div className={styles.sliderSection}>
                                 <div className={styles.sliderLabel}>
-                                    Width: <span className={styles.sliderValue}>{spotWidth} cm</span>
+                                    {t('home.width')}: <span className={styles.sliderValue}>{spotWidth} cm</span>
                                 </div>
                                 <input
                                     type="range"
@@ -318,7 +323,7 @@ export default function Home() {
 
                     {/* OK Button */}
                     <button className={styles.okButton} onClick={() => setCategoryDrawerOpen(false)}>
-                        OK
+                        {t('common.ok')}
                     </button>
                 </div>
             </Drawer>

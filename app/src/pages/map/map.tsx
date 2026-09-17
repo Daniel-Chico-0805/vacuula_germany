@@ -22,9 +22,12 @@ import { useRobot } from '../../context/useRobot'
 import { usePersistentMaps } from '../../loaders/resources'
 import type { Floorplan } from '../../types/neato/gen4'
 import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 
 
 export default () => {
+    const { t } = useTranslation()
     const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
     const [drawerOpen, setDrawerOpen] = useState(true)
 
@@ -198,14 +201,14 @@ export default () => {
 
     const getTitle = () => {
         switch (mode) {
-            case 'maps': return "Maps"
+            case 'maps': return t('map.maps')
             case 'boundaries':
             case 'map-edit':
-                return "Map: " + persistentMaps?.find(p => p.id === persistentMap)?.name
+                return t('map.mapTitle', { name: persistentMaps?.find(p => p.id === persistentMap)?.name ?? '' })
             case 'boundary-info': return ' '
             case 'boundary-edit':
-                if (!drawerOpen) return 'Drag up to finish'
-                return 'Edit boundary'
+                if (!drawerOpen) return t('map.dragUpToFinish')
+                return t('map.editBoundary')
         }
     }
 
@@ -229,7 +232,7 @@ export default () => {
 
             {mode === 'maps' && (
                 <div className={styles.selectMap}>
-                    <span>Select a map</span>
+                    <span>{t('map.selectMap')}</span>
                 </div>
             )}
 
@@ -248,7 +251,7 @@ export default () => {
                             <div key={i} className={styles.item} onClick={() => setPersistentMap(item.id)}>
                                 <div className={styles.info}>
                                     <span>{item.name}</span>
-                                    <span className={styles.type}>{new Date(robot.type === RobotType.NeatoGen4 ? item.created_at : item.id).toLocaleString()}</span>
+                                    <span className={styles.type}>{new Date(robot.type === RobotType.NeatoGen4 ? item.created_at : item.id).toLocaleString(i18n.language)}</span>
                                 </div>
                                 {'enabled' in item ? (
                                     <Input type="switch" skipSection={true} value={item.enabled} onChange={() => {
@@ -260,13 +263,13 @@ export default () => {
                             </div>
                         ))}
                         {persistentMaps?.length === 0 && (
-                            <span style={{ textAlign: 'center' }}>You don't have any explored maps yet, start an exploration to draw boundaries!</span>
+                            <span style={{ textAlign: 'center' }}>{t('map.noMaps')}</span>
                         )}
                         <hr style={{ width: '90%' }} />
                         <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
                             <div className={styles.info}>
-                                <span>New map</span>
-                                <span className={styles.type}>Explore new map</span>
+                                <span>{t('map.newMap')}</span>
+                                <span className={styles.type}>{t('map.exploreNewMap')}</span>
                             </div>
                         </div>
                     </div>
@@ -276,20 +279,20 @@ export default () => {
                     <div>
                         <Input
                             type="text"
-                            label="Name"
+                            label={t('common.name')}
                             value={mapEditform.name}
                             onChange={(name) => updateForm(setMapEditForm, { name })} />
                         {robot.type === RobotType.NeatoGen3 && (
-                            <Input type="switch" label='Enabled' value={mapEditform.enabled} onChange={(enabled) => updateForm(setMapEditForm, { enabled })} />
+                            <Input type="switch" label={t('common.enabled')} value={mapEditform.enabled} onChange={(enabled) => updateForm(setMapEditForm, { enabled })} />
                         )}
-                        <Button text="Save" style='success' onClick={() => {
+                        <Button text={t('common.save')} style='success' onClick={() => {
                             updatePersistentMap(mapEditform);
                         }} />
                         {robot.type === RobotType.NeatoGen4 &&
                             (persistentMaps?.find(p => p.id === persistentMap) as Floorplan)?.in_maps_list &&
                             !(persistentMaps?.find(p => p.id === persistentMap) as Floorplan)?.promoted && (
                                 <div style={{ padding: '1rem 0' }}>
-                                    <Button text='Stop using as floormap' style='fail' onClick={() =>
+                                    <Button text={t('map.stopUsingAsFloormap')} style='fail' onClick={() =>
                                         Http.postUnuseMapAsFloorPlan(robot.serial, persistentMap).then(() => {
                                             setMode('maps')
                                             updatePersistentMaps()
@@ -335,14 +338,14 @@ export default () => {
                             {robot.type === RobotType.NeatoGen4 ? (
                                 <PromoteDemoteBtn robot={robot} map={persistentMaps?.find(p => p.id === persistentMap) as Floorplan} onSuccess={updatePersistentMaps} />
                             ) : (
-                                <span>{(persistentMaps?.find(p => p.id === persistentMap) as Neato.Gen3.PersistentMap)?.enabled ? 'Enabled' : 'Disabled'}</span>
+                                <span>{(persistentMaps?.find(p => p.id === persistentMap) as Neato.Gen3.PersistentMap)?.enabled ? t('common.enabled') : t('common.disabled')}</span>
                             )}
 
-                            <Button text="Edit map details" style='primary' onClick={() => setMode('map-edit')} />
+                            <Button text={t('map.editMapDetails')} style='primary' onClick={() => setMode('map-edit')} />
                         </div>
                         <hr />
                         <div className={styles.buttonContainer}>
-                            <Button text="Add feature" style='primary' onClick={() => openEdit(uuidv4())} />
+                            <Button text={t('map.addFeature')} style='primary' onClick={() => openEdit(uuidv4())} />
                         </div>
 
                         <div className={styles.featureList}>
@@ -351,11 +354,11 @@ export default () => {
                                     <div className={styles.info}>
                                         <span>{item.name}</span>
                                         <span className={styles.type} style={{ color: item.color }}>
-                                            {item.type === 'polygon' ? 'Zone' : 'No-Go Line'}
+                                            {item.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}
                                         </span>
                                     </div>
                                     {item.type === 'polyline' && (<Input type="switch" skipSection={true} value={item.enabled} onChange={() => toggleNoGoLine(item)} />)}
-                                    {item.type === 'polygon' && (<Button style='primary' text='Clean zone' onClick={() => {
+                                    {item.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => {
                                         // GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
                                         GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, item.id)
                                     }} />)}
@@ -376,25 +379,26 @@ interface BoundaryDetailsProps {
 }
 
 const BoundaryDetails = (props: BoundaryDetailsProps) => {
+    const { t } = useTranslation()
     return (
         <div className={styles.boundaryDetails}>
             <div className={styles.featureList}>
                 <div className={styles.item} style={{ background: `${props.boundary.color || 'red'}22` }}>
                     <div className={styles.info}>
                         <span>{props.boundary.name}</span>
-                        <span className={styles.type} style={{ color: props.boundary.color }}>{props.boundary.type === 'polygon' ? 'Zone' : 'No-Go Line'}</span>
+                        <span className={styles.type} style={{ color: props.boundary.color }}>{props.boundary.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}</span>
                     </div>
                     {props.boundary.type === 'polyline' && (<Input type="switch" skipSection={true} value={props.boundary.enabled} onChange={(value) => props.boundary.enabled = value} />)}
-                    {props.boundary.type === 'polygon' && (<Button style='primary' text='Clean zone' onClick={() => { }} />)}
+                    {props.boundary.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => { }} />)}
                 </div>
             </div>
 
             <div className={styles.zoneActions}>
                 {props.boundary.type === 'polygon' && (
-                    <Button text="Add schedule" style='secondary' onClick={() => console.log('Add schedule')} />
+                    <Button text={t('map.addSchedule')} style='secondary' onClick={() => console.log('Add schedule')} />
                 )}
-                <Button text="Edit" style='primary' onClick={() => props.editBoundary(props.boundary.id)} />
-                <Button text="Delete" style='fail' onClick={() => props.deleteBoundary(props.boundary.id)} />
+                <Button text={t('common.edit')} style='primary' onClick={() => props.editBoundary(props.boundary.id)} />
+                <Button text={t('common.delete')} style='fail' onClick={() => props.deleteBoundary(props.boundary.id)} />
             </div>
         </div>
     )
@@ -423,26 +427,27 @@ interface EditBoundaryDetailsProps {
 }
 
 const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
+    const { t } = useTranslation()
     return (
         <div className={styles.editBoundaryDetails}>
 
             <div>
                 <Input
                     type="text"
-                    label="Name"
+                    label={t('common.name')}
                     value={props.name}
                     onChange={(value) => props.setName(value)} />
 
                 {props.currentLinePoints.length > 1 ? (
                     <Input
                         type="select"
-                        label={props.supportsZoneType && props.closedAsPolygon ? "Zone type" : "Type"}
+                        label={props.supportsZoneType && props.closedAsPolygon ? t('map.zoneType') : t('common.type')}
                         options={[
                             {
                                 value: props.closedAsPolygon ? BoundaryTypes.CLEANING_ZONE : BoundaryTypes.NOGO_LINE,
-                                label: props.closedAsPolygon ? (props.supportsZoneType ? 'Cleaning' : 'Zone') : 'No-Go Line'
+                                label: props.closedAsPolygon ? (props.supportsZoneType ? t('map.cleaning') : t('map.zone')) : t('map.noGoLine')
                             },
-                            ...((props.supportsZoneType && props.closedAsPolygon) ? [{ value: BoundaryTypes.NOGO_ZONE, label: "No-Go" }] : [])
+                            ...((props.supportsZoneType && props.closedAsPolygon) ? [{ value: BoundaryTypes.NOGO_ZONE, label: t('map.noGo') }] : [])
                         ]}
                         value={props.closedAsPolygon ? (props.supportsZoneType ? props.zoneType : BoundaryTypes.CLEANING_ZONE) : BoundaryTypes.NOGO_LINE}
                         onChange={(zoneType) => {
@@ -451,22 +456,22 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
                         }}
                         extraInfo={
                             props.closedAsPolygon ?
-                                "To make a no-go line, don't press the button to close the polygon." :
-                                "To make a Zone, move cursor to the first point and click the Zone button (blue to the right), this will connect the points and make a Zone."
+                                t('map.polygonHint') :
+                                t('map.lineHint')
                         }
                     />
                 ) : (
                     <Input
                         type="custom"
-                        label="Type"
-                        extraInfo='By drawing a line you are making a no-go lines, by using the polygon button to connect the cursor with the first point, you are making a zone'>
-                        <Button text="Draw boundary" style='primary' onClick={() => props.setDrawerOpen(false)} />
+                        label={t('common.type')}
+                        extraInfo={t('map.drawHint')}>
+                        <Button text={t('map.drawBoundary')} style='primary' onClick={() => props.setDrawerOpen(false)} />
                     </Input>
                 )}
 
                 <Input
                     type="text"
-                    label="Color"
+                    label={t('map.color')}
                     value={props.color}
                     onChange={(value) => props.setColor(value)}
                 />
@@ -474,8 +479,8 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
 
 
             <div className={styles.editBoundaryActionButtons}>
-                <Button text="Cancel" style='fail' onClick={() => props.cancel()} />
-                <Button text="Save" style='success' onClick={() => props.save()} />
+                <Button text={t('common.cancel')} style='fail' onClick={() => props.cancel()} />
+                <Button text={t('common.save')} style='success' onClick={() => props.save()} />
             </div>
         </div>
     )
@@ -486,8 +491,10 @@ interface PromoteDemoteBtnProps {
     map: Floorplan
     onSuccess: () => void
 }
-const PromoteDemoteBtn = ({ robot, map, onSuccess }: PromoteDemoteBtnProps) =>
-    <Button text={map.promoted ? 'Demote' : 'Promote'} onClick={() => {
+const PromoteDemoteBtn = ({ robot, map, onSuccess }: PromoteDemoteBtnProps) => {
+    const { t } = useTranslation()
+    return <Button text={map.promoted ? t('map.demote') : t('map.promote')} onClick={() => {
         if (map.promoted) Http.demoteFloorplan(robot.serial, map.id).finally(() => onSuccess())
         else Http.test(robot.serial, map.id).finally(() => onSuccess());
     }} style={map.promoted ? 'fail' : 'success'} />
+}

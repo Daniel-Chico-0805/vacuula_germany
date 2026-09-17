@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from './drawer.module.scss'
 import { FaArrowLeft } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 
 
@@ -19,6 +20,7 @@ interface DrawerProps {
 const HANDLE_HEIGHT = 60
 
 export default function Drawer(props: DrawerProps) {
+    const { t } = useTranslation()
     const [drawerHeight, setDrawerHeight] = useState(props.handle ? HANDLE_HEIGHT : 0)
     const [isDraggingDrawer, setIsDraggingDrawer] = useState(false)
     const [dragStartY, setDragStartY] = useState(0)
@@ -106,7 +108,7 @@ export default function Drawer(props: DrawerProps) {
                         props.onBackButtonClick?.()
                     }} />}
                     <div className={styles.drawerTitle}>
-                        {props.title || 'Options'}
+                        {props.title || t('common.options')}
                     </div>
                 </div>
             )}

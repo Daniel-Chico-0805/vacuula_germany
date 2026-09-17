@@ -3,8 +3,10 @@ import styles from './robotSwitcher.module.scss'
 import { TbChevronDown } from 'react-icons/tb'
 import { useApp } from '../../context/useApp'
 import { useRobots } from '../../context/useRobots'
+import { useTranslation } from 'react-i18next'
 
 export default function RobotSwitcher({ icon, children }: { icon?: ReactNode, children?: ReactNode }) {
+    const { t } = useTranslation()
     const { robot, selectRobot } = useApp()
     const { robots } = useRobots()
 
@@ -30,11 +32,11 @@ export default function RobotSwitcher({ icon, children }: { icon?: ReactNode, ch
             <button
                 className={styles.trigger}
                 onClick={() => setIsOpen(o => !o)}
-                aria-label="Select robot"
+                aria-label={t('topbar.selectRobot')}
                 aria-expanded={isOpen}
             >
                 {icon}
-                <span className={styles.name}>{selected?.name ?? 'Select a robot'}</span>
+                <span className={styles.name}>{selected?.name ?? t('topbar.selectARobot')}</span>
                 {children}
                 <TbChevronDown
                     size={14}
@@ -63,7 +65,7 @@ export default function RobotSwitcher({ icon, children }: { icon?: ReactNode, ch
                             }}
                         >
                             <span className={styles.dropdownName}>{info.name}</span>
-                            {!info.connected && <span className={styles.offlineTag}>Offline</span>}
+                            {!info.connected && <span className={styles.offlineTag}>{t('common.offline')}</span>}
                             {serial === robot?.serial && <span className={styles.dropdownCheck}>✓</span>}
                         </button>
                     ))}

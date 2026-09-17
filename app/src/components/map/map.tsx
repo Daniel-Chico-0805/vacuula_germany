@@ -6,6 +6,7 @@ import { RobotType } from '../../types'
 import Button from '../button/button'
 import { Http } from '../../http'
 import { usePersistentMap } from '../../loaders/resources'
+import { useTranslation } from 'react-i18next'
 
 interface MapProps {
     mapId: string
@@ -13,6 +14,7 @@ interface MapProps {
 }
 
 export default function Map({ mapId, runId }: MapProps) {
+    const { t } = useTranslation()
     const { robot } = useRobot()
     const { data: persistantMapData, refresh: refreshPersistantMapData } = usePersistentMap(mapId);
 
@@ -39,7 +41,7 @@ export default function Map({ mapId, runId }: MapProps) {
             </div>
             {robot.type === RobotType.NeatoGen4 && !persistantMapData?.in_maps_list && (
                 <div style={{ padding: '1.5rem' }}>
-                    <Button text='Use as floormap' style='success' onClick={() => { Http.postUseMapAsFloorPlan(robot.serial, mapId).then(refreshPersistantMapData) }} />
+                    <Button text={t('map.useAsFloormap')} style='success' onClick={() => { Http.postUseMapAsFloorPlan(robot.serial, mapId).then(refreshPersistantMapData) }} />
                 </div>
             )}
         </>
