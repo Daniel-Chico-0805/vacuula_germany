@@ -1,4 +1,4 @@
-import { COLORS, DRAWING } from './constants'
+import { COLORS, DRAWING, readMapToken } from './constants'
 import type { Zone, NoGoLine, Point } from './types'
 
 /* ---------------- SHAPE TYPES ---------------- */
@@ -103,13 +103,14 @@ export function drawMap(
     mapSize: { height: number, width: number },
     shape: CellShape = 'circle',
     runCells?: number[] | null,
-    runOptions?: RunOverlayOptions
+    runOptions?: RunOverlayOptions,
+    backgroundToken?: string
 ) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     // The map is drawn like an image: always on its own background so the
     // wall/floor colours keep the same contrast in every app theme.
-    ctx.fillStyle = COLORS.BACKGROUND
+    ctx.fillStyle = backgroundToken ? readMapToken(backgroundToken) : COLORS.BACKGROUND
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     const bounds = getVisibleBounds(canvas, zoom, offset)

@@ -47,7 +47,8 @@ export default function MapCanvas({
         mapId,
         runId,
         extraDraw,
-        redrawKey
+        redrawKey,
+        backgroundToken: '--map-editor-bg'
     })
 
     const addPointAtCrosshair = () => {

@@ -31,8 +31,14 @@ function resolveColors(): Record<MapColorKey, string> {
     return resolved
 }
 
+/** Resolve any --map-* token to a colour usable by the canvas (call once per frame, not per cell). */
+export function readMapToken(token: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(token).trim()
+}
+
 export const COLORS: Readonly<Record<MapColorKey, string>> = new Proxy({} as Record<MapColorKey, string>, {
-    get: (_target, prop: string) => resolveColors()[prop as MapColorKey],
+    get: (_target, prop) =>
+        typeof prop === 'string' ? resolveColors()[prop as MapColorKey] : undefined,
 })
 
 // Drawing constants

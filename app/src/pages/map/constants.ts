@@ -32,7 +32,8 @@ function resolveColors(): Record<MapColorKey, string> {
 }
 
 export const COLORS: Readonly<Record<MapColorKey, string>> = new Proxy({} as Record<MapColorKey, string>, {
-    get: (_target, prop: string) => resolveColors()[prop as MapColorKey],
+    get: (_target, prop) =>
+        typeof prop === 'string' ? resolveColors()[prop as MapColorKey] : undefined,
 })
 
 // Drawing constants

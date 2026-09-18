@@ -138,7 +138,8 @@ body {
    the same; the surround and the wall/line colour follow the theme. Plain
    colours only - no color-mix(), the canvas parser does not resolve it. */
 :root {
-  --map-bg: #13161a;
+  --map-bg: #13161a;          /* Runs tab: map panel */
+  --map-editor-bg: #0f1113;   /* Map tab: same as the page background */
   --map-empty: #2f353b;
   --map-wall: #3ddc97;
   --map-grid: rgba(255, 255, 255, 0.2);
@@ -151,6 +152,7 @@ body {
 /* Light theme: mid-grey surround, dark green walls/lines; floor cells stay dark. */
 :root[data-theme="light"] {
   --map-bg: #c9cfcc;
+  --map-editor-bg: #c9cfcc;
   --map-wall: #0b7a4b;
   --map-grid: rgba(0, 0, 0, 0.15);
   --map-line: #0b7a4b;

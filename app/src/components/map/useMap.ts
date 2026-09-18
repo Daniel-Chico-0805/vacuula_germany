@@ -26,6 +26,8 @@ interface UseMapOptions {
     // bump this to force a redraw when extraDraw's closed-over state changes
     // (boundaries, mode, currentLinePoints, etc.) without re-registering the RAF effect's deps.
     redrawKey?: unknown
+    // CSS token used for the canvas background (default: --map-bg, the Runs panel)
+    backgroundToken?: string
 }
 
 export function useMap({
@@ -34,7 +36,8 @@ export function useMap({
     shape = 'circle',
     fitOnLoad = true,
     extraDraw,
-    redrawKey
+    redrawKey,
+    backgroundToken
 }: UseMapOptions) {
     const canvasRef = useRef<HTMLCanvasElement | undefined>(undefined)
     const cellsRef = useRef<number[] | null>(null)
@@ -62,11 +65,12 @@ export function useMap({
         drawMap(
             ctx, canvas, cellsRef.current, currentZoom, currentOffset, mapSize,
             shape, runCellsRef.current,
-            { getRunColor: colorForPathValue, ignoreRunValues: runIgnoreSetRef.current }
+            { getRunColor: colorForPathValue, ignoreRunValues: runIgnoreSetRef.current },
+            backgroundToken
         )
 
         extraDrawRef.current?.(ctx, canvas, currentZoom, currentOffset, mapSize)
-    }, [mapSize, shape])
+    }, [mapSize, shape, backgroundToken])
 
     const onMouseDown = useCallback((e: React.MouseEvent) => {
         userInteractedRef.current = true
