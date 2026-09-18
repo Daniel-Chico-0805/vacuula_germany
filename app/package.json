@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:no-ts": "vite build; rm -r ../server/web; cp -r ./dist ../server/web",
     "lint": "eslint .",
     "preview": "vite preview"
   },

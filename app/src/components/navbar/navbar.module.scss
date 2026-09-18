@@ -15,16 +15,16 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  color: #2e3548;
+  color: $text-dim;
   text-decoration: none;
   padding: 8px 16px;
   border-radius: 12px;
   transition: color 0.15s;
 
-  &:hover { color: #5a6580; }
+  &:hover { color: $text-muted; }
 
   &.active {
-    color: #3ef5a0;
+    color: $accent;
   }
 }
 
@@ -32,7 +32,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3ef5a0;
+  background: $accent;
   opacity: 0;
   transition: opacity 0.15s;
 

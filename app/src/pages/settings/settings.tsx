@@ -12,9 +12,15 @@ import { GEN3_COMMANDS } from '../../http/gen3'
 import type { UseState } from '../map/types'
 import { useTranslation } from 'react-i18next'
 import { APP_LANGUAGES, DEFAULT_LANGUAGE } from '../../i18n/languages'
+import { THEME_MODES, useTheme, type ThemeMode } from '../../theme'
+import { UNITS, useUnits, type Units } from '../../units'
+import { MASCOTS, useMascot } from '../../mascot'
 
 export default () => {
     const { t, i18n } = useTranslation()
+    const { theme, setTheme } = useTheme()
+    const { units, setUnits } = useUnits()
+    const { mascot, setMascot } = useMascot()
 
     const { robot, updateRobotName } = useRobot()
 
@@ -80,6 +86,27 @@ export default () => {
                     options={APP_LANGUAGES.map(lang => ({ value: lang.code, label: lang.label }))}
                     value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
                     onChange={(code) => i18n.changeLanguage(code)}
+                />
+                <Input
+                    type="dropdown"
+                    label={t('settings.theme')}
+                    options={THEME_MODES.map(mode => ({ value: mode, label: t(`settings.theme_${mode}`) }))}
+                    value={theme}
+                    onChange={(mode) => setTheme(mode as ThemeMode)}
+                />
+                <Input
+                    type="dropdown"
+                    label={t('settings.units')}
+                    options={UNITS.map(u => ({ value: u, label: t(`settings.units_${u}`) }))}
+                    value={units}
+                    onChange={(u) => setUnits(u as Units)}
+                />
+                <Input
+                    type="dropdown"
+                    label={t('settings.mascot')}
+                    options={MASCOTS.map(m => ({ value: m.id, label: t(`settings.mascot_${m.id}`) }))}
+                    value={mascot.id}
+                    onChange={(id) => setMascot(id)}
                 />
             </div>
 
@@ -152,7 +179,7 @@ const Gen4RobotSettings = () => {
 
     return (
         <>
-            <div className={styles.item} style={{ background: '#45d57d22' }}>
+            <div className={styles.item} style={{ background: 'var(--accent-soft)' }}>
                 <div className={styles.info}>
                     <span>{t('settings.forceFloorplan')}</span>
                 </div>
@@ -216,7 +243,7 @@ const Gen3RobotSettings = () => {
 
     return (
         <>
-            <div className={styles.item} style={{ background: '#45d57d22' }}>
+            <div className={styles.item} style={{ background: 'var(--accent-soft)' }}>
                 <div className={styles.info}>
                     <span>{t('settings.robotSounds')}</span>
                 </div>

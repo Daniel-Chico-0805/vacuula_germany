@@ -20,9 +20,11 @@ import { useRobot } from '../../context/useRobot'
 import { usePersistentMap } from '../../loaders/resources'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
+import { useUnits } from '../../units'
 
 export default () => {
     const { t } = useTranslation()
+    const { formatArea } = useUnits()
     const { setCleanings, cleanings } = useApp()
     const { robot } = useRobot()
     const [selectedCleaning, setSelectedCleaning] = useState<Neato.Gen4.Cleaning>();
@@ -58,7 +60,7 @@ export default () => {
                             <span>{t('runs.entryTitle', { startedBy: item.started_by, date: new Date(item.timing.start).toLocaleString(i18n.language) })}</span>
                             <span className={styles.type}>
                                 <IoMdTime /> &nbsp; {formatDuration(item.timing.start, item.timing.end)} &nbsp; |
-                                &nbsp; {calcTotalArea(item)}m² &nbsp; |
+                                &nbsp; {formatArea(calcTotalArea(item))} &nbsp; |
                                 &nbsp; <SlEnergy /> &nbsp; {t('runs.batteryUsed', { percent: item.battery_consumed })}
                             </span>
                         </div>
@@ -91,7 +93,7 @@ export default () => {
                         </div>
                         <div className={styles.basicInfo}>
                             <span>{t('runs.area')}</span>
-                            <span>{selectedCleaning && calcTotalArea(selectedCleaning)} m2</span>
+                            <span>{selectedCleaning && formatArea(calcTotalArea(selectedCleaning))}</span>
                         </div>
                         <div className={styles.basicInfo}>
                             <span>{t('runs.battery')}</span>
@@ -116,7 +118,7 @@ export default () => {
                                 <div className={styles.info}>
                                     <span>{run.state} | {formatDuration(run.timing.start, run.timing.end)}</span>
                                     <span className={styles.type}>
-                                        {formatArea(run.stats.area)}m² &nbsp; |
+                                        {formatArea(run.stats.area)} &nbsp; |
                                         &nbsp; {run.settings.mode} {run.settings.navigation_mode} |
                                         {run.autonomous_dock ? t('runs.docked') : t('runs.notDocked')}
                                     </span>
@@ -155,12 +157,10 @@ function formatDuration(startDate: string, endDate: string) {
     return i18n.t('runs.durationShort', { minutes, seconds });
 }
 
-function formatArea(area: number) {
-    return Math.round(area * 10) / 10
-}
 
+// total area in m² (raw); format with useUnits().formatArea for display
 function calcTotalArea(cleaning: Neato.Gen4.Cleaning) {
-    return formatArea(cleaning.runs.reduce(
+    return (cleaning.runs.reduce(
         (total, run) => total + run.stats.area,
         0
     ))

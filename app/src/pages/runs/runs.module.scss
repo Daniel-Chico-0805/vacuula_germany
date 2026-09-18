@@ -98,7 +98,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: $shadow-md;
     }
 
     .btngroup {
@@ -240,8 +240,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba($bg, 0.8);
-    color: white
+    background-color: $overlay-bg;
+    color: $text-primary
 }
 
 .dropdownContainer {
@@ -266,13 +266,13 @@
 
     &:hover {
         border-color: $accent;
-        background: lighten($surface, 2%);
+        background: $surface-hover;
     }
 
     &:focus {
         outline: none;
         border-color: $accent;
-        box-shadow: 0 0 0 3px rgba(69, 213, 125, 0.1);
+        box-shadow: 0 0 0 3px $accent-ring;
     }
 
     option {
@@ -313,12 +313,12 @@
 
     &:hover {
         border-color: $accent;
-        background: lighten($surface, 3%);
+        background: $surface-hover;
         color: $accent;
     }
 
     &.active {
-        background: rgba(69, 213, 125, 0.2);
+        background: $accent-soft;
         border-color: $accent;
         color: $accent;
     }

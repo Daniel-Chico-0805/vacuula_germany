@@ -266,7 +266,7 @@ export default () => {
                             <span style={{ textAlign: 'center' }}>{t('map.noMaps')}</span>
                         )}
                         <hr style={{ width: '90%' }} />
-                        <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: '#45d57d22' }} onClick={() => GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
+                        <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
                             <div className={styles.info}>
                                 <span>{t('map.newMap')}</span>
                                 <span className={styles.type}>{t('map.exploreNewMap')}</span>

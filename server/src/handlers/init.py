@@ -10,13 +10,13 @@ import threading
 
 
 def start():
-    # HTTP server on 8080
-    http_server = ThreadingHTTPServer(("0.0.0.0", 8080), RouterHandler)
+    # HTTP server on 80
+    http_server = ThreadingHTTPServer(("0.0.0.0", 80), RouterHandler)
     
     http_thread = threading.Thread(target=http_server.serve_forever, daemon=True)
     
     http_thread.start()
     
-    print("Listening on http://0.0.0.0:8080")
+    print("Listening on http://0.0.0.0:80")
 
 

@@ -157,6 +157,15 @@
     "brushReminder": "Påminnelse om borstbyte (månader)",
     "appSettings": "Appinställningar",
     "appLanguage": "Appens språk",
+    "theme": "Tema",
+    "theme_dark": "Mörkt",
+    "theme_light": "Ljust",
+    "units": "Enheter",
+    "units_metric": "Metriskt (m², cm)",
+    "units_imperial": "Brittiskt (ft², ft)",
+    "mascot": "Maskot",
+    "mascot_vacuula": "Vacuula (original)",
+    "mascot_robot": "Robot",
     "comingSoon": "Mycket mer är på gång - håll utkik!"
   }
 }

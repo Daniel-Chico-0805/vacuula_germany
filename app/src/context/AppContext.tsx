@@ -7,6 +7,7 @@ import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
 import { GEN4_COMMANDS } from '../http/gen4'
 import { OrbitalServices, type AnyEvent } from '../types/neato/gen4'
 import { persistentMapsLoader } from '../loaders/resources'
+import { useTheme } from '../theme'
 
 interface AppContextType {
     robot?: Robot,
@@ -48,7 +49,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[]>()
 
     const [userId, setUserId] = useState<string | null>(null)
-    const [isDarkMode, setIsDarkMode] = useState(false)
+    const { isDark: isDarkMode, setTheme } = useTheme()
+    const setIsDarkMode = (dark: boolean) => setTheme(dark ? 'dark' : 'light')
     const [isLoading, setIsLoading] = useState(false)
     const [loadingState, setLoadingState] = useState<{ isLoading: boolean, message?: string }>({ isLoading: false })
     const [message, setMessage] = useState<string | null>(null)
@@ -151,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!robot) return;
 
         const events = new EventSource(
-            `http://${location.hostname}:8080/app/robot/${robot.serial}/connect`,
+            `http://${location.hostname}/api/robot/${robot.serial}/connect`,
         );
 
         events.onopen = () => {

@@ -20,8 +20,8 @@
 
     background: $bg;
     border-radius: 2rem;
-    border: 0.1rem solid #1e2535;
-    box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.4);
+    border: 0.1rem solid $border;
+    box-shadow: $shadow-md;
     padding: 0 1.4rem 0 1.8rem;
     gap: 1rem;
     overflow: hidden;
@@ -29,12 +29,12 @@
     transition: background 0.15s, border-color 0.15s;
 
     &:hover {
-        background: #161a24;
-        border-color: #2a3045;
+        background: $surface-hover;
+        border-color: $border-strong;
     }
 
     &:active {
-        background: #0d0f14;
+        background: $bg;
         transform: scale(0.99);
     }
 }
@@ -44,7 +44,7 @@
 .name {
     font-size: 1.5rem;
     font-weight: 500;
-    color: #e8f5ee;
+    color: $text-primary;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -60,23 +60,23 @@
 }
 
 .iconErr {
-    color: #f07070;
+    color: $err;
     flex-shrink: 0;
 }
 
 .iconWarn {
-    color: #f0b040;
+    color: $warn;
     flex-shrink: 0;
 }
 
 .iconDocked {
-    color: #66b3ff;
+    color: $info;
     opacity: 0.9;
     flex-shrink: 0;
 }
 
 .chevron {
-    color: #2e3548;
+    color: $text-dim;
     flex-shrink: 0;
     transition: transform 0.15s;
 }
@@ -93,9 +93,9 @@
     z-index: 20;
 
     background: $bg;
-    border: 0.1rem solid #1e2535;
+    border: 0.1rem solid $border;
     border-radius: 1.4rem;
-    box-shadow: 0 0.4rem 1.6rem rgba(0, 0, 0, 0.5);
+    box-shadow: $shadow-lg;
     overflow: hidden;
 }
 
@@ -114,8 +114,8 @@
 
     background: transparent;
     border: none;
-    border-bottom: 0.1rem solid #1e2535;
-    color: #e8f5ee;
+    border-bottom: 0.1rem solid $border;
+    color: $text-primary;
     font-size: 1.4rem;
 
     &:last-child {
@@ -123,12 +123,12 @@
     }
 
     &:hover {
-        background: #161a24;
+        background: $surface-hover;
     }
 }
 
 .dropdownItemActive {
-    color: #1edd88;
+    color: $accent;
 }
 
 .dropdownName {
@@ -138,6 +138,6 @@
 }
 
 .dropdownCheck {
-    color: #1edd88;
+    color: $accent;
     flex-shrink: 0;
 }

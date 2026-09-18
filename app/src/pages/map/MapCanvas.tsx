@@ -47,7 +47,8 @@ export default function MapCanvas({
         mapId,
         runId,
         extraDraw,
-        redrawKey
+        redrawKey,
+        backgroundToken: '--map-editor-bg'
     })
 
     const addPointAtCrosshair = () => {
@@ -107,13 +108,13 @@ export default function MapCanvas({
             {mode === 'boundary-edit' && (
                 <div className={styles.actionButtons}>
                     <div onClick={undo} className={styles.undo}>
-                        <FaUndo size={20} color="#fff" />
+                        <FaUndo size={20} color="var(--text)" />
                     </div>
                     <div onClick={addPointAtCrosshair} className={`${styles.add} ${closedAsPolygon ? styles.disabled : ''}`}>
-                        <FaPlus size={40} color="#fff" />
+                        <FaPlus size={40} color="var(--text)" />
                     </div>
                     <div onClick={closeAsPolygon} className={`${styles.closePolygon} ${(showCloseAsPolygon && !closedAsPolygon) ? '' : styles.disabled}`}>
-                        <PiBoundingBox size={20} color="#fff" />
+                        <PiBoundingBox size={20} color="var(--text)" />
                     </div>
                 </div>
             )}

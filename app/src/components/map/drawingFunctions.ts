@@ -1,4 +1,4 @@
-import { COLORS, DRAWING } from './constants'
+import { COLORS, DRAWING, readMapToken } from './constants'
 import type { Zone, NoGoLine, Point } from './types'
 
 /* ---------------- SHAPE TYPES ---------------- */
@@ -103,9 +103,15 @@ export function drawMap(
     mapSize: { height: number, width: number },
     shape: CellShape = 'circle',
     runCells?: number[] | null,
-    runOptions?: RunOverlayOptions
+    runOptions?: RunOverlayOptions,
+    backgroundToken?: string
 ) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // The map is drawn like an image: always on its own background so the
+    // wall/floor colours keep the same contrast in every app theme.
+    ctx.fillStyle = backgroundToken ? readMapToken(backgroundToken) : COLORS.BACKGROUND
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     const bounds = getVisibleBounds(canvas, zoom, offset)
 
@@ -124,6 +130,8 @@ export function drawMap(
     const ox = offset.x
     const oy = offset.y
     const size = Math.max(1, scale * 0.5)
+    const floorSize = Math.max(1, scale * 0.45)
+    const wallSize = Math.max(1.5, scale * 0.75)
 
     for (let y = startY; y < endY; y++) {
         const row = y * mapSize.width
@@ -137,10 +145,11 @@ export function drawMap(
             // 1. Floor map is ALWAYS drawn (unless truly unexplored) — this
             //    is the base layer regardless of whether a run is loaded.
             if (floorValue !== 0) {
-                ctx.fillStyle = floorValue === 1 ? COLORS.EMPTY : COLORS.WALL
+                const isWall = floorValue !== 1
+                ctx.fillStyle = isWall ? COLORS.WALL : COLORS.EMPTY
                 ctx.save()
                 ctx.translate(cx, cy)
-                ctx.fill(getShape(shape, size))
+                ctx.fill(getShape(shape, isWall ? wallSize : floorSize))
                 ctx.restore()
             }
 
