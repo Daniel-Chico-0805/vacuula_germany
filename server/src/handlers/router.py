@@ -1,7 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
 from handlers.route_matcher import BrainslugHandler, BEEHIVE_ROUTES, NUCLEO_ROUTES, APP_ROUTES, S3_ROUTES
-from handlers import static_ui
 from socketserver import ThreadingMixIn
 import json
 import socket
@@ -154,10 +153,6 @@ class RouterHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", "0")
             self.end_headers()
         else:
-            # Browser requests for the web app (built into app/dist) are answered
-            # here; anything that is not a UI file keeps going to the S3 routes.
-            if static_ui.serve(self):
-                return None
             return BrainslugHandler(S3_ROUTES, self)
 
     def do_POST(self):
