@@ -1,5 +1,6 @@
 from http.server import ThreadingHTTPServer
 from handlers.router import RouterHandler
+from handlers import static_ui
 from tls import create_ssl_context
 import threading
 import socket, ssl, struct, json
@@ -18,5 +19,9 @@ def start():
     http_thread.start()
     
     print("Listening on http://0.0.0.0:8080")
+    if static_ui.ui_available():
+        print(f"Serving web app from {static_ui.UI_DIR}")
+    else:
+        print(f"Web app build not found at {static_ui.UI_DIR} - run `pnpm build` in app/ (or set VACUULA_UI_DIR)")
 
 

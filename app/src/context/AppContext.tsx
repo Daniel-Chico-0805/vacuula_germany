@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Http } from '../http'
 import { GEN3_COMMANDS } from '../http/gen3'
@@ -141,19 +141,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const promotedFloorplan = undefined
     // console.log("FLOORPLAN PROMOTED!", promotedFloorplan)
 
+    // Robot list: one fetch for the first paint, then kept in sync by the
+    // server's event stream (a `robots` event on every connect/disconnect/rename;
+    // the stream also sends a snapshot each time it (re)opens, so no polling).
     useEffect(() => {
-        Http.getRobots().then((res) => {
-            setRobots(res.data)
-            const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
-            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
-        });
+        Http.getRobots().then((res) => setRobots(res.data)).catch(err => console.error('Failed to fetch robots', err))
+
+        const events = new EventSource('/app/events')
+        events.addEventListener('robots', (event) => {
+            setRobots(JSON.parse((event as MessageEvent).data))
+        })
+        events.onerror = (err) => console.error('events stream error:', err)
+        return () => events.close()
     }, [])
+
+    // Nothing selected yet (first load, or all robots were offline): select the
+    // first robot that is online. A selected robot that goes offline stays
+    // selected, with its last known state, until it comes back.
+    const connectingRef = useRef(false)
+    useEffect(() => {
+        if (robot || !robots || connectingRef.current) return
+        const firstOnline = Object.entries(robots).find(([, info]) => info.connected)
+        if (!firstOnline) return
+        connectingRef.current = true
+        connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
+    }, [robots, robot])
+
+    useEffect(() => {
+        if (robot) connectingRef.current = false
+    }, [robot?.serial])
 
     useEffect(() => {
         if (!robot) return;
 
         const events = new EventSource(
-            `http://${location.hostname}:8080/app/robot/${robot.serial}/connect`,
+            `/app/robot/${robot.serial}/connect`,
         );
 
         events.onopen = () => {

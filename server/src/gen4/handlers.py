@@ -7,6 +7,7 @@ from models.persistent_map import FloorPlan
 import threading
 from models.run import Gen4__Run
 from state import robot_connections
+from handlers.events import notify_robots_changed
 from utils import Generation
 
 from state import pending_requests, client_connections
@@ -41,6 +42,8 @@ def handle_login(rc: RobotConn, msg):
         if not exists:
             session.add(Robot(serial=serial, name="Gen4 robot"))
             session.commit()
+
+    notify_robots_changed()
 
     response = {
         "code": 200,

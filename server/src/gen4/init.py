@@ -6,6 +6,7 @@ import socket, ssl, struct, json
 from utils import Generation
 from conn import RobotConn, Gen4Conn
 from state import robot_connections
+from handlers.events import notify_robots_changed
 from gen4.handlers import handle_login, robot_response, heartbeat_thread, robot_event, roboot_request
 
 HOST = "0.0.0.0"
@@ -123,6 +124,11 @@ def handle_robot(conn, addr):
             conn.close()
         except Exception:
             pass
+        # forget this connection so the robot shows as offline until it logs in again
+        if rc.serial and robot_connections.get(rc.serial) is rc:
+            robot_connections.pop(rc.serial, None)
+            print("OFFLINE", rc.serial)
+            notify_robots_changed()
         # with robots_lock:
         #     if rc.serial and robots.get(rc.serial) is rc:
         #         robots.pop(rc.serial, None)

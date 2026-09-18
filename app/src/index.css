@@ -21,3 +21,12 @@ body {
 *::after {
   box-sizing: border-box;
 }
+
+/* App-like scrolling: content still scrolls, but no scrollbar is drawn */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}

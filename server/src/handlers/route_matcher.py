@@ -7,6 +7,7 @@ from gen4.app import delete_demote_floorplan, get_boundaries, get_test, post_bou
 from handlers.setup import get_cert
 
 from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command
+from .events import get_events
 # gen3
 from gen3.handlers.beehive import post_links, persistent_maps, upload_init, upload_finish
 from gen3.handlers.nucleo import nucleo_init
@@ -30,6 +31,7 @@ BEEHIVE_ROUTES: List[Tuple[str, str, Handler]] = [
 APP_ROUTES: List[Tuple[str, str, Handler]] = [
     ("GET", "/app/cert", get_cert),
     ("GET", "/app/robots", get_robots),
+    ("GET", "/app/events", get_events),
     ("GET", r"/app/robot/(.+)/connect", connect_robot),
     ("GET", r"/app/robot/(.+)/maps", get_maps),
     ("GET", r"/app/robot/(.+)/run/(.+)", get_run),
