@@ -175,7 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!robot) return;
 
         const events = new EventSource(
-            `/app/robot/${robot.serial}/connect`,
+            `/api/robot/${robot.serial}/connect`,
         );
 
         events.onopen = () => {
