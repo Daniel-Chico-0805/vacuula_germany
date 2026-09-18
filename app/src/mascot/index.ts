@@ -16,8 +16,8 @@ export interface MascotOption {
 }
 
 export const MASCOTS: MascotOption[] = [
-    { id: 'vacuula', src: logoVacuula, favicon: '/favicon-vacuula.svg' },
-    { id: 'robot', src: logoRobot, favicon: '/favicon-robot.svg' },
+    { id: 'vacuula', src: logoVacuula, favicon: `${import.meta.env.BASE_URL}favicon-vacuula.svg`, },
+    { id: 'robot', src: logoRobot, favicon: `${import.meta.env.BASE_URL}favicon-robot.svg`, },
 ]
 export const DEFAULT_MASCOT = MASCOTS[0].id
 export const MASCOT_STORAGE_KEY = 'vacuula.mascot'
