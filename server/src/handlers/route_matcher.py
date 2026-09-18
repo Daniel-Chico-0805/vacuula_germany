@@ -4,6 +4,7 @@ import re
 from typing import Callable, Optional, Tuple, List
 
 from gen4.app import delete_demote_floorplan, get_boundaries, get_test, post_boundaries, post_update_floorplan_in_unuse, post_update_floorplan_in_use
+from handlers.setup import get_cert
 
 from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command
 # gen3
@@ -27,6 +28,7 @@ BEEHIVE_ROUTES: List[Tuple[str, str, Handler]] = [
 ]
 
 APP_ROUTES: List[Tuple[str, str, Handler]] = [
+    ("GET", "/app/cert", get_cert),
     ("GET", "/app/robots", get_robots),
     ("GET", r"/app/robot/(.+)/connect", connect_robot),
     ("GET", r"/app/robot/(.+)/maps", get_maps),
