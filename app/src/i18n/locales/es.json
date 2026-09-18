@@ -157,6 +157,15 @@
     "brushReminder": "Aviso de cambio de cepillo (meses)",
     "appSettings": "Ajustes de la aplicación",
     "appLanguage": "Idioma de la aplicación",
+    "theme": "Tema",
+    "theme_dark": "Oscuro",
+    "theme_light": "Claro",
+    "units": "Unidades",
+    "units_metric": "Métrico (m², cm)",
+    "units_imperial": "Imperial (ft², ft)",
+    "mascot": "Mascota",
+    "mascot_vacuula": "Vacuula (original)",
+    "mascot_robot": "Robot",
     "comingSoon": "Muchas más novedades pronto - ¡esté atento!"
   }
 }

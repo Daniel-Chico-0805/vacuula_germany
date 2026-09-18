@@ -1,5 +1,5 @@
 import styles from './home.module.scss'
-import logo from '../../assets/logo.svg'
+import { useMascot } from '../../mascot'
 import { MdAutoAwesome, MdCleaningServices, MdError, MdOutlineHealthAndSafety, MdWarning } from 'react-icons/md'
 import { IoMdPause, IoMdPlay } from 'react-icons/io'
 import { TbAdjustments, TbLeaf, TbHome } from 'react-icons/tb'
@@ -20,6 +20,7 @@ import { useRobot } from '../../context/useRobot'
 import { getRobotStateKey } from '../../utils/state'
 import { useTranslation } from 'react-i18next'
 import { useTimeAgoFormatter } from '../../i18n/timeago'
+import { useUnits } from '../../units'
 
 
 // ── Alert card ────────────────────────────────────────────────────────────────
@@ -72,6 +73,8 @@ var interval: number | undefined;
 export default function Home() {
     const { t } = useTranslation()
     const timeAgoFormatter = useTimeAgoFormatter()
+    const { formatLength } = useUnits()
+    const { mascot } = useMascot()
     const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false)
 
     const [gen3__cleaningMode, gen3__setCleaningMode] = useState<CleaningMode>(CleaningMode.ECO)
@@ -118,7 +121,7 @@ export default function Home() {
             <div className={styles.mascotZone}>
                 <div className={styles.statusRing}>
                     {/* <RingProgress pct={75} /> */}
-                    <img src={logo} alt={t('home.logoAlt')} className={styles.robotImage} />
+                    <img src={mascot.src} alt={t('home.logoAlt')} className={styles.robotImage} />
                 </div>
                 <div className={styles.statusBadge}>
                     {/* <span className={styles.pulseDot} /> */}
@@ -177,9 +180,9 @@ export default function Home() {
                     {robot.type === RobotType.NeatoGen3 && (
                         <>
 
-                            {gen3__navigationMode === CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.EXTRA_CARE)} label={t('modes.normal')} />)}
-                            {gen3__navigationMode === CleaningNavigationMode.EXTRA_CARE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.DEEP)} label={t('modes.extraCare')} />)}
-                            {gen3__navigationMode === CleaningNavigationMode.DEEP && (<CtrlBtn icon={<MdAutoAwesome color='#8B5CF6' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.NORMAL)} label={t('modes.deep')} />)}
+                            {gen3__navigationMode === CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='var(--accent)' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.EXTRA_CARE)} label={t('modes.normal')} />)}
+                            {gen3__navigationMode === CleaningNavigationMode.EXTRA_CARE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='var(--warn)' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.DEEP)} label={t('modes.extraCare')} />)}
+                            {gen3__navigationMode === CleaningNavigationMode.DEEP && (<CtrlBtn icon={<MdAutoAwesome color='var(--violet)' size={22} />} onClick={() => gen3__setNavigationMode(CleaningNavigationMode.NORMAL)} label={t('modes.deep')} />)}
 
                             {gen3__cleaningMode === CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen3__setCleaningMode(CleaningMode.NORMAL)} label={t('modes.eco')} />)}
                             {gen3__cleaningMode === CleaningMode.NORMAL && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen3__setCleaningMode(CleaningMode.ECO)} label={t('modes.normal')} />)}
@@ -188,8 +191,8 @@ export default function Home() {
 
                     {robot.type === RobotType.NeatoGen4 && (
                         <>
-                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='#28d1bb' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.GENTLE)} label={t('modes.normal')} />)}
-                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.GENTLE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='#F59E0B' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.NORMAL)} label={t('modes.gentle')} />)}
+                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='var(--accent)' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.GENTLE)} label={t('modes.normal')} />)}
+                            {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.GENTLE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='var(--warn)' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.NORMAL)} label={t('modes.gentle')} />)}
 
                             {gen4__cleaningMode === Neato.Gen4.CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.MAX)} label={t('modes.eco')} />)}
                             {gen4__cleaningMode === Neato.Gen4.CleaningMode.MAX && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.TURBO)} label={t('modes.max')} />)}
@@ -292,7 +295,7 @@ export default function Home() {
                             {/* Height Slider */}
                             <div className={styles.sliderSection}>
                                 <div className={styles.sliderLabel}>
-                                    {t('home.height')}: <span className={styles.sliderValue}>{spotHeight} cm</span>
+                                    {t('home.height')}: <span className={styles.sliderValue}>{formatLength(spotHeight)}</span>
                                 </div>
                                 <input
                                     type="range"
@@ -307,7 +310,7 @@ export default function Home() {
                             {/* Width Slider */}
                             <div className={styles.sliderSection}>
                                 <div className={styles.sliderLabel}>
-                                    {t('home.width')}: <span className={styles.sliderValue}>{spotWidth} cm</span>
+                                    {t('home.width')}: <span className={styles.sliderValue}>{formatLength(spotWidth)}</span>
                                 </div>
                                 <input
                                     type="range"

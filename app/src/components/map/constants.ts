@@ -1,14 +1,39 @@
-// Color constants
-export const COLORS = {
-    BACKGROUND: '#181920',
-    EMPTY: '#303240',
-    WALL: '#45d57d',
-    GRID: 'rgba(255, 255, 255, 0.2)',
-    POLYGON_FILL: 'rgba(255, 90, 31, 0.2)',
-    LINE_COLOR: '#45d57d',
-    CROSSHAIR: '#45d57d',
-    IN_PROGRESS: '#4ab3f5',
+// Canvas colours, resolved from the --map-* tokens in src/theme/theme.css so the
+// map follows the active theme. Values are cached per theme/accent because the
+// floor loop reads them once per cell.
+const MAP_TOKENS = {
+    BACKGROUND: '--map-bg',
+    EMPTY: '--map-empty',
+    WALL: '--map-wall',
+    GRID: '--map-grid',
+    POLYGON_FILL: '--map-polygon-fill',
+    LINE_COLOR: '--map-line',
+    CROSSHAIR: '--map-crosshair',
+    IN_PROGRESS: '--map-in-progress',
 } as const
+
+type MapColorKey = keyof typeof MAP_TOKENS
+
+let cachedKey = ''
+let cachedColors: Record<MapColorKey, string> | null = null
+
+function resolveColors(): Record<MapColorKey, string> {
+    const html = document.documentElement
+    const key = `${html.getAttribute('data-theme')}|${html.getAttribute('data-accent')}`
+    if (cachedColors && key === cachedKey) return cachedColors
+    const style = getComputedStyle(html)
+    const resolved = {} as Record<MapColorKey, string>
+    for (const name of Object.keys(MAP_TOKENS) as MapColorKey[]) {
+        resolved[name] = style.getPropertyValue(MAP_TOKENS[name]).trim()
+    }
+    cachedKey = key
+    cachedColors = resolved
+    return resolved
+}
+
+export const COLORS: Readonly<Record<MapColorKey, string>> = new Proxy({} as Record<MapColorKey, string>, {
+    get: (_target, prop: string) => resolveColors()[prop as MapColorKey],
+})
 
 // Drawing constants
 export const DRAWING = {

@@ -157,6 +157,15 @@
     "brushReminder": "Erinnerung: Bürstenwechsel (Monate)",
     "appSettings": "App-Einstellungen",
     "appLanguage": "App-Sprache",
+    "theme": "Design",
+    "theme_dark": "Dunkel",
+    "theme_light": "Hell",
+    "units": "Einheiten",
+    "units_metric": "Metrisch (m², cm)",
+    "units_imperial": "Imperial (ft², ft)",
+    "mascot": "Maskottchen",
+    "mascot_vacuula": "Vacuula (Original)",
+    "mascot_robot": "Roboter",
     "comingSoon": "Viel mehr kommt bald - bleiben Sie dran!"
   }
 }

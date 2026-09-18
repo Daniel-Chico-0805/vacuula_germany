@@ -1,0 +1,159 @@
+/*
+ * Vacuula design tokens (runtime theme).
+ *
+ * Two independent axes, both set as attributes on <html>:
+ *   data-theme  = "dark" | "light"   -> surfaces, text, borders, status colours
+ *   data-accent = "mint"             -> brand/accent colour
+ *
+ * Dark + mint are the defaults and are declared on plain :root so the page is
+ * correct even before any attribute is set. To add an accent, add one block
+ * for dark and one for light (see "Accent" below) and register it in
+ * src/theme/index.ts - nothing else needs to change.
+ *
+ * Every colour in the app lives in this file. Components use the tokens
+ * (directly as var(--x) or through the aliases in src/variables.scss).
+ * The two page background values are duplicated in index.html (anti-flash
+ * script) and src/theme/index.ts - keep them in sync.
+ */
+
+/* ---------- Mode: dark (default) ---------- */
+:root {
+  color-scheme: dark;
+
+  --bg: #0f1113;
+  --surface: #181c1f;
+  --surface-hover: #1e2327;
+  --surface-2: #22282c;
+
+  --border: #262b30;
+  --border-strong: #343b41;
+
+  --text: #eef2f0;
+  --text-muted: #8a93a0;
+  --text-dim: #4a535d;
+
+  --success: #3ddc97;
+  --warn: #f0b040;
+  --warn-bg: #4a3410;
+  --warn-text: #f2dfb7;
+  --warn-icon-bg: #d29b26;
+  --err: #f07070;
+  --err-bg: #4a1a1e;
+  --err-text: #ecabaf;
+  --err-icon-bg: #cc2e38;
+  --err-soft: rgba(240, 112, 112, 0.15);
+  --info: #66b3ff;
+  --violet: #a78bfa;
+
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-bg: rgba(15, 17, 19, 0.8);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.5);
+
+  --switch-track: rgba(128, 128, 128, 0.3);
+  --switch-knob: #999999;
+
+  --battery-text-on-fill: #0f1113;
+}
+
+/* ---------- Mode: light ---------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --surface-hover: #eef1f0;
+  --surface-2: #e8ecea;
+
+  --border: #d9dedb;
+  --border-strong: #c3cac6;
+
+  --text: #161b1e;
+  --text-muted: #5c6670;
+  --text-dim: #a5adb5;
+
+  --success: #12a866;
+  --warn: #c47a0a;
+  --warn-bg: #fdf1d8;
+  --warn-text: #6b4306;
+  --warn-icon-bg: #f0b040;
+  --err: #d13f3f;
+  --err-bg: #fde3e3;
+  --err-text: #7a1f1f;
+  --err-icon-bg: #e05252;
+  --err-soft: rgba(209, 63, 63, 0.12);
+  --info: #1f6fd0;
+  --violet: #7c3aed;
+
+  --overlay: rgba(0, 0, 0, 0.35);
+  --overlay-bg: rgba(244, 246, 245, 0.85);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.16);
+
+  --switch-track: rgba(0, 0, 0, 0.15);
+  --switch-knob: #ffffff;
+
+  --battery-text-on-fill: #0f1113;
+}
+
+/* ---------- Accent: mint (default) ---------- */
+:root,
+:root[data-accent="mint"] {
+  --accent: #3ddc97;
+  --accent-hover: #5ee5aa;
+  --on-accent: #05261a;
+}
+
+:root[data-theme="light"],
+:root[data-accent="mint"][data-theme="light"] {
+  --accent: #12a866;
+  --accent-hover: #0f9058;
+  --on-accent: #ffffff;
+}
+
+/* ---------- Accent tints (derived, valid for every accent) ---------- */
+:root {
+  --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
+  --accent-ring: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 25%, transparent);
+  --accent-surface: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --accent-border: color-mix(in srgb, var(--accent) 45%, var(--surface));
+}
+
+/* ---------- Page ---------- */
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---------- Map canvas ----------
+   Read from JS (canvas fillStyle cannot use var()), see pages/map/constants.ts.
+   Floor cells keep the same dark colour in every theme so the map always reads
+   the same; the surround and the wall/line colour follow the theme. Plain
+   colours only - no color-mix(), the canvas parser does not resolve it. */
+:root {
+  --map-bg: #13161a;
+  --map-empty: #2f353b;
+  --map-wall: #3ddc97;
+  --map-grid: rgba(255, 255, 255, 0.2);
+  --map-polygon-fill: rgba(255, 90, 31, 0.2);
+  --map-line: #3ddc97;
+  --map-crosshair: #3ddc97;
+  --map-in-progress: #4ab3f5;
+}
+
+/* Light theme: mid-grey surround, dark green walls/lines; floor cells stay dark. */
+:root[data-theme="light"] {
+  --map-bg: #c9cfcc;
+  --map-wall: #0b7a4b;
+  --map-grid: rgba(0, 0, 0, 0.15);
+  --map-line: #0b7a4b;
+  --map-crosshair: #0b7a4b;
+  --map-in-progress: #1f6fd0;
+}

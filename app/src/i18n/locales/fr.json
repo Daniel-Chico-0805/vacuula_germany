@@ -157,6 +157,15 @@
     "brushReminder": "Rappel de changement de la brosse (mois)",
     "appSettings": "Paramètres de l'application",
     "appLanguage": "Langue de l'application",
+    "theme": "Thème",
+    "theme_dark": "Sombre",
+    "theme_light": "Clair",
+    "units": "Unités",
+    "units_metric": "Métrique (m², cm)",
+    "units_imperial": "Impérial (ft², ft)",
+    "mascot": "Mascotte",
+    "mascot_vacuula": "Vacuula (originale)",
+    "mascot_robot": "Robot",
     "comingSoon": "Beaucoup d'autres nouveautés à venir - restez à l'écoute !"
   }
 }

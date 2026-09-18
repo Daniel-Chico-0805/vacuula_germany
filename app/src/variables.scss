@@ -1,13 +1,55 @@
-$bg: #0e1012;
-$surface: #161a1d;
-$surface-2: #1c2c29;
-$border: #1a1f2e;
-$accent: #45d57d;
-$accent-2: #1c2c29;
-$text-primary: white;
-$err-text: #ecabaf;
-$err-bg: #7c1c22;
-$err-icon-bg: #cc2e38;
-$warn-text: #f2dfb7;
-$warn-bg: #906a1a;
-$warn-icon-bg: #d29b26;
+// Compile-time aliases for the runtime theme tokens in src/theme/theme.css.
+// Keep using these in .module.scss files; the actual colours switch at runtime
+// with the data-theme / data-accent attributes on <html>.
+//
+// Note: Sass colour functions (rgba($x, a), darken, ...) cannot operate on a
+// var(); use the ready-made tints ($accent-soft, $accent-ring, ...) instead.
+
+// surfaces
+$bg: var(--bg);
+$surface: var(--surface);
+$surface-hover: var(--surface-hover);
+$surface-2: var(--accent-surface);      // accent-tinted surface (active/selected)
+$surface-neutral-2: var(--surface-2);   // neutral second-level surface
+
+// borders
+$border: var(--border);
+$border-strong: var(--border-strong);
+
+// text
+$text-primary: var(--text);
+$text-muted: var(--text-muted);
+$text-dim: var(--text-dim);
+
+// accent
+$accent: var(--accent);
+$accent-hover: var(--accent-hover);
+$on-accent: var(--on-accent);
+$accent-2: var(--accent-surface);
+$accent-soft: var(--accent-soft);
+$accent-ring: var(--accent-ring);
+$accent-glow: var(--accent-glow);
+$accent-border: var(--accent-border);
+
+// status
+$success: var(--success);
+$err: var(--err);
+$err-text: var(--err-text);
+$err-bg: var(--err-bg);
+$err-icon-bg: var(--err-icon-bg);
+$err-soft: var(--err-soft);
+$warn: var(--warn);
+$warn-text: var(--warn-text);
+$warn-bg: var(--warn-bg);
+$warn-icon-bg: var(--warn-icon-bg);
+$info: var(--info);
+$violet: var(--violet);
+
+// effects
+$overlay: var(--overlay);
+$overlay-bg: var(--overlay-bg);
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$switch-track: var(--switch-track);
+$switch-knob: var(--switch-knob);

@@ -157,6 +157,15 @@
     "brushReminder": "Promemoria cambio spazzola (mesi)",
     "appSettings": "Impostazioni dell'app",
     "appLanguage": "Lingua dell'app",
+    "theme": "Tema",
+    "theme_dark": "Scuro",
+    "theme_light": "Chiaro",
+    "units": "Unità",
+    "units_metric": "Metrico (m², cm)",
+    "units_imperial": "Imperiale (ft², ft)",
+    "mascot": "Mascotte",
+    "mascot_vacuula": "Vacuula (originale)",
+    "mascot_robot": "Robot",
     "comingSoon": "Molte altre novità in arrivo - resta aggiornato!"
   }
 }

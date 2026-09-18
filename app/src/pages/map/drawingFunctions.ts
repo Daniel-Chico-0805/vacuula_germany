@@ -74,6 +74,11 @@ export function drawMap(
 ) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+    // The map is drawn like an image: always on its own background so the
+    // wall/floor colours keep the same contrast in every app theme.
+    ctx.fillStyle = COLORS.BACKGROUND
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
     const bounds = getVisibleBounds(canvas, zoom, offset)
 
     const startX = Math.max(0, bounds.minX)
@@ -93,10 +98,11 @@ export function drawMap(
 
             // if (value === 0) ctx.fillStyle = '#1a1f2e'
             if (value === 0) continue
-            else if (value === 1) ctx.fillStyle = COLORS.EMPTY
-            else ctx.fillStyle = COLORS.WALL
+            const isWall = value !== 1
+            ctx.fillStyle = isWall ? COLORS.WALL : COLORS.EMPTY
 
-            const size = Math.max(1, scale * 0.5)
+            // walls are drawn larger than floor cells so the outline reads as a solid edge
+            const size = isWall ? Math.max(1.5, scale * 0.75) : Math.max(1, scale * 0.45)
 
             const cx = ox + x * scale + scale / 2
             const cy = oy + y * scale + scale / 2

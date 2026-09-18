@@ -33,14 +33,14 @@
         display: block;
         width: 4rem;
         height: 0.4rem;
-        background: white;
+        background: $border-strong;
         border-radius: 0.2rem;
         margin-bottom: 0.8rem;
     }
 }
 
 .drawerTitle {
-    color: white;
+    color: $text-primary;
     font-weight: 600;
     font-size: 1.3rem;
     letter-spacing: 0.05rem;
@@ -49,7 +49,7 @@
 
 .drawerContent {
     padding: 1.6rem;
-    color: white;
+    color: $text-primary;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -58,7 +58,7 @@
 
 
 .handleIcon {
-    color: white;
+    color: $text-primary;
     cursor: pointer;
     position: absolute;
     left: 2rem;

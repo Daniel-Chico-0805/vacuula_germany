@@ -94,7 +94,7 @@ export default function Drawer(props: DrawerProps) {
             style={{
                 height: `${drawerHeight}px`,
                 transition: isDraggingDrawer ? 'none' : 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                borderTop: (props.handle || props.open) ? '2px solid white' : ''
+                borderTop: (props.handle || props.open) ? '2px solid var(--border-strong)' : ''
             }}>
 
             {(props.handle || props.open) && (

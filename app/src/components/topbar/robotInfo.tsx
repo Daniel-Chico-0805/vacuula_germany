@@ -47,7 +47,7 @@ function isCharging(robot: Robot) {
 export function RobotStateIcon() {
     const { robot } = useRobot()
     const StateIcon = basicStateIcons[resolveRobotState(robot)]
-    return <StateIcon size={25} fill="#1edd88" className={styles.stateIcon} />
+    return <StateIcon size={25} color="var(--accent)" className={styles.stateIcon} />
 }
 
 // trailing slot — sits after the name, before the chevron

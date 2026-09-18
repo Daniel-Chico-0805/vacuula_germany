@@ -6,17 +6,17 @@
 }
 
 .iconErr {
-    color: #f07070;
+    color: var(--err);
     flex-shrink: 0;
 }
 
 .iconWarn {
-    color: #f0b040;
+    color: var(--warn);
     flex-shrink: 0;
 }
 
 .iconDocked {
-    color: #66b3ff;
+    color: var(--info);
     opacity: 0.9;
     flex-shrink: 0;
 }

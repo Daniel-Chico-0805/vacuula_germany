@@ -157,6 +157,15 @@
     "brushReminder": "Brush change reminder (month)",
     "appSettings": "App settings",
     "appLanguage": "App language",
+    "theme": "Theme",
+    "theme_dark": "Dark",
+    "theme_light": "Light",
+    "units": "Units",
+    "units_metric": "Metric (m², cm)",
+    "units_imperial": "Imperial (ft², ft)",
+    "mascot": "Mascot",
+    "mascot_vacuula": "Vacuula (original)",
+    "mascot_robot": "Robot",
     "comingSoon": "Lots more coming soon - stay tuned!"
   }
 }

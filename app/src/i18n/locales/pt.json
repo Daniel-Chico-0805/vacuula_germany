@@ -157,6 +157,15 @@
     "brushReminder": "Aviso de troca da escova (meses)",
     "appSettings": "Definições da aplicação",
     "appLanguage": "Idioma da aplicação",
+    "theme": "Tema",
+    "theme_dark": "Escuro",
+    "theme_light": "Claro",
+    "units": "Unidades",
+    "units_metric": "Métrico (m², cm)",
+    "units_imperial": "Imperial (ft², ft)",
+    "mascot": "Mascote",
+    "mascot_vacuula": "Vacuula (original)",
+    "mascot_robot": "Robot",
     "comingSoon": "Muito mais em breve - fique atento!"
   }
 }
