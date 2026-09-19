@@ -61,7 +61,11 @@
   },
   "require": {
     "noRobotsLinked": "Nenhum robot associado",
-    "allRobotsOffline": "Todos os seus robots estão offline neste momento."
+    "allRobotsOffline": "Todos os seus robots estão offline neste momento.",
+    "noRobotsLinkedInfo": "Ainda nenhum robot se ligou a este servidor.",
+    "allRobotsOfflineInfo": "Aparecem aqui assim que se ligarem.",
+    "waiting": "À espera de robots…",
+    "serverHint": "Aponte os seus robots para este servidor:"
   },
   "home": {
     "errorTitle": "Erro",

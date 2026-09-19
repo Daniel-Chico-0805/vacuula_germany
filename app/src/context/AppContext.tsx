@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Http } from '../http'
 import { GEN3_COMMANDS } from '../http/gen3'
@@ -141,19 +141,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const promotedFloorplan = undefined
     // console.log("FLOORPLAN PROMOTED!", promotedFloorplan)
 
+    // Robot list: one fetch for the first paint, then kept in sync by the
+    // server's event stream (a `robots` event on every connect/disconnect/rename;
+    // the stream also sends a snapshot each time it (re)opens, so no polling).
     useEffect(() => {
         Http.getRobots().then((res) => {
             setRobots(res.data)
             const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
             if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         });
+
+        const events = new EventSource('/api/events')
+        events.addEventListener('robots', (event) => {
+            setRobots(JSON.parse((event as MessageEvent).data))
+        })
+        events.onerror = (err) => console.error('events stream error:', err)
+        return () => events.close()
     }, [])
 
     useEffect(() => {
         if (!robot) return;
 
         const events = new EventSource(
-            `http://${location.hostname}/api/robot/${robot.serial}/connect`,
+            `/api/robot/${robot.serial}/connect`,
         );
 
         events.onopen = () => {

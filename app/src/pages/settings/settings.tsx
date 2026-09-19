@@ -15,6 +15,7 @@ import { APP_LANGUAGES, DEFAULT_LANGUAGE } from '../../i18n/languages'
 import { THEME_MODES, useTheme, type ThemeMode } from '../../theme'
 import { UNITS, useUnits, type Units } from '../../units'
 import { MASCOTS, useMascot } from '../../mascot'
+import { GrCertificate } from 'react-icons/gr'
 
 export default () => {
     const { t, i18n } = useTranslation()
@@ -108,6 +109,12 @@ export default () => {
                     value={mascot.id}
                     onChange={(id) => setMascot(id)}
                 />
+
+                <Input
+                    type="custom"
+                    label="Vacuula123">
+                    <Button icon={<SiBuymeacoffee size={20} />} text='Buy Me a Coffee' style='secondary' onClick={() => window.open('https://www.buymeacoffee.com/philip2809')} />
+                </Input>
             </div>
 
             <hr style={{ width: '95%' }} />
@@ -130,6 +137,8 @@ export default () => {
 
                         <Button icon={<SiKofi size={20} />} text='Ko-fi' style='secondary' onClick={() => window.open('https://ko-fi.com/V7V61PBIY6')} />
                         <Button icon={<SiBuymeacoffee size={20} />} text='Buy Me a Coffee' style='secondary' onClick={() => window.open('https://www.buymeacoffee.com/philip2809')} />
+
+                        <Button icon={<GrCertificate size={20} />} text={t('settings.downloadCert')} style='secondary' onClick={() => window.open("/api/cert")}/>
                     </div>
                 </Input>
 

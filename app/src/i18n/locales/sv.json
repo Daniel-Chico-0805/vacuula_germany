@@ -61,7 +61,11 @@
   },
   "require": {
     "noRobotsLinked": "Inga robotar länkade",
-    "allRobotsOffline": "Alla dina robotar är offline just nu."
+    "allRobotsOffline": "Alla dina robotar är offline just nu.",
+    "noRobotsLinkedInfo": "Ingen robot har anslutit till den här servern än.",
+    "allRobotsOfflineInfo": "De visas här så snart de ansluter.",
+    "waiting": "Väntar på robotar…",
+    "serverHint": "Peka dina robotar mot den här servern:"
   },
   "home": {
     "errorTitle": "Fel",

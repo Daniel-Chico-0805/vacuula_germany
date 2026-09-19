@@ -5,4 +5,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     base: "/web/",
+    server: {
+        proxy: {
+            '/api': {
+                target: process.env.VACUULA_API ?? 'http://localhost:80',
+                changeOrigin: true,
+            },
+        },
+    },
 })

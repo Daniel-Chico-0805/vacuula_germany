@@ -1,5 +1,6 @@
 from gen3.commands import send_chunk, build_heartbeat
 from state import robot_connections
+from handlers.events import notify_robots_changed
 from gen3.utils import get_robot_serial
 from db import get_session
 from gen3.event_handler import robot_data
@@ -28,6 +29,7 @@ def nucleo_init(req: RouterHandler) -> None:
 
     send_chunk(req.wfile, build_heartbeat())
     robot_connections[serial] = RobotConn(serial, Generation.GEN3, Gen2Gen3Conn(robot.password, req.wfile))
+    notify_robots_changed()
 
     try:
         while True:
@@ -38,4 +40,6 @@ def nucleo_init(req: RouterHandler) -> None:
     except Exception:
         pass
     finally:
-        del robot_connections[serial]
+        if robot_connections.get(serial) is conn:
+            del robot_connections[serial]
+            notify_robots_changed()

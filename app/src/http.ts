@@ -11,8 +11,7 @@ import type { NoGoLine, Zone } from "./pages/map/types";
 let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
-  baseURL: `http://${location.hostname}/api`,
-  // baseURL: 'https://lz233vf1-8080.euw.devtunnels.ms/app'
+  baseURL: '/api',
 });
 
 
@@ -99,6 +98,10 @@ export class Http {
 
   static getRobots() {
     return instance.get<QuickRobotInfo>('/robots');
+  }
+
+  static getVacuulaCert() {
+    return instance.get('/cert');
   }
 
   static updateRobot(serial: string, data: { name: string }) {

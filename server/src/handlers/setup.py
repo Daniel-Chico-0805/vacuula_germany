@@ -8,18 +8,24 @@ if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 
+from pathlib import Path
+
+CERT_PATH = Path("ssl/cert.pem")
+
 def get_cert(req: RouterHandler) -> None:
-    """GET /cert - return server certificate."""
-
-    file = Path("ssl/cert.pem")
-
+    """GET /cert - download the certificate."""
     try:
-        data = file.read_text(encoding="utf-8")
+        data = CERT_PATH.read_bytes()
     except OSError:
         req.send_internal_error("Failed to read certificate")
         return
 
-    req.send_ok(data)
+    req.send_response(200)
+    req.send_header("Content-Type", "application/x-x509-ca-cert")
+    req.send_header("Content-Disposition", 'attachment; filename="vacuula-ca.crt"')
+    req.send_header("Content-Length", str(len(data)))
+    req.end_headers()
+    req.wfile.write(data)
 
 
 # mDNS stuff

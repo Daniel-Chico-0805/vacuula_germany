@@ -1,5 +1,6 @@
 from gen3.commands import send_chunk, build_command, build_heartbeat # TODO
 from state import robot_connections, client_connections, pending_requests
+from handlers.events import robots_snapshot, notify_robots_changed
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan, PersistentMap
 from models.robot import Robot
@@ -8,6 +9,9 @@ from sqlalchemy import select, update
 from utils import Generation, get_robot_by_serial
 import json
 import time
+
+# Longest wait for a robot to answer a command before the HTTP request fails
+COMMAND_TIMEOUT_S = 30
 import os
 
 from gen4.handlers import robot_send_request
@@ -88,25 +92,8 @@ def get_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
 
 
 def get_robots(req: RouterHandler) -> None:
-    """GET /robots - list all robots with connection status"""
-    with get_session() as session:
-        robots: Sequence[Robot] = session.execute(select(Robot)).scalars().all()
-
-    if len(robots) == 0:
-        req.send_ok({ "error": "no robots" })
-
-    connected_serials = list(robot_connections.keys())
-    res = {
-        robot.serial: {
-            "type": "neato.gen4" if not robot.password else "neato.gen3",
-            "connected": robot.serial in connected_serials,
-            "name": robot.name
-        }
-        for robot in robots
-    }
-    time.sleep(2)
-
-    req.send_ok(res)
+    """GET /robots - list all robots with connection status (empty object when none)"""
+    req.send_ok(robots_snapshot())
 
 
 def get_maps(req: RouterHandler, serial: str) -> None:
@@ -200,7 +187,8 @@ def post_robot(req: RouterHandler, serial: str) -> None:
             .values(name=name)
         )
         session.commit()
-    
+
+    notify_robots_changed()
     req.send_ok()
 
 def get_runs(req: RouterHandler, serial: str) -> None:
@@ -305,7 +293,7 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         # gen4
         req_id = robot_send_request(conn, data)
         pending_requests[str(req_id)] = req
-    if (conn.gen == Generation.GEN3):
+    elif (conn.gen == Generation.GEN3):
         req_id, msg = build_command(serial, data)
         pending_requests[str(req_id)] = req
 
@@ -315,4 +303,17 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
                 send_chunk(conn.conn.wfile, msg) # TODO
             except Exception:
                 pass
+    else:
+        req.send_bad_request("Unsupported robot generation")
+        return
+
+    # TODO: investigate a better system for handling requests, for now it will be a little wacky
+    # key = str(req_id)
+    # deadline = time.monotonic() + COMMAND_TIMEOUT_S
+    # while key in pending_requests:
+    #     if time.monotonic() > deadline:
+    #         pending_requests.pop(key, None)
+    #         req.send_error_response(504, "Robot did not answer in time")
+    #         return
+    #     time.sleep(0.02)
     

@@ -13,11 +13,27 @@ export interface MascotOption {
     src: string
     /** Tab / bookmark icon (no drop shadow) */
     favicon: string
+    /** Web app manifest (home-screen icon set); the icon is fixed when the user installs */
+    manifest: string
+    /** iOS home-screen icon (iOS ignores manifest icons) */
+    appleTouchIcon: string
 }
 
 export const MASCOTS: MascotOption[] = [
-    { id: 'vacuula', src: logoVacuula, favicon: `${import.meta.env.BASE_URL}favicon-vacuula.svg`, },
-    { id: 'robot', src: logoRobot, favicon: `${import.meta.env.BASE_URL}favicon-robot.svg`, },
+    { 
+        id: 'vacuula',
+        src: logoVacuula,
+        favicon: `${import.meta.env.BASE_URL}favicon-vacuula.svg`,
+        manifest: `${import.meta.env.BASE_URL}manifest-vacuula.webmanifest`,
+        appleTouchIcon: `${import.meta.env.BASE_URL}icons/apple-touch-icon-vacuula.png` 
+    },
+    { 
+        id: 'robot',
+        src: logoRobot,
+        favicon: `${import.meta.env.BASE_URL}favicon-robot.svg`,
+        manifest: `${import.meta.env.BASE_URL}manifest-robot.webmanifest`,
+        appleTouchIcon: `${import.meta.env.BASE_URL}icons/apple-touch-icon-robot.png`
+    },
 ]
 export const DEFAULT_MASCOT = MASCOTS[0].id
 export const MASCOT_STORAGE_KEY = 'vacuula.mascot'
@@ -39,7 +55,11 @@ const subscribe = (fn: () => void) => {
 }
 
 function applyFavicon(mascot: MascotOption) {
-    document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', mascot.favicon)
+    const setHref = (selector: string, href: string) =>
+        document.querySelector<HTMLLinkElement>(selector)?.setAttribute('href', href)
+    setHref('link[rel="icon"]', mascot.favicon)
+    setHref('link[rel="manifest"]', mascot.manifest)
+    setHref('link[rel="apple-touch-icon"]', mascot.appleTouchIcon)
 }
 
 export function setMascot(id: string) {
