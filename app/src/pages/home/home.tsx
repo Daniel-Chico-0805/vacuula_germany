@@ -238,8 +238,14 @@ export default function Home() {
                                     }
                                     GEN3_COMMANDS.startCleaning(robot.serial, gen3__cleaningMode, gen3__navigationMode)
                                 } else if (robot.type === RobotType.NeatoGen4) {
+                                    // stuff is technically for gen3, but will piggyback of it for now, later make its own separate things? TODO
+                                    if (gen3__cleaningCategory === CleaningCategory.HOUSE) {
+                                        GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode)
+                                        return
+                                    }
+
                                     const promotedFloorplan = await getPromotedFloorplan()
-                                    // GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode, promotedFloorplan?.id)
+                                    GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode, promotedFloorplan?.id)
                                 }
 
 

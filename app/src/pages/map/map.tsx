@@ -19,7 +19,7 @@ import i18n from '../../i18n'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import type { NoGoLine, Point, UseState, Zone } from '../../components/map/types'
 import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline } from '../../components/map/drawingFunctions'
-import type { upsertPreserveOrder } from '../../components/map/utils'
+import { upsertPreserveOrder } from '../../components/map/utils'
 
 
 export default () => {
@@ -360,7 +360,7 @@ export default () => {
                                         // GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
                                         const promotedFloorplan = await getPromotedFloorplan();
                                         if (!promotedFloorplan) return // TODO: ERROR (will do when i do gen3)
-                                        // GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, promotedFloorplan.id, item.id)
+                                        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, promotedFloorplan.id, item.id)
                                     }} />)}
                                 </div>
                             ))}

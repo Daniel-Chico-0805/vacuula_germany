@@ -26,7 +26,6 @@ def start():
             client, addr = sock.accept()
 
             try:
-                print("something!")
                 tls = ctx.wrap_socket(client, server_side=True)
             except ssl.SSLError as e:
                 print(f"TLS handshake failed from {addr}: {e}")
@@ -70,7 +69,6 @@ def handle_robot(conn, addr):
     # )
     rc = RobotConn("<unknown>", Generation.GEN4, Gen4Conn(conn))
 
-    print("CONN", f"TLS connection from {addr}")
     try:
         json_count = 0
         while True:
@@ -94,7 +92,6 @@ def handle_robot(conn, addr):
 
             json_count += 1
 
-            print("msg from robot", msg)
 
             if json_count == 1 and "signature" in msg:
                 handle_login(rc, msg)
@@ -106,7 +103,6 @@ def handle_robot(conn, addr):
             msg_type = msg.get("type")
             if msg_type == "event":
                 robot_event(rc, msg)
-                print("event")
             elif msg_type == "response":
                 robot_response(rc, msg)
             elif msg_type == "request":
@@ -125,9 +121,9 @@ def handle_robot(conn, addr):
         except Exception:
             pass
         # forget this connection so the robot shows as offline until it logs in again
-        if rc.serial and robot_connections.get(rc.serial) is rc:
-            robot_connections.pop(rc.serial, None)
-            notify_robots_changed()
+        # if rc.serial and robot_connections.get(rc.serial) is rc:
+        #     robot_connections.pop(rc.serial, None)
+        #     notify_robots_changed()
         # with robots_lock:
         #     if rc.serial and robots.get(rc.serial) is rc:
         #         robots.pop(rc.serial, None)

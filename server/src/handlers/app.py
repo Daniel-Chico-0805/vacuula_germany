@@ -293,7 +293,7 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         # gen4
         req_id = robot_send_request(conn, data)
         pending_requests[str(req_id)] = req
-    elif (conn.gen == Generation.GEN3):
+    if (conn.gen == Generation.GEN3):
         req_id, msg = build_command(serial, data)
         pending_requests[str(req_id)] = req
 
@@ -303,17 +303,5 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
                 send_chunk(conn.conn.wfile, msg) # TODO
             except Exception:
                 pass
-    else:
-        req.send_bad_request("Unsupported robot generation")
-        return
-
-    # TODO: investigate a better system for handling requests, for now it will be a little wacky
-    # key = str(req_id)
-    # deadline = time.monotonic() + COMMAND_TIMEOUT_S
-    # while key in pending_requests:
-    #     if time.monotonic() > deadline:
-    #         pending_requests.pop(key, None)
-    #         req.send_error_response(504, "Robot did not answer in time")
-    #         return
-    #     time.sleep(0.02)
+    
     

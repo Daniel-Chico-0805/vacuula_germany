@@ -91,7 +91,7 @@ function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigation
     // only mapId = cleaning of map, going around nogo lines and nogo zones
     // mapId & zoneId = clean that zone
     const map = mapId !== undefined ? 
-        { rank_id: mapId, track_id: zoneId ?? null, nogo_enabled: true } : 
+        { rank_id: mapId, track_id: zoneId || null, nogo_enabled: true } : 
         null // robot needs null as value
     return Http.sendCmd(serial, {
         ability: "cleaning.start",
