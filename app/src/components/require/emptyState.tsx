@@ -25,7 +25,7 @@ export default function EmptyState({ title, subtitle, children }: EmptyStateProp
                 {t('require.waiting')}
             </span>
             <span className={styles.hint}>
-                {t('require.serverHint')} <code>{location.host}</code>
+                {t('require.serverHint')}
             </span>
         </div>
     )

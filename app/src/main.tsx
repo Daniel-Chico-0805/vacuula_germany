@@ -7,9 +7,9 @@ import './theme'
 import './mascot'
 import './index.css'
 import App from './app.tsx'
-import { registerServiceWorker } from './serviceWorker'
+// import { registerServiceWorker } from './serviceWorker'
 
-registerServiceWorker()
+// registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <AppProvider>

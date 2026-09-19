@@ -100,6 +100,10 @@ export class Http {
     return instance.get<QuickRobotInfo>('/robots');
   }
 
+  static getVacuulaCert() {
+    return instance.get('/cert');
+  }
+
   static updateRobot(serial: string, data: { name: string }) {
     return instance.post(`/robot/${serial}`, data)
   }

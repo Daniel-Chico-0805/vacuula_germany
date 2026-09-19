@@ -65,7 +65,7 @@
     "noRobotsLinkedInfo": "No robot has connected to this server yet.",
     "allRobotsOfflineInfo": "They will appear here as soon as they connect.",
     "waiting": "Waiting for robots…",
-    "serverHint": "Point your robots at this server:"
+    "serverHint": "TODO: look at the github for infomation on setting your robots up!"
   },
   "home": {
     "errorTitle": "Error",
@@ -170,6 +170,7 @@
     "mascot": "Mascot",
     "mascot_vacuula": "Vacuula (original)",
     "mascot_robot": "Robot",
-    "comingSoon": "Lots more coming soon - stay tuned!"
+    "comingSoon": "Lots more coming soon - stay tuned!",
+    "downloadCert": "Download cert"
   }
 }
