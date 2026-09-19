@@ -14,7 +14,6 @@ export function RequireRobots({ children }: { children: ReactNode }) {
         return <NoRobotsLinked />
     }
 
-    // a robot that was selected and went offline stays on screen (with its offline badge)
     const hasOnlineRobot = entries.some(([, info]) => info.connected)
     if (!hasOnlineRobot) {
         return <RobotsOffline robots={robots} />

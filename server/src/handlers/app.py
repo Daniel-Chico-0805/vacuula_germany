@@ -307,17 +307,13 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         req.send_bad_request("Unsupported robot generation")
         return
 
-    # The reply is written by the robot's thread (robot_response) through
-    # pending_requests. Keep this handler alive until that has happened:
-    # returning earlier lets the HTTP server close the socket when the client
-    # sent "Connection: close" - which every proxy in front of the API does
-    # (Vite dev server, nginx, Caddy) - before the reply exists.
-    key = str(req_id)
-    deadline = time.monotonic() + COMMAND_TIMEOUT_S
-    while key in pending_requests:
-        if time.monotonic() > deadline:
-            pending_requests.pop(key, None)
-            req.send_error_response(504, "Robot did not answer in time")
-            return
-        time.sleep(0.02)
+    # TODO: investigate a better system for handling requests, for now it will be a little wacky
+    # key = str(req_id)
+    # deadline = time.monotonic() + COMMAND_TIMEOUT_S
+    # while key in pending_requests:
+    #     if time.monotonic() > deadline:
+    #         pending_requests.pop(key, None)
+    #         req.send_error_response(504, "Robot did not answer in time")
+    #         return
+    #     time.sleep(0.02)
     

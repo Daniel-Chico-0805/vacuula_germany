@@ -127,7 +127,6 @@ def handle_robot(conn, addr):
         # forget this connection so the robot shows as offline until it logs in again
         if rc.serial and robot_connections.get(rc.serial) is rc:
             robot_connections.pop(rc.serial, None)
-            print("OFFLINE", rc.serial)
             notify_robots_changed()
         # with robots_lock:
         #     if rc.serial and robots.get(rc.serial) is rc:

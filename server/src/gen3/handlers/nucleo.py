@@ -40,5 +40,6 @@ def nucleo_init(req: RouterHandler) -> None:
     except Exception:
         pass
     finally:
-        robot_connections.pop(serial, None)
-        notify_robots_changed()
+        if robot_connections.get(serial) is conn:
+            del robot_connections[serial]
+            notify_robots_changed()

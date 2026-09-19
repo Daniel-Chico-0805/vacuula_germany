@@ -1,10 +1,3 @@
-"""Server-sent events that are not about a single robot.
-
-GET /app/events streams `robots` events: the full robot list (same shape as
-GET /app/robots) whenever a robot logs in, drops its connection or is renamed,
-plus one snapshot right after connecting. Clients keep their list in sync from
-this stream instead of polling.
-"""
 import json
 import threading
 import time
@@ -21,7 +14,7 @@ if TYPE_CHECKING:
 
 KEEPALIVE_S = 15
 
-_clients: list = []          # wfile of every connected event-stream client
+_clients: list = [] # wfile of every connected event-stream client
 _lock = threading.Lock()
 
 
@@ -61,7 +54,7 @@ def notify_robots_changed() -> None:
     """Call after a robot connects, disconnects or is renamed."""
     try:
         broadcast("robots", robots_snapshot())
-    except Exception as e:  # never let a notification break the caller
+    except Exception as e: # never let a notification break the caller
         print("WARN", f"robots event not sent: {type(e).__name__}: {e}")
 
 
@@ -83,7 +76,7 @@ def get_events(req: "RouterHandler") -> None:
             req.wfile.write(b": keepalive\n\n")
             req.wfile.flush()
     except OSError:
-        pass  # client went away (reload, tab closed, phone in background)
+        pass # client went away (reload, tab closed, phone in background)
     finally:
         with _lock:
             if req.wfile in _clients:

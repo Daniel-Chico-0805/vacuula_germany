@@ -145,7 +145,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // server's event stream (a `robots` event on every connect/disconnect/rename;
     // the stream also sends a snapshot each time it (re)opens, so no polling).
     useEffect(() => {
-        Http.getRobots().then((res) => setRobots(res.data)).catch(err => console.error('Failed to fetch robots', err))
+        Http.getRobots().then((res) => {
+            setRobots(res.data)
+            const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
+            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
+        });
 
         const events = new EventSource('/api/events')
         events.addEventListener('robots', (event) => {
@@ -154,22 +158,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         events.onerror = (err) => console.error('events stream error:', err)
         return () => events.close()
     }, [])
-
-    // Nothing selected yet (first load, or all robots were offline): select the
-    // first robot that is online. A selected robot that goes offline stays
-    // selected, with its last known state, until it comes back.
-    const connectingRef = useRef(false)
-    useEffect(() => {
-        if (robot || !robots || connectingRef.current) return
-        const firstOnline = Object.entries(robots).find(([, info]) => info.connected)
-        if (!firstOnline) return
-        connectingRef.current = true
-        connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
-    }, [robots, robot])
-
-    useEffect(() => {
-        if (robot) connectingRef.current = false
-    }, [robot?.serial])
 
     useEffect(() => {
         if (!robot) return;
