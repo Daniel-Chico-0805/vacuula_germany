@@ -5,7 +5,7 @@ import NoRobotsLinked from './noRobotsLinked'
 import RobotsOffline from './robotsOffline'
 
 export function RequireRobots({ children }: { children: ReactNode }) {
-    const { robots, robot } = useApp()
+    const { robots } = useApp()
 
     if (!robots) return <Loading />
 
@@ -16,7 +16,7 @@ export function RequireRobots({ children }: { children: ReactNode }) {
 
     // a robot that was selected and went offline stays on screen (with its offline badge)
     const hasOnlineRobot = entries.some(([, info]) => info.connected)
-    if (!hasOnlineRobot && !robot) {
+    if (!hasOnlineRobot) {
         return <RobotsOffline robots={robots} />
     }
 
