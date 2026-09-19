@@ -53,6 +53,12 @@ function pauseCleaning(serial: string) {
     })
 }
 
+function resumeCleaning(serial: string) {
+    return Http.sendCmd(serial, {
+        ability: "cleaning.resume",
+    })
+}
+
 
 function getSettings<Op extends Neato.Gen4.SettingsGetOperation>(serial: string, settings: Neato.Gen4.RobotSettingsGet<Op>) {
     return Http.sendCmd<Neato.Gen4.BaseResponse<Neato.Gen4.SettingsMap[Op]>>(serial, {
@@ -80,21 +86,21 @@ function demoteFloorplan(serial: string, id: string) {
     })
 }
 
-
-function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode, temp_track_id: string) {
+function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode, mapId?: string, zoneId?: string) {
+    // no mapId = full possible clean
+    // only mapId = cleaning of map, going around nogo lines and nogo zones
+    // mapId & zoneId = clean that zone
+    const map = mapId !== undefined ? 
+        { rank_id: mapId, track_id: zoneId ?? null, nogo_enabled: true } : 
+        null // robot needs null as value
     return Http.sendCmd(serial, {
         ability: "cleaning.start",
         runs: [{
-            map: {
-                "rank_id":     "894e115c-7934-4519-bc62-2f64db633136", // "338e289b-0a3d-406f-9247-902623b1b455",
-                "track_id":     temp_track_id, //"e79742d6-4517-4734-9dce-55d9d618d469",
-                "nogo_enabled": false,
-            },
-            // map: null,
+            map,
             settings: {
                 mode,
-                navigation_mode: navigationMode
-            }
+                navigation_mode: navigationMode,
+            },
         }]
     })
 }
@@ -110,6 +116,7 @@ export const GEN4_COMMANDS = {
     startCleaning,
     stopCleaning,
     pauseCleaning,
+    resumeCleaning,
     cleaningInfo,
     sendToBase,
 

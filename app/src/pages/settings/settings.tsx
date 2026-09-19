@@ -109,12 +109,6 @@ export default () => {
                     value={mascot.id}
                     onChange={(id) => setMascot(id)}
                 />
-
-                <Input
-                    type="custom"
-                    label="Vacuula123">
-                    <Button icon={<SiBuymeacoffee size={20} />} text='Buy Me a Coffee' style='secondary' onClick={() => window.open('https://www.buymeacoffee.com/philip2809')} />
-                </Input>
             </div>
 
             <hr style={{ width: '95%' }} />
