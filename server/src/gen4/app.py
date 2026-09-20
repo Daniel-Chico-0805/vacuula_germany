@@ -4,7 +4,7 @@ from state import robot_connections, client_connections, pending_requests
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan
 from models.robot import Robot
-from models.run import Run
+from models.run import Gen3__Run
 from sqlalchemy import select, update
 from utils import Generation, get_robot_by_serial
 import json

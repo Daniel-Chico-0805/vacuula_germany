@@ -27,13 +27,13 @@ export default () => {
     const { formatArea } = useUnits()
     const { setCleanings, cleanings } = useApp()
     const { robot } = useRobot()
-    const [selectedCleaning, setSelectedCleaning] = useState<Neato.Gen4.Cleaning>();
+    const [selectedCleaning, setSelectedCleaning] = useState<Neato.Gen4.Cleaning | Neato.Gen3.CleaningRun>();
     const [drawerOpen, setDrawerOpen] = useState(false)
 
     const getCleanings = () => {
         Http.getCleanings(robot.serial).then(res => {
             const sorted = [...res.data].sort(
-                (a, b) => new Date(b.timing.start).getTime() - new Date(a.timing.start).getTime()
+                (a, b) => new Date('timing' in b ? b.timing.start : b.run.start_at).getTime() - new Date('timing' in a ? a.timing.start : a.run.start_at).getTime()
             )
             setCleanings(sorted)
         })
@@ -57,10 +57,15 @@ export default () => {
                 {cleanings.map((item, i) => (
                     <div key={i} className={styles.item} onClick={() => setSelectedCleaning(item)}>
                         <div className={styles.info}>
-                            <span>{t('runs.entryTitle', { startedBy: item.started_by, date: new Date(item.timing.start).toLocaleString(i18n.language) })}</span>
+                            <span>
+                                {t('runs.entryTitle', {
+                                    startedBy: 'timing' in item ? item.started_by : item.run.launched_from,
+                                    date: new Date('timing' in item ? item.timing.start : item.run.start_at).toLocaleString(i18n.language)
+                                })}
+                            </span>
                             <span className={styles.type}>
                                 <IoMdTime /> &nbsp; {formatDuration(item.timing.start, item.timing.end)} &nbsp; |
-                                &nbsp; {formatArea(calcTotalArea(item))} &nbsp; |
+                                &nbsp; {formatArea( 'timing' in item ? calcTotalArea(item) : item.run.cleaned_area)} &nbsp; |
                                 &nbsp; <SlEnergy /> &nbsp; {t('runs.batteryUsed', { percent: item.battery_consumed })}
                             </span>
                         </div>
@@ -109,7 +114,7 @@ export default () => {
                     {/* TODO: Explain the differnet colors meaning */}
 
                     <hr style={{ width: '100%' }} />
-                    
+
 
                     <div className={styles.runs}>
                         {selectedCleaning && selectedCleaning.runs.map((run, i) =>

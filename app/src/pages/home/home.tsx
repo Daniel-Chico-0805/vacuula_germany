@@ -99,7 +99,7 @@ export default function Home() {
             <div className={styles.alerts}>
                 {robot.type === RobotType.NeatoGen4 && robot.errors && <Gen4AlertCards errors={robot.errors} />}
 
-                {/* <AlertCard
+                <AlertCard
                     visible={!!robot.error}
                     type="error"
                     icon={<MdError size={17} />}
@@ -116,7 +116,7 @@ export default function Home() {
                     onClick={() => {
                         GEN3_COMMANDS.dismissCurrentAlert(robot.serial)
                     }}
-                /> */}
+                />
             </div>
 
             {/* ── Mascot + ring ── */}

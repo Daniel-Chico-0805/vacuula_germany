@@ -4,7 +4,7 @@ from handlers.events import robots_snapshot, notify_robots_changed
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan, PersistentMap
 from models.robot import Robot
-from models.run import Gen4__Run, Run
+from models.run import Gen4__Run, Gen3__Run
 from sqlalchemy import select, update
 from utils import Generation, get_robot_by_serial
 import json
@@ -193,16 +193,19 @@ def post_robot(req: RouterHandler, serial: str) -> None:
 
 def get_runs(req: RouterHandler, serial: str) -> None:
     """GET /robot/<serial>/runs - list all runs to user"""
+
+    table = Gen3__Run if '-' in serial else Gen4__Run
+
     with get_session() as session:
         runs = session.execute(
-            select(Gen4__Run)
-            .where(Gen4__Run.robot == serial)
+            select(table)
+            .where(table.robot == serial)
         ).scalars().all()
 
     data = [
         {
             column.name: getattr(run, column.name)
-            for column in Gen4__Run.__table__.columns
+            for column in table.__table__.columns
         }
         for run in runs
     ]

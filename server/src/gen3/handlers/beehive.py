@@ -6,7 +6,7 @@ from gen3.map_utils import parse_session
 from db import get_session, db_commit
 from models.robot import Robot
 from models.persistent_map import PersistentMap
-from models.run import Run
+from models.run import Gen3__Run
 import os
 from sqlalchemy import select
 import socket
@@ -158,7 +158,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
                 robot=serial,
                 name="Persistent Map",
                 enabled=True,
-                baseX=0.5,
+                base=0.5,
                 baseY=0.5
             )):
                 # TODO: error

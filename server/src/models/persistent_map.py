@@ -15,8 +15,8 @@ class PersistentMap(Base):
     robot: Mapped[str] = mapped_column(String, ForeignKey("robot.serial", ondelete='CASCADE'), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    baseX: Mapped[float] = mapped_column(Float, nullable=False)
-    baseY: Mapped[float] = mapped_column(Float, nullable=False)
+    in_maps_list: Mapped[bool] = mapped_column(Boolean, nullable=False) # if valid in case of gen3
+    base: Mapped[Point] = mapped_column(JSON, nullable=False) # x, y
 
 
 class FloorPlan(Base):

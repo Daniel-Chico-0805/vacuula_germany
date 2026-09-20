@@ -20,8 +20,8 @@ interface AppContextType {
 
     setPersistentMaps: UseState<(Neato.Gen3.PersistentMap[] | Neato.Gen4.Floorplan[]) | undefined>
 
-    cleanings?: Neato.Gen4.Cleaning[]
-    setCleanings: UseState<Neato.Gen4.Cleaning[] | undefined>
+    cleanings?: Neato.Gen4.Cleaning[] | Neato.Gen3.CleaningRun[]
+    setCleanings: UseState<Neato.Gen4.Cleaning[] | Neato.Gen3.CleaningRun[] | undefined>
 
     userId: string | null
     setUserId: (id: string | null) => void
@@ -45,7 +45,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [robots, setRobots] = useState<QuickRobotInfo>()
     const [lastHeartbeat, setLastHeartbeat] = useState<number | undefined>()
     // const [persistentMaps, setPersistentMaps] = useState<PersistentMap[]>()
-    const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[]>()
+    const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[] | Neato.Gen3.Cleaning[]>()
 
     const [userId, setUserId] = useState<string | null>(null)
     const { isDark: isDarkMode, setTheme } = useTheme()

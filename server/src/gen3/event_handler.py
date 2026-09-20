@@ -55,6 +55,9 @@ def robot_data(serial: str, data: bytes):
             if c["serial"] == serial
         ]
 
+        print("data")
+        print(data)
+
         for client in clients_subscribed:
             try:
                 msg = json.dumps({
