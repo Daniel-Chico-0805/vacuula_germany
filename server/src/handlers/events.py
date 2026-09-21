@@ -1,4 +1,5 @@
 import json
+import queue
 import threading
 import time
 
@@ -6,7 +7,7 @@ from sqlalchemy import select
 
 from db import get_session
 from models.robot import Robot
-from state import robot_connections
+from state import put_drop_oldest, robot_connections
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -14,7 +15,9 @@ if TYPE_CHECKING:
 
 KEEPALIVE_S = 15
 
-_clients: list = [] # wfile of every connected event-stream client
+CLIENT_QUEUE_MAX = 100       # frames buffered per client before the oldest is dropped
+
+_clients: list = []          # one bounded Queue per connected event-stream client
 _lock = threading.Lock()
 
 
@@ -40,14 +43,8 @@ def broadcast(event: str, data) -> None:
     frame = _frame(event, data)
     with _lock:
         clients = list(_clients)
-    for wfile in clients:
-        try:
-            wfile.write(frame)
-            wfile.flush()
-        except OSError:
-            with _lock:
-                if wfile in _clients:
-                    _clients.remove(wfile)
+    for q in clients:
+        put_drop_oldest(q, frame)
 
 
 def notify_robots_changed() -> None:
@@ -66,18 +63,23 @@ def get_events(req: "RouterHandler") -> None:
     req.send_header("Connection", "keep-alive")
     req.end_headers()
 
+    q: queue.Queue = queue.Queue(maxsize=CLIENT_QUEUE_MAX)
+
     with _lock:
-        _clients.append(req.wfile)
+        _clients.append(q)
     try:
         req.wfile.write(_frame("robots", robots_snapshot()))
         req.wfile.flush()
         while True:
-            time.sleep(KEEPALIVE_S)
-            req.wfile.write(b": keepalive\n\n")
+            try:
+                frame = q.get(timeout=KEEPALIVE_S)
+            except queue.Empty:
+                frame = b": keepalive\n\n"
+            req.wfile.write(frame)
             req.wfile.flush()
     except OSError:
         pass # client went away (reload, tab closed, phone in background)
     finally:
         with _lock:
-            if req.wfile in _clients:
-                _clients.remove(req.wfile)
+            if q in _clients:
+                _clients.remove(q)

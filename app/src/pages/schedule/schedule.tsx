@@ -43,7 +43,7 @@ export default () => {
             setSchedule(res.data.data)
         })
 
-        GEN4_COMMANDS.getSchedule(robot.serial);
+        // GEN4_COMMANDS.getSchedule(robot.serial);
     }
 
     useEffect(() => {

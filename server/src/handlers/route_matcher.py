@@ -3,11 +3,15 @@
 import re
 from typing import Callable, Optional, Tuple, List
 
-from gen4.app import delete_demote_floorplan, get_boundaries, get_test, post_boundaries, post_update_floorplan_in_unuse, post_update_floorplan_in_use
-from handlers.setup import get_cert
-
+# general
 from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command
 from .events import get_events
+from handlers.setup import get_cert
+
+#gen4
+import gen4.app as gen4
+# from gen4.app import delete_demote_floorplan, get_boundaries, get_test, post_boundaries, post_update_floorplan_in_unuse, post_update_floorplan_in_use
+
 # gen3
 from gen3.handlers.beehive import post_links, persistent_maps, upload_init, upload_finish
 from gen3.handlers.nucleo import nucleo_init
@@ -36,16 +40,16 @@ APP_ROUTES: List[Tuple[str, str, Handler]] = [
     ("GET", r"/api/robot/(.+)/maps", get_maps),
     ("GET", r"/api/robot/(.+)/run/(.+)", get_run),
     ("GET", r"/api/robot/(.+)/runs", get_runs),
-    ("GET", r"/api/robot/(.+)/maps/(.+)/boundaries", get_boundaries),
-    ("GET", r"/api/robot/(.+)/maps/(.+)/test", get_test),
+    ("GET", r"/api/robot/(.+)/maps/(.+)/boundaries", gen4.get_boundaries),
+    ("GET", r"/api/robot/(.+)/maps/(.+)/test", gen4.get_test),
     ("GET", r"/api/robot/(.+)/maps/(.+)", get_map),
-    ("POST", r"/api/robot/(.+)/maps/(.+)/boundaries", post_boundaries),
-    ("POST", r"/api/robot/(.+)/maps/(.+)/use", post_update_floorplan_in_use),
-    ("POST", r"/api/robot/(.+)/maps/(.+)/unuse", post_update_floorplan_in_unuse),
+    ("POST", r"/api/robot/(.+)/maps/(.+)/boundaries", gen4.post_boundaries),
+    ("POST", r"/api/robot/(.+)/maps/(.+)/use", gen4.post_update_floorplan_in_use),
+    ("POST", r"/api/robot/(.+)/maps/(.+)/unuse", gen4.post_update_floorplan_in_unuse),
     ("POST", r"/api/robot/(.+)/maps/(.+)", post_map),
     ("POST", r"/api/robot/(.+)/command", post_robot_command),
     ("POST", r"/api/robot/(.+)", post_robot),
-    ("DELETE", r"/api/robot/(.+)/maps/(.+)", delete_demote_floorplan),
+    ("DELETE", r"/api/robot/(.+)/maps/(.+)", gen4.delete_demote_floorplan),
 ]
 
 S3_ROUTES: List[Tuple[str, str, Handler]] = [

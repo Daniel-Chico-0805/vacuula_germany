@@ -1,6 +1,6 @@
 from gen3.commands import send_chunk, build_command, build_heartbeat # TODO
-from state import robot_connections, client_connections, pending_requests
-from handlers.events import robots_snapshot, notify_robots_changed
+from state import robot_connections, client_connections, pending_requests, PendingRequest
+from handlers.events import robots_snapshot, notify_robots_changed, CLIENT_QUEUE_MAX
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan, PersistentMap
 from models.robot import Robot
@@ -9,6 +9,7 @@ from sqlalchemy import select, update
 from utils import Generation, get_robot_by_serial
 import json
 import time
+import queue
 
 # Longest wait for a robot to answer a command before the HTTP request fails
 COMMAND_TIMEOUT_S = 30
@@ -22,73 +23,6 @@ if TYPE_CHECKING:
 
 
 
-
-def post_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
-    """POST /robot/<serial>/maps/<map_id>/boundaries - update map data"""
-    if not (data := req.read_json()):
-        return
-
-    keys_required = {
-        "id",
-        "name",
-        "color",
-        "type",
-        "vertices",
-        "enabled",
-    }
-
-    for boundary in data:
-        boundary_keys = {x for x in boundary}
-        if keys_required != boundary_keys:
-            req.send_bad_request("not all required keys")
-            return
-
-    with get_session() as session:
-        for boundary in data:
-            existing = session.get(Boundary, boundary["id"])
-
-            if existing:
-                existing.floorplan = map_id
-                existing.name = boundary["name"]
-                existing.color = boundary["color"]
-                existing.type = boundary["type"]
-                existing.vertices = boundary["vertices"]
-                existing.enabled = boundary["enabled"]
-            else:
-                session.add(Boundary(
-                    id=boundary["id"],
-                    floorplan=map_id,
-                    name=boundary["name"],
-                    color=boundary["color"],
-                    type=boundary["type"],
-                    vertices=boundary["vertices"],
-                    enabled=boundary["enabled"],
-                ))
-
-        if not db_commit(session, req):
-            # TODO: error
-            return
-
-    req.send_ok()
-
-
-def get_boundaries(req: RouterHandler, serial: str, map_id: str) -> None:
-    """GET /robot/<serial>/maps/<map_id>/boundaries - get boundaries"""
-
-    with get_session() as session:
-        boundaries: Sequence[Boundary] = session.execute(
-            select(Boundary)
-            .where(Boundary.floorplan == map_id)
-        ).scalars().all()
-
-    req.send_ok({ "boundaries": [{
-        "id": b.id,
-        "name": b.name,
-        "enabled": b.enabled,
-        "color": b.color,
-        "vertices": b.vertices,
-        "type": b.type,
-    } for b in boundaries] })
 
 
 def get_robots(req: RouterHandler) -> None:
@@ -246,38 +180,35 @@ def connect_robot(req: RouterHandler, serial: str) -> None:
     req.send_header("Connection", "keep-alive")
     req.end_headers()
 
-    conn = {"client": "test", "serial": serial, "wfile": req.wfile}
+    q: queue.Queue = queue.Queue(maxsize=CLIENT_QUEUE_MAX)
+    conn = {"client": "test", "serial": serial, "queue": q}
     client_connections.append(conn)
 
     try:
         while True:
             # Heartbeat every 15 seconds
-            req.wfile.write(b": keepalive\n\n")
+            try:
+                frame = q.get(timeout=15)
+            except queue.Empty:
+                frame = b": keepalive\n\n"
+            req.wfile.write(frame)
             req.wfile.flush()
 
-            time.sleep(15)
-
-    except (BrokenPipeError, ConnectionResetError):
+    except (BrokenPipeError, ConnectionResetError, OSError):
         print(f"Client disconnected: {serial}")
 
     finally:
-        client_connections.remove(conn)
+        if conn in client_connections:
+            client_connections.remove(conn)
 
-    # # try:
-    # msg = json.dumps({
-    #     "serial": serial,
-    # })
-
-    # event_data = f"data: {msg}\n\n"
-    # req.wfile.write(event_data.encode())
-    # req.wfile.flush()
-    # # except Exception as e:
-    # #     print("ERROR", f"send failed: {e}")
-    # # finally:
-    # #     print('REMOVING!!')
-    # #     if conn in client_connections:
-    # #         client_connections.remove(conn)
-
+def _send_quietly(write):
+    # Run a client-socket write; swallow the error if the client already hung up.
+    # A vanished browser shouldn't become a noisy traceback - and now that replies
+    # are delivered from this handler thread, it can't affect anything else either.
+    try:
+        write()
+    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+        pass
 
 def post_robot_command(req: RouterHandler, serial: str) -> None:
     """POST /robots/{serial}/command - send command to robot"""
@@ -292,19 +223,43 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         return
 
     conn = robot_connections[serial]
+    slot = PendingRequest()
     if (conn.gen == Generation.GEN4):
         # gen4
-        req_id = robot_send_request(conn, data)
-        pending_requests[str(req_id)] = req
-    if (conn.gen == Generation.GEN3):
-        req_id, msg = build_command(serial, data)
-        pending_requests[str(req_id)] = req
+        # req_id = robot_send_request(conn, data)
+        # pending_requests[str(req_id)] = req
 
-        conn = robot_connections[serial]
-        if conn:
-            try:
-                send_chunk(conn.conn.wfile, msg) # TODO
-            except Exception:
-                pass
+        req_id, err = robot_send_request(conn, data, slot)
+        if err:
+            _send_quietly(lambda: req.send_error_response(502, "Failed to send command to robot"))
+            return
+    elif (conn.gen == Generation.GEN3):
+        req_id, msg = build_command(serial, data)
+        # pending_requests[str(req_id)] = req
+
+        # conn = robot_connections[serial]
+        # if conn:
+        #     try:
+        #         send_chunk(conn.conn.wfile, msg) # TODO
+        #     except Exception:
+        #         pass
+        pending_requests[str(req_id)] = slot  # register before sending
+        try:
+            send_chunk(conn.conn.wfile, msg) # TODO
+        except Exception:
+            pending_requests.pop(str(req_id), None)
+            _send_quietly(lambda: req.send_error_response(502, "Failed to send command to robot"))
+            return
+    else:
+        req.send_bad_request("Unsupported robot generation")
+        return
+
+    key = str(req_id)
+    slot.event.wait(COMMAND_TIMEOUT_S)
+    pending_requests.pop(key, None)
+    if slot.event.is_set():
+        _send_quietly(lambda: req.send_response_data(slot.content, True, slot.status))
+    else:
+        _send_quietly(lambda: req.send_error_response(504, "Robot did not answer in time"))
     
     

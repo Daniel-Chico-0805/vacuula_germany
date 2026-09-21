@@ -6,7 +6,7 @@ from models.robot import Robot
 from models.persistent_map import FloorPlan
 import threading
 from models.run import Gen4__Run
-from state import robot_connections
+from state import put_drop_oldest, robot_connections
 from handlers.events import notify_robots_changed
 from utils import Generation
 
@@ -113,6 +113,11 @@ def heartbeat_thread(rc: RobotConn):
             send_heartbeat(rc.conn.socket)
         except Exception as e:
             print("ERROR", f"heartbeat send failed for {rc.serial}: {e}")
+            rc.stop_event.set()
+            try:
+                rc.conn.socket.close()
+            except Exception:
+                pass
             return
 
 
@@ -122,7 +127,7 @@ def send_heartbeat(sock):
 
 
 import uuid
-def robot_send_request(rc: RobotConn, body: dict):
+def robot_send_request(rc: RobotConn, body: dict, slot=None):
     request_id = str(uuid.uuid4())
 
     msg = {
@@ -132,28 +137,25 @@ def robot_send_request(rc: RobotConn, body: dict):
         "body": body,
     }
 
-    print("msg to send", msg)
-
-    print(
-        "CMD",
-        f"sent to {rc.serial} id={request_id} body={json.dumps(body)}",
-    )
+    if slot is not None:
+        pending_requests[request_id] = slot
     try:
         send_json(rc.conn.socket, msg)
     except Exception as e:
-        print("ERROR", f"send failed: {e}")
-    
+        if slot is not None:
+            pending_requests.pop(request_id, None)
+        return None, e
 
-    return request_id
+    return request_id, None
 
 def robot_response(rc: RobotConn, data: dict):
     reqId = data.get("id")
-    if reqId in pending_requests:
-        req: RouterHandler = pending_requests[reqId]
-        req.send_response_data(data, True, data["code"])
-        del pending_requests[reqId]
+    slot = pending_requests.get(reqId)
+    if slot is not None:
+        slot.fulfill(data, data["code"])
 
-import time
+
+import time, queue
 def robot_event(rc: RobotConn, data: dict):
     # broadcast to all clients subscribed to this robot
     clients_subscribed = [
@@ -161,27 +163,16 @@ def robot_event(rc: RobotConn, data: dict):
         if c["serial"] == rc.serial
     ]
 
-    print("clients! ", len(clients_subscribed))
+    msg = json.dumps({
+        "serial": rc.serial,
+        "type": "neato.gen4",
+        "data": data,
+        "ts": time.time()
+    }) + "\n"
+    frame = f"data: {msg}\n\n".encode()
 
     for client in clients_subscribed:
-        try:
-            msg = json.dumps({
-                "serial": rc.serial,
-                "type": "neato.gen4",
-                "data": data,
-                "ts": time.time()
-            }) + "\n"
-
-            event_data = f"data: {msg}\n\n"
-
-            client["wfile"].write(event_data.encode())
-            client["wfile"].flush()
-
-        except Exception as e:
-            print(
-                f">> failed to send event to client "
-                f"{client['client']}: {e}"
-            )
+        put_drop_oldest(client["queue"], frame)
 
 
 import os

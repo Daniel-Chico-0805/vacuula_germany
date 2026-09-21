@@ -1,6 +1,6 @@
 from re import search
 from gen3.commands import send_chunk, build_command, build_heartbeat # TODO
-from state import robot_connections, client_connections, pending_requests
+from state import PendingRequest, robot_connections, client_connections, pending_requests
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan
 from models.robot import Robot
@@ -238,15 +238,12 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
             "binary":     base64.b64encode(zlib.compress(clean_raw, level=9)).decode("ascii"),
         })
 
-        with open(f'./clean_raw_{boundary.id}.pgm', 'wb') as f:
-            f.write(clean_raw)
+    #     with open(f'./clean_raw_{boundary.id}.pgm', 'wb') as f:
+    #         f.write(clean_raw)
         
 
-    with open('./nogo_raw.pgm', 'wb') as f:
-        f.write(nogo_raw)
-
-
-
+    # with open('./nogo_raw.pgm', 'wb') as f:
+    #     f.write(nogo_raw)
 
 
     with open(f'uploads/maps/{serial}/{map_id}/rank_binary.pgm.nz', 'rb') as rank:
@@ -272,16 +269,35 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
                 "cleaning_tracks": cleaning_tracks,
             }
 
-            print(payload)
+            conn = robot_connections.get(serial)
+            if conn is None:
+                req.send_bad_request("Robot not connected")
+                return
 
-            robot_send_request(robot_connections[serial], payload)
+            slot = PendingRequest()
+            req_id, err = robot_send_request(conn, payload, slot)
+            if req_id is None:
+                req.send_error_response(502, "Failed to send promote to robot")
+                return
 
+            PROMOTE_TIMEOUT_S = 60
+
+            slot.event.wait(PROMOTE_TIMEOUT_S)
+            pending_requests.pop(req_id, None)
+
+            if not slot.event.is_set():
+                print(f"PROMOTE: robot did not acknowledge within {PROMOTE_TIMEOUT_S}s")
+                req.send_error_response(504, "Robot did not acknowledge promote in time")
+                return
+            if slot.status != 200:
+                print(f"PROMOTE: robot rejected promote: status={slot.status} body={slot.content}")
+                req.send_error_response(502, f"Robot rejected promote (status {slot.status})")
+                return
+
+
+            # Robot confirmed update worked, update db
             with get_session() as session:
                 floor_plan = session.get(FloorPlan, map_id)
-
-                if floor_plan is None:
-                    # TODO return error
-                    raise ValueError(f"Floor plan {map_id} not found")
 
                 session.execute(
                     update(FloorPlan)
@@ -298,6 +314,8 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
 
 
     req.send_ok(payload)
+
+    
 
 # is this really needded???
 def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):

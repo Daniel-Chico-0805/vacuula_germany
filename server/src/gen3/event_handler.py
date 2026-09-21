@@ -1,7 +1,8 @@
 import state
 import json
+import queue
 import time
-from state import pending_requests
+from state import pending_requests, put_drop_oldest
 import typing
 
 if typing.TYPE_CHECKING:
@@ -38,45 +39,27 @@ def robot_data(serial: str, data: bytes):
     eventId = decoded.get("eventId")
     reqId = decoded.get("reqId")
 
+    print(f">> robot_data: serial={serial} eventId={eventId} reqId={reqId} data={data}")
+
     if reqId in pending_requests:
-        req: RouterHandler = pending_requests[reqId]
+        slot = pending_requests.get(reqId)
         result = decoded.get("result")
-        if (result == "ok"):
-            req.send_ok(data)
-        else:
-            req.send_response_data(data, True, 400)
-
-        del pending_requests[reqId]
+        if slot is not None:
+            slot.fulfill(data, 200 if result == "ok" else 400)
     elif eventId:
-        print(f">> event {eventId} from {serial}")
-        # broadcast to all clients subscribed to this robot
-        clients_subscribed = [
-            c for c in state.client_connections
-            if c["serial"] == serial
-        ]
+        clients = [c for c in state.client_connections if c["serial"] == serial]
+        if clients:  # skip serializing when nobody is listening
+            msg = json.dumps({
+                "serial": serial,
+                "event": eventId,
+                "data": decoded,      # parsed dict, not raw bytes
+                "ts": time.time(),
+            }) + "\n"
+            frame = f"data: {msg}\n\n".encode()
+            for client in clients:
+                put_drop_oldest(client["queue"], frame)
 
-        print("data")
-        print(data)
 
-        for client in clients_subscribed:
-            try:
-                msg = json.dumps({
-                    "serial": serial,
-                    "event": eventId,
-                    "data": data,
-                    "ts": time.time()
-                }) + "\n"
-
-                event_data = f"data: {msg}\n\n"
-
-                client["wfile"].write(event_data.encode())
-                client["wfile"].flush()
-
-            except Exception as e:
-                print(
-                    f">> failed to send event to client "
-                    f"{client['client']}: {e}"
-                )
     else:
         print(f">> no eventId or reqId in data from {serial}")
 

@@ -108,7 +108,7 @@ export default () => {
     useEffect(() => {
         if (!robot) return;
         updatePersistentMaps();
-    }, [robot])
+    }, [robot.serial])
 
     useEffect(() => {
         if (!persistentMap) return;

@@ -11,6 +11,7 @@ from gen4.handlers import handle_login, robot_response, heartbeat_thread, robot_
 
 HOST = "0.0.0.0"
 PORT = 3443
+ROBOT_SOCKET_TIMEOUT_S = 20
 
 def start():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -39,7 +40,10 @@ def start():
 def recv_packet(sock):
     hdr = b""
     while len(hdr) < 4:
-        chunk = sock.recv(4 - len(hdr))
+        try:
+            chunk = sock.recv(4 - len(hdr))
+        except TimeoutError:
+            continue
         if not chunk:
             return None
         hdr += chunk
@@ -50,7 +54,10 @@ def recv_packet(sock):
         return None
     data = b""
     while len(data) < n:
-        chunk = sock.recv(min(65536, n - len(data)))
+        try:
+            chunk = sock.recv(min(65536, n - len(data)))
+        except TimeoutError:
+            continue
         if not chunk:
             return None
         data += chunk
@@ -58,16 +65,8 @@ def recv_packet(sock):
 
 
 def handle_robot(conn, addr):
-    # Late import: handlers imports from this module at top-level, so we
-    # defer pulling it in until handle_robot is first invoked (which only
-    # happens once we're fully loaded and serving connections).
-    # from handlers import (
-    #     handle_login,
-    #     handle_event,
-    #     handle_response,
-    #     handle_request_from_robot,
-    # )
     rc = RobotConn("<unknown>", Generation.GEN4, Gen4Conn(conn))
+    conn.settimeout(ROBOT_SOCKET_TIMEOUT_S)
 
     try:
         json_count = 0

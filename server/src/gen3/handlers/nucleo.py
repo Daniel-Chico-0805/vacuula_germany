@@ -9,7 +9,7 @@ from sqlalchemy import select
 from typing import TYPE_CHECKING
 from utils import get_robot_by_serial, Generation
 from conn import RobotConn, Gen2Gen3Conn
-
+import traceback
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
@@ -28,7 +28,8 @@ def nucleo_init(req: RouterHandler) -> None:
     req.end_headers()
 
     send_chunk(req.wfile, build_heartbeat())
-    robot_connections[serial] = RobotConn(serial, Generation.GEN3, Gen2Gen3Conn(robot.password, req.wfile))
+    conn = RobotConn(serial, Generation.GEN3, Gen2Gen3Conn(robot.password, req.wfile))
+    robot_connections[serial] = conn
     notify_robots_changed()
 
     try:
@@ -38,6 +39,7 @@ def nucleo_init(req: RouterHandler) -> None:
                 break
             robot_data(serial, data)
     except Exception:
+        traceback.print_exc()
         pass
     finally:
         if robot_connections.get(serial) is conn:
