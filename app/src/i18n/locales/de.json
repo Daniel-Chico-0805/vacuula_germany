@@ -163,6 +163,7 @@
     "appLanguage": "App-Sprache",
     "theme": "Design",
     "theme_dark": "Dunkel",
+    "theme_soft": "Dunkel (sanft)",
     "theme_light": "Hell",
     "units": "Einheiten",
     "units_metric": "Metrisch (m², cm)",

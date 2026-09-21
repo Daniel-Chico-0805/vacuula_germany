@@ -14,13 +14,14 @@
           mode = localStorage.getItem('vacuula.theme') || mode;
           accent = localStorage.getItem('vacuula.accent') || accent;
         } catch (e) {}
-        if (mode !== 'light') mode = 'dark';
-        var bg = mode === 'light' ? '#f4f6f5' : '#0f1113';
+        var bgs = { dark: '#0f1113', soft: '#25292e', light: '#f4f6f5' };
+        if (!bgs[mode]) mode = 'dark';
+        var bg = bgs[mode];
         var html = document.documentElement;
         html.setAttribute('data-theme', mode);
         html.setAttribute('data-accent', accent);
         html.style.backgroundColor = bg;
-        html.style.colorScheme = mode;
+        html.style.colorScheme = mode === 'light' ? 'light' : 'dark';
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', bg);
       })();

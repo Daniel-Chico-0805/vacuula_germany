@@ -2,7 +2,7 @@
  * Vacuula design tokens (runtime theme).
  *
  * Two independent axes, both set as attributes on <html>:
- *   data-theme  = "dark" | "light"   -> surfaces, text, borders, status colours
+ *   data-theme  = "dark" | "soft" | "light"   -> surfaces, text, borders, status colours
  *   data-accent = "mint"             -> brand/accent colour
  *
  * Dark + mint are the defaults and are declared on plain :root so the page is
@@ -55,6 +55,50 @@
   --switch-knob: #999999;
 
   --battery-text-on-fill: #0f1113;
+}
+
+/* ---------- Mode: soft (dark, easier on the eyes) ----------
+   Same structure as dark but built on a slate grey (#25292e, L 16%) instead of
+   near-black (L 7%): no pure black or white anywhere, off-white text, status
+   colours 10-15% less saturated, lighter shadows. */
+:root[data-theme="soft"] {
+  color-scheme: dark;
+
+  --bg: #25292e;
+  --surface: #2c3137;
+  --surface-hover: #343a41;
+  --surface-2: #3b424a;
+
+  --border: #3a4148;
+  --border-strong: #4c545d;
+
+  --text: #e4e8ec;
+  --text-muted: #9aa3ad;
+  --text-dim: #6b747e;
+
+  --success: #4fd19d;
+  --warn: #e6b25a;
+  --warn-bg: #4a3a1c;
+  --warn-text: #f0dcb0;
+  --warn-icon-bg: #c9942e;
+  --err: #e88a8a;
+  --err-bg: #4b272a;
+  --err-text: #efb8b8;
+  --err-icon-bg: #c4474f;
+  --err-soft: rgba(232, 138, 138, 0.15);
+  --info: #7db6f0;
+  --violet: #b39dfa;
+
+  --overlay: rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(37, 41, 46, 0.82);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.38);
+
+  --switch-track: rgba(255, 255, 255, 0.15);
+  --switch-knob: #b0b7bf;
+
+  --battery-text-on-fill: #25292e;
 }
 
 /* ---------- Mode: light ---------- */
@@ -113,6 +157,14 @@
   --on-accent: #ffffff;
 }
 
+/* Soft: the same mint, slightly desaturated so it does not glare on the grey. */
+:root[data-theme="soft"],
+:root[data-accent="mint"][data-theme="soft"] {
+  --accent: #4fd19d;
+  --accent-hover: #68d9ad;
+  --on-accent: #0c2a1d;
+}
+
 /* ---------- Accent tints (derived, valid for every accent) ---------- */
 :root {
   --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
@@ -153,6 +205,22 @@ body {
   --map-run-sat: 75;
   --map-run-light: 55;
   --map-run-opacity: 0.55;
+}
+
+/* Soft theme: the floor must sit visibly ABOVE the slate page background, so
+   it gets its own (lighter) --map-empty; walls/lines take the soft mint. */
+:root[data-theme="soft"] {
+  --map-bg: #2a2f35;
+  --map-editor-bg: #25292e;
+  --map-empty: #3c434b;
+  --map-wall: #4fd19d;
+  --map-grid: rgba(255, 255, 255, 0.18);
+  --map-line: #4fd19d;
+  --map-crosshair: #4fd19d;
+  --map-in-progress: #7db6f0;
+  --map-run-sat: 70;
+  --map-run-light: 58;
+  --map-run-opacity: 0.6;
 }
 
 /* Light theme: mid-grey surround, dark green walls/lines; floor cells stay dark. */
