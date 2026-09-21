@@ -341,8 +341,28 @@
     }
 }
 
+// One period = one playback of the robot's find-me sound
+// (10820_NEATO_COMPRESSED_FINDME.mp3, 2.46 s + <=0.1 s of playback polling
+// in the firmware's hal_controller.__play_audio). Neato Gen4 queues it 5x
+// (robot_ui/ui_map.py: EVENT_UTILITIES_FIND_ME -> (locate_robot, 5)), so the
+// icon swings 5 iterations. Keyframe percentages follow the sound's envelope:
+//   2%  -> hard hit (0.05 s)      12% -> second hit (0.30 s)
+//  35%  -> bell peak (0.85 s)     53% -> end of swell (1.30 s)
+//  85%  -> sound faded (2.10 s)   rest: silence until the next repeat
 @keyframes bellSwing {
-    0% {
+    0%   { transform: rotate(0deg); }
+    2%   { transform: rotate(-6deg); }
+    12%  { transform: rotate(6deg); }
+    20%  { transform: rotate(0deg); }
+    35%  { transform: rotate(-14deg); }
+    45%  { transform: rotate(12deg); }
+    53%  { transform: rotate(-8deg); }
+    65%  { transform: rotate(4deg); }
+    75%  { transform: rotate(-2deg); }
+    85%  { transform: rotate(0deg); }
+    100% { transform: rotate(0deg); }
+
+    /*0% {
         transform: rotate(0deg);
     }
     25% {
@@ -356,11 +376,13 @@
     }
     100% {
         transform: rotate(0deg);
-    }
+    }*/
 }
 
 .bellIcon {
-    animation: bellSwing 0.5s ease-in-out;
+    animation: bellSwing 2.5s ease-in-out 5;   // keep in sync with BELL_MS in home.tsx
+    // animation: bellSwing 0.5s ease-in-out;
+    transform-origin: top center;              // swing from the bell's crown
 }
 
 // ── Category Drawer ──────────────────────────────────────────────────────────

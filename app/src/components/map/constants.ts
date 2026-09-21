@@ -10,6 +10,11 @@ const MAP_TOKENS = {
     LINE_COLOR: '--map-line',
     CROSSHAIR: '--map-crosshair',
     IN_PROGRESS: '--map-in-progress',
+    // Run overlay (cleaned-area) tone, per theme: hsl saturation %, lightness %
+    // and globalAlpha. Read as plain numbers by colorForPathValue / drawMap.
+    RUN_SAT: '--map-run-sat',
+    RUN_LIGHT: '--map-run-light',
+    RUN_OPACITY: '--map-run-opacity',
 } as const
 
 type MapColorKey = keyof typeof MAP_TOKENS
@@ -58,6 +63,6 @@ export const DRAWING = {
     ZOOM_FACTOR: 1.1,
     PINCH_ZOOM_POWER: 0.5,
     MIN_MOVEMENT: 5, // Pixels before considering it a drag vs click
-    RUN_OVERLAY_OPACITY: 0.55,
+    RUN_OVERLAY_OPACITY: 0.55, // fallback only; the live value is --map-run-opacity (theme.css)
     MIN_PINCH_DISTANCE: 10,
 } as const

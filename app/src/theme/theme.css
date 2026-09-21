@@ -147,6 +147,12 @@ body {
   --map-line: #3ddc97;
   --map-crosshair: #3ddc97;
   --map-in-progress: #4ab3f5;
+  /* Runs tab cleaned-area overlay: hsl saturation, lightness and alpha
+     (numbers, read by components/map/drawingFunctions.ts). Dark theme keeps
+     the original look. */
+  --map-run-sat: 75;
+  --map-run-light: 55;
+  --map-run-opacity: 0.55;
 }
 
 /* Light theme: mid-grey surround, dark green walls/lines; floor cells stay dark. */
@@ -158,4 +164,9 @@ body {
   --map-line: #0b7a4b;
   --map-crosshair: #0b7a4b;
   --map-in-progress: #1f6fd0;
+  /* Against the light surround the half-transparent overlay read as grey;
+     go vivid and near-opaque so cleaned cells pop on the dark floor. */
+  --map-run-sat: 90;
+  --map-run-light: 58;
+  --map-run-opacity: 0.9;
 }

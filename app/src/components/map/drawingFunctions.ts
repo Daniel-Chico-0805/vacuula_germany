@@ -69,7 +69,12 @@ const GOLDEN_RATIO_CONJUGATE = 0.6180339887498949
 // "legend" on the frontend at all.
 export function colorForPathValue(value: number): string {
     const hue = (value * GOLDEN_RATIO_CONJUGATE) % 1
-    return `hsl(${Math.round(hue * 360)}, 75%, 55%)`
+    // Saturation / lightness come from the theme (--map-run-sat / --map-run-light
+    // in theme.css) so dark and light mode can pick the tone that contrasts
+    // best with their floor and surround. Fallback = the original dark-mode look.
+    const sat = parseFloat(COLORS.RUN_SAT) || 75
+    const light = parseFloat(COLORS.RUN_LIGHT) || 55
+    return `hsl(${Math.round(hue * 360)}, ${sat}%, ${light}%)`
 }
 
 // Build the set of raw path-map values to skip when overlaying the run.
@@ -124,7 +129,7 @@ export function drawMap(
     const hasRun = !!runCells && runCells.length === cells.length
     const getRunColor = runOptions?.getRunColor ?? colorForPathValue
     const ignoreRunValues = runOptions?.ignoreRunValues
-    const runOpacity = runOptions?.opacity ?? DRAWING.RUN_OVERLAY_OPACITY
+    const runOpacity = runOptions?.opacity ?? (parseFloat(COLORS.RUN_OPACITY) || DRAWING.RUN_OVERLAY_OPACITY)
 
     const scale = zoom
     const ox = offset.x
