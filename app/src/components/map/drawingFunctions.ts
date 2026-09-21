@@ -1,5 +1,6 @@
 import { COLORS, DRAWING, readMapToken } from './constants'
 import type { Zone, NoGoLine, Point } from './types'
+import dockUrl from '../../assets/dock.svg'
 
 /* ---------------- SHAPE TYPES ---------------- */
 
@@ -377,22 +378,79 @@ export function drawCrosshair(
     ctx.fill()
 }
 
+/* ---------------- BASE (DOCK + ROBOT) ---------------- */
+
+// The marker is a static SVG (assets/dock.svg, ported from Vacuula 2) drawn
+// with drawImage, so it stays crisp at any zoom and can be edited in Inkscape.
+// Its viewBox is "-10 -18 20 36" with the DOCK CENTRE at (0,0); the dock's
+// long side is perpendicular to the robot heading (+X). R = 16 units = the
+// robot's physical radius (165 mm).
+const DOCK_VIEWBOX = { x: -10, y: -18, w: 20, h: 36 }
+const DOCK_UNIT_R = 16
+const ROBOT_RADIUS_MM = 165
+
+let dockImage: HTMLImageElement | null = null
+let dockReady = false
+const dockReadyListeners = new Set<() => void>()
+
+function getDockImage(): HTMLImageElement {
+    if (!dockImage) {
+        dockImage = new Image()
+        dockImage.onload = () => {
+            dockReady = true
+            dockReadyListeners.forEach(fn => fn())
+            dockReadyListeners.clear()
+        }
+        dockImage.src = dockUrl
+    }
+    return dockImage
+}
+
+/** Registers a one-shot callback for when the dock marker image has loaded
+ *  (no-op if it already has). Callers use it to trigger one extra redraw. */
+export function onDockImageReady(fn: () => void) {
+    if (dockReady) return
+    dockReadyListeners.add(fn)
+    getDockImage()
+}
+
+export interface BasePose {
+    /** Dock centre, normalised to the map grid (0..1 of width / height). */
+    x: number
+    y: number
+    /** Dock heading in degrees (robot's base.dir). 0 = robot faces +X. */
+    dir: number
+}
+
+/**
+ * Draws the dock + robot marker at the base pose, rotated to the dock
+ * heading. `resolution` is mm per map cell (floorplan/metadata resolution),
+ * used to size the marker to the robot's real footprint.
+ */
 export function drawBase(
     ctx: CanvasRenderingContext2D,
-    coords: { x: number; y: number; width: number; height: number },
+    base: BasePose,
     zoom: number,
     offset: { x: number; y: number },
     mapSize: { height: number, width: number },
+    resolution: number,
 ) {
-    const sx = mapSize.width * zoom
-    const sy = mapSize.height * zoom
+    const img = getDockImage()
+    if (!dockReady) return
 
-    const x = offset.x + coords.x * sx
-    const y = offset.y + coords.y * sy
-    const w = coords.width * sx
-    const h = coords.height * sy
+    const cx = offset.x + base.x * mapSize.width * zoom
+    const cy = offset.y + base.y * mapSize.height * zoom
 
-    ctx.fillStyle = 'red'
-    console.log(x, y, w, h)
-    ctx.fillRect(x, y, w, h)
+    // Robot radius in screen px: (mm / mm-per-cell) cells * px-per-cell.
+    const rPx = (ROBOT_RADIUS_MM / (resolution || 40)) * zoom
+    const s = rPx / DOCK_UNIT_R
+
+    ctx.save()
+    ctx.translate(cx, cy)
+    // base.dir is the dock heading in the floorplan's own frame, as reported
+    // by the robot on every dock (maps.create -> robot.base.dir). Positive
+    // canvas rotation = clockwise on screen, verified on hardware (D10).
+    ctx.rotate(base.dir * Math.PI / 180)
+    ctx.drawImage(img, DOCK_VIEWBOX.x * s, DOCK_VIEWBOX.y * s, DOCK_VIEWBOX.w * s, DOCK_VIEWBOX.h * s)
+    ctx.restore()
 }

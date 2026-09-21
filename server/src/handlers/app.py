@@ -76,6 +76,9 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
         floorplan = session.get(FloorPlan, map_id)
     
     data["in_maps_list"] = floorplan.in_maps_list
+    # Dock pose [x_mm, y_mm, dir_deg] so the Runs map can draw the base marker
+    # (origin/resolution/img_size already come from floormap.json's metadata).
+    data["base"] = floorplan.base
 
     req.send_ok(data)
 
