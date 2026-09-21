@@ -3,6 +3,10 @@ import { useRobot } from '../context/useRobot'
 import { persistentMapsLoader } from '../loaders/resources'
 import { Neato, RobotType } from '../types'
 
+export function getPromotedFloorplan() {
+    return useGetPromotedFloorplan()
+}
+
 export function useGetPromotedFloorplan() {
     const { robot } = useRobot()
     const serial = robot.serial

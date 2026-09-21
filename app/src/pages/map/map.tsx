@@ -20,6 +20,7 @@ import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import type { NoGoLine, Point, UseState, Zone } from '../../components/map/types'
 import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline } from '../../components/map/drawingFunctions'
 import { upsertPreserveOrder } from '../../components/map/utils'
+import { isDocked } from '../../components/topbar/robotInfo'
 
 
 export default () => {
@@ -51,7 +52,7 @@ export default () => {
 
     const { data: persistentMaps, refresh: updatePersistentMaps } = usePersistentMaps()
     const getPromotedFloorplan = useGetPromotedFloorplan()
-    
+
 
     const extraDraw = useCallback((ctx, canvas, currentZoom, currentOffset, mapSize) => {
         const showBoundaries = mode === 'boundary-edit'
@@ -210,6 +211,16 @@ export default () => {
         }
     }
 
+    const cleanZone = async (zone: Zone) => {
+        if (robot.type === RobotType.NeatoGen3) {
+            GEN3_COMMANDS.startCleaningZone(robot.serial, zone.id, Neato.Gen3.CleaningMode.ECO, Neato.Gen3.CleaningNavigationMode.EXTRA_CARE)
+            return;
+        }
+        const promotedFloorplan = await getPromotedFloorplan();
+        if (!promotedFloorplan) return // TODO: ERROR (will do when i do gen3)
+        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, promotedFloorplan.id, true, [zone.id])
+    }
+
     return (
         <div className={styles.container}>
             {persistentMap ? (
@@ -264,10 +275,12 @@ export default () => {
                             <span style={{ textAlign: 'center' }}>{t('map.noMaps')}</span>
                         )}
                         <hr style={{ width: '90%' }} />
-                        <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
+                        <div className={styles.item} style={{ opacity: isDocked(robot) ? 1 : 0.5, pointerEvents: isDocked(robot) ? undefined : 'none', justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => robot.type === RobotType.NeatoGen4
+                            ? GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE)
+                            : GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
                             <div className={styles.info}>
                                 <span>{t('map.newMap')}</span>
-                                <span className={styles.type}>{t('map.exploreNewMap')}</span>
+                                <span className={styles.type}>{isDocked(robot) ? t('map.exploreNewMap') : t('map.cannotExploreNewMap')}</span>
                             </div>
                         </div>
                     </div>
@@ -327,6 +340,7 @@ export default () => {
                             setMode('boundary-edit');
                             SetReturnFromEditMode(mode)
                         }}
+                        onCleanZone={(zone) => cleanZone(zone)}
                     />
                 )}
 
@@ -356,12 +370,7 @@ export default () => {
                                         </span>
                                     </div>
                                     {item.type === 'polyline' && (<Input type="switch" skipSection={true} value={item.enabled} onChange={() => toggleNoGoLine(item)} />)}
-                                    {item.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={async () => {
-                                        // GEN3_COMMANDS.startCleaningZone('GPC23118-40bd32d13ac7', item.id, CleaningMode.ECO, CleaningNavigationMode.EXTRA_CARE)
-                                        const promotedFloorplan = await getPromotedFloorplan();
-                                        if (!promotedFloorplan) return // TODO: ERROR (will do when i do gen3)
-                                        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, promotedFloorplan.id, item.id)
-                                    }} />)}
+                                    {item.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => cleanZone(item)} />)}
                                 </div>
                             ))}
                         </div>
@@ -376,6 +385,7 @@ interface BoundaryDetailsProps {
     boundary: NoGoLine | Zone
     editBoundary: (id: string) => void
     deleteBoundary: (id: string) => void
+    onCleanZone: (boundary: Zone) => void
 }
 
 const BoundaryDetails = (props: BoundaryDetailsProps) => {
@@ -389,14 +399,15 @@ const BoundaryDetails = (props: BoundaryDetailsProps) => {
                         <span className={styles.type} style={{ color: props.boundary.color }}>{props.boundary.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}</span>
                     </div>
                     {props.boundary.type === 'polyline' && (<Input type="switch" skipSection={true} value={props.boundary.enabled} onChange={(value) => props.boundary.enabled = value} />)}
-                    {props.boundary.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => { }} />)}
+                    {props.boundary.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => props.onCleanZone(props.boundary as Zone)} />)}
                 </div>
             </div>
 
             <div className={styles.zoneActions}>
-                {props.boundary.type === 'polygon' && (
+                {/* TODO: add a scheduiling feature here in the future */}
+                {/* {props.boundary.type === 'polygon' && (
                     <Button text={t('map.addSchedule')} style='secondary' onClick={() => console.log('Add schedule')} />
-                )}
+                )} */}
                 <Button text={t('common.edit')} style='primary' onClick={() => props.editBoundary(props.boundary.id)} />
                 <Button text={t('common.delete')} style='fail' onClick={() => props.deleteBoundary(props.boundary.id)} />
             </div>

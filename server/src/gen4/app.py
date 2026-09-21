@@ -251,11 +251,13 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
 
     with open(f'uploads/maps/{serial}/{map_id}/rank_binary.pgm.nz', 'rb') as rank:
         with open(f'uploads/maps/{serial}/{map_id}/real_binary.pgm.nz', 'rb') as real:
+            # TODO: verify if this patching is really needed!!!!
+            real_binary_patched = _mark_targets_inside_zones(real.read(), cleaning_zones, floorplan)
             payload = {
                 "ability": "maps.promote_floorplan",
                 "rank_uuid":     floorplan.id,
                 "rank_binary":   base64.b64encode(rank.read()).decode("ascii"),
-                "real_binary":   base64.b64encode(real.read()).decode("ascii"),
+                "real_binary":   base64.b64encode(real_binary_patched).decode("ascii"),
                 "old_rank_uuid": None, # manually demoted
                 "base": {
                     "x":   floorplan.base[0],
@@ -296,6 +298,82 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
 
 
     req.send_ok(payload)
+
+# is this really needded???
+def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):
+    # Set byte==6 cells inside each cleaning-zone polygon to byte==4 in the
+    # real.pgm payload, so the firmware's target finder has valid targets
+    # (byte 3/4) even over already-cleaned floor. One-time, applied only to the
+    # bytes sent in this promote; the file on disk is untouched. Returns the
+    # (re-compressed) blob, or the original on any failure / no-op.
+    try:
+        import zlib as _zlib
+        import numpy as _np
+        raw = _zlib.decompress(real_blob)
+        if not raw.startswith(b"P5"):
+            return real_blob
+        W, H = floorplan.imgsize
+        # PGM (P5) pixels are 1 byte/cell when maxval <= 255, else 2 bytes/cell
+        # big-endian (the firmware's zone maps are 16-bit, maxval=65535). Parse
+        # maxval from the header so both widths are handled. The header may
+        # carry '#' comment lines (the robot's real.pgm has a '# metadata:' line),
+        # so tokens are read with a real PGM tokenizer that skips comments, NOT a
+        # naive whitespace split. The pixel block is still located from the END
+        # of the buffer (len - W*H*bpp), which is robust to any header layout.
+        def _pgm_tokens(buf, n):
+            toks, i, L = [], 0, len(buf)
+            while len(toks) < n and i < L:
+                c = buf[i:i+1]
+                if c in b" \t\r\n":
+                    i += 1
+                elif c == b"#":
+                    j = buf.find(b"\n", i)
+                    i = L if j < 0 else j + 1
+                else:
+                    j = i
+                    while j < L and buf[j:j+1] not in b" \t\r\n#":
+                        j += 1
+                    toks.append(buf[i:j]); i = j
+            return toks
+        toks = _pgm_tokens(raw, 4)          # P5, width, height, maxval
+        if len(toks) < 4:
+            print("PROMOTE_PATCH: malformed PGM header %r; skipping" % toks)
+            return real_blob
+        try:
+            maxval = int(toks[3])
+        except ValueError:
+            print("PROMOTE_PATCH: bad PGM maxval %r; skipping" % toks[3])
+            return real_blob
+        bpp = 2 if maxval > 255 else 1
+        dtype = _np.dtype(">u2") if bpp == 2 else _np.uint8
+        npix = W * H * bpp
+        pixels_offset = len(raw) - npix
+        if pixels_offset < 4 or pixels_offset > 1024:
+            print("PROMOTE_PATCH: real.pgm size mismatch (offset=%d, bpp=%d); skipping" % (pixels_offset, bpp))
+            return real_blob
+        arr = _np.frombuffer(raw[pixels_offset:pixels_offset + npix], dtype=dtype).reshape(H, W).copy()
+        changed = 0
+        for boundary in cleaning_zones:
+            if boundary.type != "polygon" or len(boundary.vertices) < 3:
+                continue
+            pts = [(p[0] * W, p[1] * H) for p in boundary.vertices]
+            mimg = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(mimg).polygon(pts, fill=1, outline=1)
+            mask = _np.array(mimg, dtype=bool)
+            targets = mask & (arr == 6)
+            n = int(targets.sum())
+            if n:
+                arr[targets] = 4
+                changed += n
+        if not changed:
+            print("PROMOTE_PATCH: no byte=6 cells inside cleaning polygons; unchanged")
+            return real_blob
+        new_raw = raw[:pixels_offset] + arr.tobytes()
+        print("PROMOTE_PATCH: marked %d cells (6->4) inside cleaning polygons" % changed)
+        return _zlib.compress(new_raw, level=9)
+    except Exception as _e:
+        print("PROMOTE_PATCH failed (non-fatal): %s: %s" % (type(_e).__name__, _e))
+        return real_blob
 
 
 def demote_floorplan(serial: str, map_id: str):

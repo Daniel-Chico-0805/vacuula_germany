@@ -86,23 +86,22 @@ function demoteFloorplan(serial: string, id: string) {
     })
 }
 
-function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode, mapId?: string, zoneId?: string) {
+function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigationMode: Neato.Gen4.CleaningNavigationMode, mapId?: string, nogoEnabled?: boolean, zoneIds?: string[]) {
     // no mapId = full possible clean
     // only mapId = cleaning of map, going around nogo lines and nogo zones
     // mapId & zoneId = clean that zone
-    const map = mapId !== undefined ? 
-        { rank_id: mapId, track_id: zoneId || null, nogo_enabled: true } : 
-        null // robot needs null as value
+    const settings = {
+        mode,
+        navigation_mode: navigationMode,
+    };
+    const runs = mapId === undefined ? [{ map: null, settings}] : 
+        zoneIds === undefined ? [{ map: { rank_id: mapId, track_id: null, nogo_enabled: nogoEnabled }, settings}] :
+        zoneIds.map(z => ({ map: { rank_id: mapId, track_id: z, nogo_enabled: nogoEnabled }, settings}));
+
     return Http.sendCmd(serial, {
-        ability: "cleaning.start",
-        runs: [{
-            map,
-            settings: {
-                mode,
-                navigation_mode: navigationMode,
-            },
-        }]
-    })
+            ability: "cleaning.start",
+            runs
+        })
 }
 
 function cleaningInfo(serial: string) {
@@ -123,11 +122,11 @@ export const GEN4_COMMANDS = {
     getSchedule,
     updateOrAddSchduledEvent,
     deleteScheduledEvent,
-    
+
     demoteFloorplan,
     getSettings,
     setSettings,
-    
+
     getRobotState,
     findMe,
 

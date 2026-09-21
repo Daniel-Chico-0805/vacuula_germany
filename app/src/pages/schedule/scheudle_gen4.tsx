@@ -19,6 +19,9 @@ import type { CommandEvent } from '../../types/neato/gen4'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { dayKey } from '../../i18n/days'
+import { useGetPromotedFloorplan } from '../../utils/floormaps'
+import { useRobot } from '../../context/useRobot'
+import type { NoGoLine, Zone } from '../../components/map/types'
 
 // For now schduling will be only for cleaning.start for ONE run, later on scheduling can be more advanced
 
@@ -38,6 +41,22 @@ export default () => {
     const [scheduleFormNavigationMode, setScheduleFormNavigationMode] = useState<Neato.Gen4.CleaningNavigationMode>()
     const [scheduleFormCleaningMode, setScheduleCleaningMode] = useState<Neato.Gen4.CleaningMode>()
 
+    const getPromotedFloorplan = useGetPromotedFloorplan()
+    const [promotedFloorplan, setPromotedFloorplan] =
+        useState<Neato.Gen4.Floorplan>()
+    useEffect(() => {
+        getPromotedFloorplan().then(setPromotedFloorplan)
+    }, [getPromotedFloorplan])
+
+    const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
+    useEffect(() => {
+        if (!promotedFloorplan) return
+        Http.getBoundaries(robot.serial, promotedFloorplan.id).then(res => setBoundaries(res.data))
+    }, [promotedFloorplan])
+    const [selectedZones, setSelectedZones] = useState<string[]>([])
+    const [nogoEnabled, setNogoEnabled] = useState<boolean>(true)
+    const [usePromotedFloorplan, setUsePromotedFloorplan] = useState<boolean>(true)
+
     // const [schduleRuns, setScheduleRuns] = useState<Neato.Gen4.Run[]>()
     const [scheduleForm, setScheduleForm] = useState<Omit<Neato.Gen4.CommandEvent, "command">>({
         enabled: true,
@@ -45,12 +64,21 @@ export default () => {
         time: '',
     })
 
-    const { robot, persistentMaps } = useApp()
+    const { robot } = useRobot()
 
     const setFormFromEvent = (event: Neato.Gen4.CommandEvent) => {
         setScheduleForm(event);
+        // in this fucked up implimitation, if one has a map, all has, also modes are the same. TODO: make the runs separate!
         setScheduleFormNavigationMode(event.command.runs[0].settings.navigation_mode);
         setScheduleCleaningMode(event.command.runs[0].settings.mode);
+
+        if (event.command.runs[0].map === null) {
+            setUsePromotedFloorplan(false)
+        } else {
+            setNogoEnabled(event.command.runs[0].map.nogo_enabled)
+            setSelectedZones(event.command.runs.map(r => r.map!.track_id).filter(id => id != null))
+        }
+
         setDrawerOpen(true)
     }
 
@@ -62,7 +90,10 @@ export default () => {
         });
         setScheduleFormNavigationMode(undefined);
         setScheduleCleaningMode(undefined);
-        setDrawerOpen(true)
+        setUsePromotedFloorplan(true);
+        setNogoEnabled(true);
+        setSelectedZones([]);
+        setDrawerOpen(true);
     }
 
 
@@ -129,7 +160,7 @@ export default () => {
                         }} />
                     </div>
                 ))}
-                {persistentMaps?.length === 0 && (
+                {schedule.events?.length === 0 && (
                     <span style={{ textAlign: 'center' }}>{t('schedule.noSchedules')}</span>
                 )}
             </div>
@@ -188,6 +219,42 @@ export default () => {
                         value={scheduleForm.time}
                         onChange={(time) => updateForm(setScheduleForm, { time })} />
 
+
+                    {promotedFloorplan && (
+                        <>
+                            <Input
+                                type="switch"
+                                label={t('schedule.usePromoted')}
+                                value={usePromotedFloorplan}
+                                onChange={setUsePromotedFloorplan}
+                            />
+
+                            {usePromotedFloorplan && (
+                                <>
+                                    <Input
+                                        type="switch"
+                                        label={t('schedule.useNogoLayer')}
+                                        value={nogoEnabled}
+                                        onChange={setNogoEnabled}
+                                    />
+
+                                    {boundaries && (
+                                        <>
+                                            <Input
+                                                type="multi-select"
+                                                label={t('schedule.selectZones')}
+                                                extraInfo={t('schedule.selectZonesHelp')}
+                                                options={boundaries.filter(b => b.type === 'polygon').map(b => ({ value: b.id, label: b.name }))}
+                                                value={selectedZones}
+                                                onChange={setSelectedZones}
+                                            />
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </>
+                    )}
+
                     {/* <Input
                         type="text"
                         label="boundaryId"
@@ -197,23 +264,23 @@ export default () => {
                     <Button text={t('common.save')} style='success' onClick={() => {
                         if (!scheduleFormNavigationMode || !scheduleFormCleaningMode) return;
 
+                        const settings = {
+                            mode: scheduleFormCleaningMode,
+                            navigation_mode: scheduleFormNavigationMode,
+                        };
+                        const mapId = usePromotedFloorplan ? promotedFloorplan?.id : undefined
+                        const runs = mapId === undefined ? [{ map: null, settings }] :
+                            selectedZones.length === 0 ? [{ map: { rank_id: mapId, track_id: null, nogo_enabled: nogoEnabled }, settings }] :
+                                selectedZones.map(z => ({ map: { rank_id: mapId, track_id: z, nogo_enabled: nogoEnabled }, settings }));
+
+
                         GEN4_COMMANDS.updateOrAddSchduledEvent(robot.serial, {
                             ...scheduleForm,
                             command: {
                                 ability: "cleaning.start",
                                 auto_localization: false, // unused
                                 force_floorplan: false,
-                                runs: [{
-                                    settings: {
-                                        navigation_mode: scheduleFormNavigationMode,
-                                        mode: scheduleFormCleaningMode,
-                                    },
-                                    map: {
-                                        rank_id: null as any,
-                                        track_id: null,
-                                        nogo_enabled: true
-                                    }
-                                }]
+                                runs
                             }
                         }).finally(() => getSchedule())
                     }} />

@@ -39,8 +39,7 @@ export default function MapCanvas({
     setClosedAsPolygon,
     setDrawerOpen
 }: MapCanvasProps) {
-    // Purely a "how close is the crosshair to the first point" UI flag — nothing outside
-    // this component reads it, so it doesn't need to be lifted to the parent.
+    // TODO: decide on how exactly i want this to work, for now just show the button if there is at least 3 points.
     const [showCloseAsPolygon, setShowCloseAsPolygon] = useState(false)
 
     const { canvasRef, mapSize, zoom, offset, isDragging, hasMoved, canvasHandlers } = useMap({
@@ -113,7 +112,7 @@ export default function MapCanvas({
                     <div onClick={addPointAtCrosshair} className={`${styles.add} ${closedAsPolygon ? styles.disabled : ''}`}>
                         <FaPlus size={40} color="var(--text)" />
                     </div>
-                    <div onClick={closeAsPolygon} className={`${styles.closePolygon} ${(showCloseAsPolygon && !closedAsPolygon) ? '' : styles.disabled}`}>
+                    <div onClick={closeAsPolygon} className={`${styles.closePolygon} ${((currentLinePoints.length > 2) && !closedAsPolygon) ? '' : styles.disabled}`}>
                         <PiBoundingBox size={20} color="var(--text)" />
                     </div>
                 </div>

@@ -33,12 +33,12 @@ export interface Command {
 
 export interface SchduleRun {
     settings: RunSettings;
-    map?:      RunMap;
+    map:      RunMap | null;
 }
 
 export interface RunMap {
     rank_id:      string;
-    track_id:     null;
+    track_id:     string | null;
     nogo_enabled: boolean;
 }
 

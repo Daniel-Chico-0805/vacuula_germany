@@ -5,6 +5,10 @@ import gen4.init
 import handlers.init
 from handlers.setup import MDNSAdvertiser
 
+# welcome to the source code for vacuula. sorry for it being a mess, a cleanup effort is on the way.
+# the big unexpected differances between the robot generations and wanting to release something as fast as
+# possible has resulted in this. Please don't judge to hard lol
+
 if __name__ == "__main__":
     threading.Thread(target=gen3.init.start, daemon=True).start()
     threading.Thread(target=gen4.init.start, daemon=True).start()

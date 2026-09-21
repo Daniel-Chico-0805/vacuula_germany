@@ -33,7 +33,7 @@ const basicStateIcons: Record<BasicState, IconType> = {
     [BasicState.SUSPENDED_EXPLORATION]: IoMdPause,
 }
 
-function isDocked(robot: Robot) {
+export function isDocked(robot: Robot) {
     if (robot.type === RobotType.NeatoGen3) return robot.details.isDocked;
     if (robot.type === RobotType.NeatoGen4) return robot.details.is_docked;
 }

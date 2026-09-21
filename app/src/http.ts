@@ -5,13 +5,13 @@ import { EVENT_CALLBACKS } from "./http/events";
 import { Neato, type QuickRobotInfo } from "./types";
 import type * as Gen3 from './types/neato/gen3'
 import type * as Gen4 from './types/neato/gen4'
-import type { NoGoLine, Zone } from "./pages/map/types";
+import type { NoGoLine, Zone } from "./components/map/types";
 
 // Store for loading state callback - will be set by AppContext
 let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
-  baseURL: 'http://localhost:80/api',
+  baseURL: `http://${location.hostname}:80/api`, // IMPORTANT: keep like this for now, this will work perfectly when built and in dev. currently some issues with the vite proxy, will fix it after initial release!!
 });
 
 

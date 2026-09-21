@@ -113,7 +113,11 @@
     "weekends": "on weekends",
     "weekdays": "on weekdays",
     "navigation": "Navigation",
-    "boundaryId": "Boundary ID"
+    "boundaryId": "Boundary ID",
+    "usePromoted": "Use promoted floorplan",
+    "useNogoLayer": "Avoid nogo lines & zones",
+    "selectZones": "Clean zones",
+    "selectZonesHelp": "Optional, select one or more zones to clean, if none selected, it will clean entire map."
   },
   "map": {
     "maps": "Maps",
@@ -124,6 +128,7 @@
     "noMaps": "You don't have any explored maps yet, start an exploration to draw boundaries!",
     "newMap": "New map",
     "exploreNewMap": "Explore new map",
+    "cannotExploreNewMap": "Robot needs to be docked to start exploration.",
     "stopUsingAsFloormap": "Stop using as floormap",
     "useAsFloormap": "Use as floormap",
     "editMapDetails": "Edit map details",
