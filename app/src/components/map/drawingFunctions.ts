@@ -1,5 +1,6 @@
 import { COLORS, DRAWING, readMapToken } from './constants'
 import type { Zone, NoGoLine, Point } from './types'
+import { normalizeHex, withAlpha } from './color'
 
 /* ---------------- SHAPE TYPES ---------------- */
 
@@ -222,8 +223,13 @@ function drawZone(
 ) {
     if (zone.vertices.length < 3) return
 
-    ctx.fillStyle = zone.color ? zone.color + '33' : COLORS.POLYGON_FILL
-    ctx.strokeStyle = zone.color || COLORS.LINE_COLOR
+    // Outline in the zone's colour; interior in the same colour at low alpha so
+    // the floor cells stay visible. Both go through the colour helpers: an
+    // invalid fillStyle would be silently ignored by the canvas and the
+    // interior would keep whatever opaque colour was set before.
+    const outline = normalizeHex(zone.color) ?? COLORS.LINE_COLOR
+    ctx.fillStyle = withAlpha(zone.color, DRAWING.ZONE_FILL_ALPHA, COLORS.POLYGON_FILL)
+    ctx.strokeStyle = outline
 
     const sx = mapSize.width * zoom
     const sy = mapSize.height * zoom
@@ -270,7 +276,7 @@ function drawNoGoLine(
 ) {
     if (nogoLine.vertices.length < 2) return
 
-    ctx.strokeStyle = nogoLine.color || COLORS.LINE_COLOR
+    ctx.strokeStyle = normalizeHex(nogoLine.color) ?? COLORS.LINE_COLOR
 
     const sx = mapSize.width * zoom
     const sy = mapSize.height * zoom

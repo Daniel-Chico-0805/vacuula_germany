@@ -20,6 +20,8 @@ import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import type { NoGoLine, Point, UseState, Zone } from '../../components/map/types'
 import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline } from '../../components/map/drawingFunctions'
 import { upsertPreserveOrder } from '../../components/map/utils'
+import { normalizeHex, pickUnusedPreset, withAlpha } from '../../components/map/color'
+import ColorPicker from '../../components/colorPicker/ColorPicker'
 import { isDocked } from '../../components/topbar/robotInfo'
 
 
@@ -139,7 +141,9 @@ export default () => {
         const existingBoundary = boundaries.find(b => b.id === activeBoundaryId);
         setEditForm({
             name: existingBoundary?.name ?? '',
-            color: existingBoundary?.color ?? `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+            // New boundary: first preset not used on this map. Existing one with a
+            // malformed colour (old un-padded random hex): also fall back to a preset.
+            color: normalizeHex(existingBoundary?.color) ?? pickUnusedPreset(boundaries.map(b => b.color)),
             zoneType: existingBoundary?.type === 'polygon' ?
                 (existingBoundary?.function === 'cleaning' ?
                     BoundaryTypes.CLEANING_ZONE : BoundaryTypes.NOGO_ZONE
@@ -275,7 +279,7 @@ export default () => {
                             <span style={{ textAlign: 'center' }}>{t('map.noMaps')}</span>
                         )}
                         <hr style={{ width: '90%' }} />
-                        <div className={styles.item} style={{ opacity: isDocked(robot) ? 1 : 0.5, pointerEvents: isDocked(robot) ? undefined : 'none', justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => robot.type === RobotType.NeatoGen4
+                        <div className={`${styles.item} ${styles.actionItem} ${isDocked(robot) ? '' : styles.disabled}`} onClick={() => robot.type === RobotType.NeatoGen4
                             ? GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE)
                             : GEN3_COMMANDS.startPersistentMapExploration(robot.serial)}>
                             <div className={styles.info}>
@@ -362,10 +366,10 @@ export default () => {
 
                         <div className={styles.featureList}>
                             {boundaries.map((item, i) => (
-                                <div key={i} className={styles.item} style={{ background: `${item.color || 'red'}22` }} onClick={() => openInfo(item.id)}>
+                                <div key={i} className={styles.item} style={{ background: withAlpha(item.color, 0.13) }} onClick={() => openInfo(item.id)}>
                                     <div className={styles.info}>
                                         <span>{item.name}</span>
-                                        <span className={styles.type} style={{ color: item.color }}>
+                                        <span className={styles.type} style={{ color: normalizeHex(item.color) ?? undefined }}>
                                             {item.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}
                                         </span>
                                     </div>
@@ -393,10 +397,10 @@ const BoundaryDetails = (props: BoundaryDetailsProps) => {
     return (
         <div className={styles.boundaryDetails}>
             <div className={styles.featureList}>
-                <div className={styles.item} style={{ background: `${props.boundary.color || 'red'}22` }}>
+                <div className={styles.item} style={{ background: withAlpha(props.boundary.color, 0.13) }}>
                     <div className={styles.info}>
                         <span>{props.boundary.name}</span>
-                        <span className={styles.type} style={{ color: props.boundary.color }}>{props.boundary.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}</span>
+                        <span className={styles.type} style={{ color: normalizeHex(props.boundary.color) ?? undefined }}>{props.boundary.type === 'polygon' ? t('map.zone') : t('map.noGoLine')}</span>
                     </div>
                     {props.boundary.type === 'polyline' && (<Input type="switch" skipSection={true} value={props.boundary.enabled} onChange={(value) => props.boundary.enabled = value} />)}
                     {props.boundary.type === 'polygon' && (<Button style='primary' text={t('map.cleanZone')} onClick={() => props.onCleanZone(props.boundary as Zone)} />)}
@@ -480,12 +484,9 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
                     </Input>
                 )}
 
-                <Input
-                    type="text"
-                    label={t('map.color')}
-                    value={props.color}
-                    onChange={(value) => props.setColor(value)}
-                />
+                <Input type="custom" label={t('map.color')}>
+                    <ColorPicker value={props.color} onChange={props.setColor} />
+                </Input>
             </div>
 
 

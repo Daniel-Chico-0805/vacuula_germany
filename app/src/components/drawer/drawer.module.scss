@@ -61,4 +61,7 @@
     cursor: pointer;
     position: absolute;
     left: 2rem;
+    padding: 0.4rem;
+    border-radius: 50%;
+    @include pressable;
 }

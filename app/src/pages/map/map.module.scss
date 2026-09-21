@@ -39,6 +39,12 @@
         justify-content: center;
         border-radius: 50%;
         box-shadow: $shadow-md;
+        @include pressable;
+
+        // Floating controls: keep the drop shadow under the hover ring.
+        &:hover:not(:disabled):not(.disabled) {
+            box-shadow: $shadow-md, 0 0 12px $accent-ring;
+        }
     }
 
     .btngroup {
@@ -125,8 +131,10 @@
         gap: 1rem;
         padding: 1rem;
         background: $surface;
+        border: 1px solid transparent;
         border-radius: 1rem;
         justify-content: space-between;
+        @include hoverable;
 
         .info {
             display: flex;
@@ -143,6 +151,27 @@
             }
         }
 
+    }
+
+    // A list card that is itself an action ("New map"): same press/hover
+    // feedback as the home-screen controls, accent-tinted, centred text.
+    .actionItem {
+        justify-content: center;
+        text-align: center;
+        background: $accent-soft;
+        border: 1px solid transparent;
+        @include pressable($hover-border: true);
+
+        // Keep the accent tint over the plain-row hover/active backgrounds.
+        &:hover,
+        &:active {
+            background: $accent-soft;
+        }
+
+        &.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     }
 }
 
@@ -241,13 +270,12 @@
     cursor: pointer;
     font-size: 1.2rem;
     font-weight: 600;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    @include pressable($hover-border: true);
 
-    &:hover {
-        border-color: $accent;
+    &:hover:not(:disabled):not(.disabled) {
         background: $surface-hover;
         color: $accent;
     }

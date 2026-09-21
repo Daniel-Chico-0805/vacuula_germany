@@ -126,8 +126,10 @@
         gap: 1rem;
         padding: 1rem;
         background: $surface;
+        border: 1px solid transparent;
         border-radius: 1rem;
         justify-content: space-between;
+        @include hoverable;
 
         .info {
             display: flex;
@@ -144,6 +146,42 @@
             }
         }
 
+    }
+
+    // A row that only holds a control (e.g. the Gen3 "Schedule" on/off switch):
+    // no row-level hover/press, the switch is the interactive part.
+    .staticItem {
+        cursor: default;
+        background: $accent-soft;
+
+        &:hover,
+        &:active {
+            background: $accent-soft;
+            border-color: transparent;
+            box-shadow: none;
+            transform: none;
+        }
+    }
+
+    // A list card that is itself an action ("New schedule"): same press/hover
+    // feedback as the home-screen controls, accent-tinted, centred text.
+    .actionItem {
+        justify-content: center;
+        text-align: center;
+        background: $accent-soft;
+        border: 1px solid transparent;
+        @include pressable($hover-border: true);
+
+        // Keep the accent tint over the plain-row hover/active backgrounds.
+        &:hover,
+        &:active {
+            background: $accent-soft;
+        }
+
+        &.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     }
 }
 

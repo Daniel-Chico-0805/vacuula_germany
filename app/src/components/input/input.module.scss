@@ -52,7 +52,7 @@
     font-weight: 600;
     pointer-events: auto;
     border: none;
-
+    @include pressable;
 }
 
 .activeSelectButton {
