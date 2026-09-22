@@ -168,6 +168,7 @@
     "appLanguage": "App language",
     "theme": "Theme",
     "theme_dark": "Dark",
+    "theme_soft": "Dark (soft)",
     "theme_light": "Light",
     "units": "Units",
     "units_metric": "Metric (m², cm)",
