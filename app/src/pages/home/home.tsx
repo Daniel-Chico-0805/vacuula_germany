@@ -70,6 +70,12 @@ function CtrlBtn({ icon, label, disabled, onClick }: { icon: React.ReactNode, la
 
 var interval: number | undefined;
 
+// How long the "locate" bell icon keeps animating. The Neato Gen4 firmware
+// queues the find-me sound 5 times back-to-back (2.46 s file + <=0.1 s polling
+// between repeats), so 5 x 2.5 s. Must match `.bellIcon` in home.module.scss
+// (animation duration x iteration count) or the class is removed mid-swing.
+const BELL_MS = 5 * 2500;
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
     const { t } = useTranslation()
@@ -163,8 +169,8 @@ export default function Home() {
                         onClick={() => {
                             setBellAnimating(true);
                             (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).findMe(robot.serial);
-                            // Reset animation after it completes
-                            setTimeout(() => setBellAnimating(false), 500)
+                            // Reset animation after all 5 swings complete
+                            setTimeout(() => setBellAnimating(false), BELL_MS)
                         }}
                     />
 
