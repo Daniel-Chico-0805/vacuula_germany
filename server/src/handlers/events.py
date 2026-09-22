@@ -1,7 +1,6 @@
 import json
 import queue
 import threading
-import time
 
 from sqlalchemy import select
 

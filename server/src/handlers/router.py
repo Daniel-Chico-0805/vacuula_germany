@@ -1,7 +1,5 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from datetime import datetime
+from http.server import BaseHTTPRequestHandler
 from handlers.route_matcher import BrainslugHandler, BEEHIVE_ROUTES, NUCLEO_ROUTES, APP_ROUTES, S3_ROUTES
-from socketserver import ThreadingMixIn
 import json
 import socket
 import uuid
@@ -69,9 +67,6 @@ class RouterHandler(BaseHTTPRequestHandler):
             return None
 
     def serve_web(self):
-        print("got req web!")
-        print(self.path)
-
         # Strip /web from the URL
         relative = self.path.removeprefix("/web")
         # Ignore query string
@@ -104,8 +99,6 @@ class RouterHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        print("loading!")
-        print(requested.absolute())
         try:
             content = requested.read_bytes()
         except OSError:
@@ -136,7 +129,6 @@ class RouterHandler(BaseHTTPRequestHandler):
 
     # Routing logic
     def route(self):
-        print(self.path)
         if self.path == "/web" or self.path.startswith("/web/"):
             return self.serve_web()
         accept = self.headers.get("Accept", "")

@@ -1,11 +1,14 @@
 """
-parse_maps.py  —  SLAM map parser for robot vacuum cleaning sessions.
+parse_maps.py  —  SLAM map parser for robot vacuum cleaning sessions (gen3).
 
 Each cleaning session produces exactly TWO files that must be parsed together:
 
     FloorMap.png  —  full SLAM floor map  (walls, free space, unknown)
-    RunMap.png    —  cleaning coverage    (where the robot actually went)
-                     + dock location marker (special pixel values 100 / 200)
+    RunMap.png    —  the path the robot actually drove, plus a dock location
+                     marker (special pixel values 100 / 200).
+                     It is NOT a walls/free/unknown map, so its raw pixel
+                     values are preserved as-is rather than being classified
+                     into the floor legend.
 
 Usage
 -----
@@ -21,8 +24,12 @@ Usage
 
 Outputs
 -------
-    floormap.json  —  RLE grid + embedded dock coordinates
-    runmap.json    —  RLE grid of coverage (no dock info needed here)
+    floormap.json  —  RLE grid of the floor map (unknown / free / wall)
+                       + embedded dock coordinates
+    runmap.json    —  RLE grid of the path map, raw pixel values preserved
+                       (one legend entry per distinct value), same width/
+                       height/downsample as the floor map so the two grids
+                       line up cell-for-cell for merging downstream.
 
 Importing as a module
 ---------------------
@@ -52,14 +59,16 @@ from PIL import Image
 # 4 = 4×4 pixels → 1 cell
 # 8 = very compressed map
 #
+# Applied to BOTH maps so their output grids stay aligned cell-for-cell.
+#
 DOWNSAMPLE = 1
 
 # =========================================================
-# PIXEL CLASSIFICATION
+# PIXEL CLASSIFICATION  (FloorMap only)
 # =========================================================
 # Grayscale:  0 = black,  255 = white
 #
-# SLAM map pixel semantics (shared by both maps):
+# SLAM floor-map pixel semantics:
 #   BLACK (< BLACK_THRESHOLD) → FREE SPACE
 #   WHITE (> WHITE_THRESHOLD) → WALL
 #   GRAY  (everything else)   → UNKNOWN / UNEXPLORED
@@ -83,7 +92,24 @@ WALL    = 2
 # Their combined centroid gives the dock position, which is
 # embedded in floormap.json so consumers always have it.
 #
-DOCK_MARKER_VALUES = {100, 200}
+DOCK_MARKER_LABELS = {100: "dock_marker_top", 200: "dock_marker_bottom"}
+DOCK_MARKER_VALUES = set(DOCK_MARKER_LABELS)
+
+# =========================================================
+# RUNMAP LEGEND  (labels only — pixel values are never remapped)
+# =========================================================
+# The RunMap is NOT classified into unknown/free/wall. Every distinct raw
+# pixel value in the image is kept and listed in the output legend.
+# Recognised values get a readable name; any other value is one of the
+# robot's path "colors" (one per pass / time-bucket / direction) and is
+# named  path_value_<N>.
+#
+#   128   →  background  (untouched canvas — the robot never went here)
+#   100   →  dock_marker_top      (see DOCK DETECTION)
+#   200   →  dock_marker_bottom
+#   other →  path_value_<N>       (the robot drove here)
+#
+RUN_BACKGROUND_VALUE = 128
 
 
 # ---------------------------------------------------------
@@ -113,6 +139,52 @@ def _rle_encode(cells: list[int]) -> list[list[int]]:
     return rle
 
 
+def _run_label(value: int) -> str:
+    if value == RUN_BACKGROUND_VALUE:
+        return "background"
+    if value in DOCK_MARKER_LABELS:
+        return DOCK_MARKER_LABELS[value]
+    return f"path_value_{value}"
+
+
+def _load_pixels(image_path: str | Path) -> tuple[np.ndarray, str]:
+    """
+    Load a PNG as a 2D integer array WITHOUT remapping its values.
+
+    8-bit ("L") and 16-bit ("I;16" / "I") grayscale are kept exactly as
+    stored. Anything else (palette / RGB / RGBA) is flattened to grayscale.
+
+    Returns (pixels[height, width], source_mode).
+    """
+    img  = Image.open(image_path)
+    mode = img.mode
+    if mode not in ("L", "I;16", "I"):
+        img = img.convert("L")
+    return np.array(img).astype(np.int32), mode
+
+
+def _downsample_majority(arr: np.ndarray, downsample: int) -> np.ndarray:
+    """
+    Downsample a 2D integer array by NxN majority vote (most frequent raw
+    value in each block). Keeps full value fidelity — no collapsing into a
+    fixed set of classes — so it works for the path map's arbitrary set of
+    distinct "color" values, not just floor/wall/unknown.
+    """
+    if downsample == 1:
+        return arr
+
+    h, w = arr.shape
+    new_h, new_w = h // downsample, w // downsample
+    out = np.zeros((new_h, new_w), dtype=arr.dtype)
+    for gy in range(new_h):
+        for gx in range(new_w):
+            block = arr[gy * downsample:(gy + 1) * downsample,
+                        gx * downsample:(gx + 1) * downsample]
+            vals, counts = np.unique(block, return_counts=True)
+            out[gy, gx] = vals[np.argmax(counts)]
+    return out
+
+
 # ---------------------------------------------------------
 # Dock detection  (always reads the RunMap)
 # ---------------------------------------------------------
@@ -125,8 +197,8 @@ def detect_dock(run_path: str | Path) -> dict | None:
 
     Returns None if no marker pixels are found.
     """
-    arr  = np.array(Image.open(run_path).convert("L"))
-    H, W = arr.shape
+    arr, _ = _load_pixels(run_path)
+    H, W   = arr.shape
 
     mask   = np.isin(arr, list(DOCK_MARKER_VALUES))
     coords = np.argwhere(mask)   # shape (N, 2): [[row/y, col/x], ...]
@@ -164,16 +236,17 @@ def detect_dock(run_path: str | Path) -> dict | None:
 
 
 # ---------------------------------------------------------
-# Single-map parser
+# FloorMap parser
 # ---------------------------------------------------------
 
-def _parse_one(
+def _parse_floor_map(
     image_path: str | Path,
     map_type:   str,
     dock_info:  dict | None,
 ) -> dict:
     """
-    Parse one SLAM map image into an RLE-compressed dict.
+    Parse the FloorMap image into an RLE-compressed dict of
+    unknown / free / wall cells.
     Dock-marker pixels are classified as FREE so they don't
     corrupt the grid.
     """
@@ -215,6 +288,44 @@ def _parse_one(
 
 
 # ---------------------------------------------------------
+# RunMap / path parser
+# ---------------------------------------------------------
+
+def _parse_path_map(image_path: str | Path, map_type: str = "run") -> dict:
+    """
+    Parse the RunMap image into an RLE-compressed dict, same shape as the
+    floor map's output, but WITHOUT classifying pixels into
+    unknown/free/wall. This map records where the robot actually drove, so
+    every distinct raw pixel value is preserved and listed in "legend"
+    (background / dock markers / path_value_<N>) instead of being collapsed
+    into 3 classes.
+
+    Dock-marker pixels (100 / 200) are kept as-is and labelled in the
+    legend; the dock's coordinates are reported separately by detect_dock().
+    """
+    pixels, source_mode = _load_pixels(image_path)
+    src_h, src_w        = pixels.shape
+
+    grid         = _downsample_majority(pixels, DOWNSAMPLE)
+    new_h, new_w = grid.shape
+    rle          = _rle_encode(grid.reshape(-1).tolist())
+
+    distinct_values = sorted(int(v) for v in np.unique(grid))
+    legend = {str(v): _run_label(v) for v in distinct_values}
+
+    return {
+        "width":       new_w,
+        "height":      new_h,
+        "downsample":  DOWNSAMPLE,
+        "map_type":    map_type,
+        "legend":      legend,
+        "rle":         rle,
+        "img_size":    [src_w, src_h],
+        "source_mode": source_mode,
+    }
+
+
+# ---------------------------------------------------------
 # Public API  —  always call with BOTH maps
 # ---------------------------------------------------------
 
@@ -222,14 +333,16 @@ def parse_session(
     floor_map_path: str | Path,
     run_map_path:   str | Path,
     out_dir:        str | Path = ".",
-    floor_out:      str        = "FloorMap.json",
-    run_out:        str        = "RunMap.json",
+    floor_out:      str        = "floormap.json",
+    run_out:        str        = "runmap.json",
 ) -> tuple[dict, dict]:
     """
     Parse a cleaning session: FloorMap + RunMap must be provided together.
 
     The RunMap is always read first to extract the dock location.
-    The dock info is embedded in the FloorMap JSON output.
+    The dock info is embedded in the FloorMap JSON output. The RunMap is
+    then written out as a path grid with its raw pixel values preserved,
+    aligned cell-for-cell with the floor grid.
 
     Parameters
     ----------
@@ -237,7 +350,7 @@ def parse_session(
     run_map_path    Path to RunMap.png
     out_dir         Directory where both JSON files are written
     floor_out       Filename for the floor map JSON
-    run_out         Filename for the run map JSON
+    run_out         Filename for the run (path) map JSON
 
     Returns
     -------
@@ -265,15 +378,15 @@ def parse_session(
 
     # Step 2: parse FloorMap  (dock info embedded)
     print("\n── Parsing FloorMap ────────────────────────────────────")
-    floor_data = _parse_one(floor_map_path, map_type="floor", dock_info=dock)
+    floor_data = _parse_floor_map(floor_map_path, map_type="floor", dock_info=dock)
     floor_file = out_dir / floor_out
     with open(floor_file, "w") as f:
         json.dump(floor_data, f)
     _print_summary(floor_file, floor_data)
 
-    # Step 3: parse RunMap
-    print("\n── Parsing RunMap ──────────────────────────────────────")
-    run_data = _parse_one(run_map_path, map_type="run", dock_info=None)
+    # Step 3: parse RunMap as a path map (raw pixel values preserved)
+    print("\n── Parsing RunMap / path ───────────────────────────────")
+    run_data = _parse_path_map(run_map_path, map_type="run")
     run_file = out_dir / run_out
     with open(run_file, "w") as f:
         json.dump(run_data, f)
@@ -287,6 +400,7 @@ def _print_summary(path: Path, data: dict) -> None:
     print(f"  Saved      : {path}")
     print(f"  Grid       : {data['width']} × {data['height']}")
     print(f"  RLE entries: {len(data['rle'])}")
+    print(f"  Legend     : {data['legend']}")
     if "dock" in data and data["dock"]:
         d = data["dock"]
         print(f"  Dock (norm): ({d['normalised_x']}, {d['normalised_y']})")
@@ -312,7 +426,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--run-out", default="runmap.json", metavar="FILE",
-        help="Run map JSON filename (default: runmap.json)",
+        help="Run (path) map JSON filename (default: runmap.json)",
     )
     args = parser.parse_args()
 

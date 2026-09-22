@@ -49,6 +49,29 @@ def maps_create(serial: str, data: dict):
 serial = "GPC23118-40bd32d13ac7"
 import json
 
+with get_session() as session:
+    session.add(Robot(
+        name='gen4 robot',
+        serial="2046LB01A11113365",
+    )
+    )
+    session.add(Robot(
+        name='fake-robot',
+        serial="fake-serial",
+    )
+    )
+
+    session.add(Robot(
+        name='gen3-robot',
+        serial='GPC23118-40bd32d13ac7',
+        password='B2A03013507E73EFBC368A69BA58B0808017F603C70E5E925311CCD839730FBC01C5A87A93AB46CC71EC81FE79F72AC08BC2D1491297C84C5C89B775F6D9DC16B93B7713B378E1DBFA4FB8A1F3B214021539BBF671F22B06A7481B1DB72A94384A7C036E8B3BFAF3A68DE9E2B52273D2ACFF281A99865EC1DB406ABBF7C5771B'
+    )
+    )
+    session.commit()
+
+    robot: Robot | None = session.get(Robot, serial)
+    print(robot.name)
+
 for path in os.walk(f'uploads/maps/{serial}'):
     if not 'manifest.json' in path[2]:
         print('Missing manifest.json!')

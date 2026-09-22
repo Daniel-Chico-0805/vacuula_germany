@@ -30,15 +30,15 @@ def get_cert(req: RouterHandler) -> None:
 
 # mDNS stuff
 SERVICE_TYPE = "_vacuula._tcp.local."
-SERVICE_NAME = "Vacuula._vacuula._tcp.local."
+SERVICE_NAME = "Vacuula Server._vacuula._tcp.local."
 MDNS_HOSTNAME = "vacuula.local."
-PORT = 8080
+PORT = 80
 
 def get_local_ip() -> str:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         # Determines which local interface is used for outbound traffic.
-        sock.connect(("9.9.9.9", 80))
+        sock.connect(("9.9.9.9", 53))
         return sock.getsockname()[0]
     finally:
         sock.close()

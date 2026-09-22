@@ -12,7 +12,7 @@ import { GEN3_COMMANDS } from '../../http/gen3'
 import { Http } from '../../http'
 import { useApp } from '../../context/useApp'
 import type { UseState } from '../map/types'
-import { RobotType, type Neato } from '../../types'
+import { Neato, RobotType } from '../../types'
 import { IoMdTime, IoMdCheckmarkCircle, IoMdCloseCircleOutline } from "react-icons/io";
 import { SlEnergy } from "react-icons/sl";
 import Map from '../../components/map/map'
@@ -64,12 +64,12 @@ export default () => {
                                 })}
                             </span>
                             <span className={styles.type}>
-                                <IoMdTime /> &nbsp; {formatDuration(item.timing.start, item.timing.end)} &nbsp; |
-                                &nbsp; {formatArea( 'timing' in item ? calcTotalArea(item) : item.run.cleaned_area)} &nbsp; |
-                                &nbsp; <SlEnergy /> &nbsp; {t('runs.batteryUsed', { percent: item.battery_consumed })}
+                                <IoMdTime /> &nbsp; {'timing' in item ? formatDuration(item.timing.start, item.timing.end) : formatDuration(item.run.start_at, item.run.end_at)} &nbsp; |
+                                &nbsp; {formatArea('timing' in item ? calcTotalArea(item) : item.run.cleaned_area)} &nbsp; |
+                                &nbsp; <SlEnergy /> &nbsp; {t('runs.batteryUsed', { percent: 'battery_consumed' in item ? item.battery_consumed : (item.run.run_charge_at_start - item.run.run_charge_at_end) })}
                             </span>
                         </div>
-                        {item.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />}
+                        {('cleaning_complete' in item ? item.cleaning_complete : item.run.status === 'complete') ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />}
                     </div>
                 ))}
                 {cleanings?.length === 0 && (
@@ -82,7 +82,7 @@ export default () => {
                 handle={false}
                 onOpenChange={setDrawerOpen}
                 openHeightPercent={70}
-                title={selectedCleaning && new Date(selectedCleaning.timing.start).toLocaleString(i18n.language)}
+                title={selectedCleaning && new Date('timing' in selectedCleaning ? selectedCleaning.timing.start : selectedCleaning.run.start_at).toLocaleString(i18n.language)}
             >
 
                 <>
@@ -90,26 +90,26 @@ export default () => {
                     <div className={styles.basicInfos}>
                         <div className={styles.basicInfo}>
                             <span>&nbsp;</span>
-                            <span>{selectedCleaning && selectedCleaning.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} &nbsp;</span>
+                            <span>{selectedCleaning && ('cleaning_complete' in selectedCleaning ? selectedCleaning.cleaning_complete : selectedCleaning.run.status === 'complete') ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} &nbsp;</span>
                         </div>
                         <div className={styles.basicInfo}>
                             <span>{t('runs.duration')}</span>
-                            <span>{selectedCleaning && formatDuration(selectedCleaning?.timing.start, selectedCleaning?.timing.end)} &nbsp;</span>
+                            <span>{selectedCleaning && 'timing' in selectedCleaning ? formatDuration(selectedCleaning.timing.start, selectedCleaning.timing.end) : selectedCleaning && formatDuration(selectedCleaning.run.start_at, selectedCleaning.run.end_at)} &nbsp;</span>
                         </div>
                         <div className={styles.basicInfo}>
                             <span>{t('runs.area')}</span>
-                            <span>{selectedCleaning && formatArea(calcTotalArea(selectedCleaning))}</span>
+                            <span>{selectedCleaning && formatArea('timing' in selectedCleaning ? calcTotalArea(selectedCleaning) : selectedCleaning.run.cleaned_area)}</span>
                         </div>
                         <div className={styles.basicInfo}>
                             <span>{t('runs.battery')}</span>
-                            <span>{selectedCleaning?.battery_consumed} %</span>
+                            <span>{selectedCleaning && ('battery_consumed' in selectedCleaning ? selectedCleaning.battery_consumed : selectedCleaning.run.run_charge_at_start - selectedCleaning.run.run_charge_at_end)} %</span>
                         </div>
                     </div>
 
 
                     <hr style={{ width: '100%' }} />
 
-                    <Map mapId={selectedCleaning?.floorplan || ''} runId={selectedCleaning?.floorplan || ''} />
+                    <Map mapId={selectedCleaning?.id || ''} runId={selectedCleaning?.id || ''} />
 
                     {/* TODO: Explain the differnet colors meaning */}
 
@@ -117,7 +117,7 @@ export default () => {
 
 
                     <div className={styles.runs}>
-                        {selectedCleaning && selectedCleaning.runs.map((run, i) =>
+                        {selectedCleaning && 'runs' in selectedCleaning && selectedCleaning.runs.map((run, i) =>
 
                             <div key={i} className={styles.run}>
                                 <div className={styles.info}>
@@ -129,6 +129,24 @@ export default () => {
                                     </span>
                                     <span className={styles.type}>
                                         {t('runs.timing', { error: run.timing.error, pause: run.timing.pause, charging: run.timing.charging })}, {t('runs.pickedUp', { count: run.stats.pickup_count })}
+                                    </span>
+                                </div>
+                                {/* {run.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} */}
+                            </div>
+                        )}
+
+                        {selectedCleaning && 'run' in selectedCleaning && (
+                            <div className={styles.run}>
+                                <div className={styles.info}>
+                                    <span>{selectedCleaning.run.status} | {formatDuration(selectedCleaning.run.start_at, selectedCleaning.run.end_at)}</span>
+                                    { selectedCleaning.run.error && <span className={styles.type} style={{ color: 'var(--error)' }}>{selectedCleaning.run.error}</span> }
+                                    <span className={styles.type}>
+                                        {formatArea(selectedCleaning.run.cleaned_area)} &nbsp; |
+                                        &nbsp; {Neato.Gen3.CleaningMode[selectedCleaning.run.mode]} {Neato.Gen3.CleaningNavigationMode[selectedCleaning.run.navigation_mode]} |
+                                        {/* {run.autonomous_dock ? t('runs.docked') : t('runs.notDocked')} */}
+                                    </span>
+                                    <span className={styles.type}>
+                                        {t('runs.timing', { error: selectedCleaning.run.time_in_error, pause: selectedCleaning.run.time_in_pause, charging: selectedCleaning.run.time_in_suspended_cleaning })}, {t('runs.pickedUp', { count: selectedCleaning.run.picked_up_count })}
                                     </span>
                                 </div>
                                 {/* {run.cleaning_complete ? <IoMdCheckmarkCircle /> : <IoMdCloseCircleOutline />} */}

@@ -93,8 +93,6 @@ def find_route(
 
 
 def BrainslugHandler(ROUTES, req) -> None:
-    print("received request...")
-
     handler, path_params = find_route(ROUTES, req.command, req.path)
     
     if handler:

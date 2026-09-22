@@ -32,34 +32,33 @@ def get_robots(req: RouterHandler) -> None:
 
 def get_maps(req: RouterHandler, serial: str) -> None:
     """GET /robot/<serial>/maps - list all maps to user"""
+
+    table = PersistentMap if '-' in serial else FloorPlan
+
     with get_session() as session:
-        maps: Sequence[FloorPlan] = session.execute(
-            select(FloorPlan)
-            .where(FloorPlan.robot == serial, FloorPlan.in_maps_list == True)
+        maps: Sequence[PersistentMap | FloorPlan] = session.execute(
+            select(table)
+            .where(table.robot == serial, table.in_maps_list == True)
 
         ).scalars().all()
 
     data = [
         {
             column.name: getattr(x, column.name)
-            for column in FloorPlan.__table__.columns
+            for column in table.__table__.columns
         }
         for x in maps
     ]
 
     req.send_ok(data)
 
-    # req.send_ok([{
-    #     "id": m.id,
-    #     "name": m.name,
-    #     "promoted": m.promoted,
-    #     "base": { "x": m.baseX, "y": m.baseY }
-    # } for m in maps])
-
 
 def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
     """GET /robot/<serial>/maps/<map_id> - return map data to user"""
     file = f"uploads/maps/{serial}/{map_id}/floormap.json"
+
+    with get_session() as session:
+        floorplan = session.get(FloorPlan, map_id)
 
     if not os.path.isfile(file):
         req.send_not_found("Map not found")
@@ -71,11 +70,12 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
     except Exception:
         req.send_internal_error("Failed to read map")
         return
-
-    with get_session() as session:
-        floorplan = session.get(FloorPlan, map_id)
     
-    data["in_maps_list"] = floorplan.in_maps_list
+    if '-' not in serial and floorplan is None:
+        req.send_not_found("Map not found")
+        return
+    elif floorplan is not None:
+        data["in_maps_list"] = floorplan.in_maps_list
 
     req.send_ok(data)
 
@@ -244,6 +244,7 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         #     except Exception:
         #         pass
         pending_requests[str(req_id)] = slot  # register before sending
+        print(f"Sending command to robot {serial}: {data}")
         try:
             send_chunk(conn.conn.wfile, msg) # TODO
         except Exception:
