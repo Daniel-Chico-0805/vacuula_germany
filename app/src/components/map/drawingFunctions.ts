@@ -380,11 +380,6 @@ export function drawCrosshair(
 
 /* ---------------- BASE (DOCK + ROBOT) ---------------- */
 
-// The marker is a static SVG (assets/dock.svg, ported from Vacuula 2) drawn
-// with drawImage, so it stays crisp at any zoom and can be edited in Inkscape.
-// Its viewBox is "-10 -18 20 36" with the DOCK CENTRE at (0,0); the dock's
-// long side is perpendicular to the robot heading (+X). R = 16 units = the
-// robot's physical radius (165 mm).
 const DOCK_VIEWBOX = { x: -10, y: -18, w: 20, h: 36 }
 const DOCK_UNIT_R = 16
 const ROBOT_RADIUS_MM = 165
@@ -406,8 +401,6 @@ function getDockImage(): HTMLImageElement {
     return dockImage
 }
 
-/** Registers a one-shot callback for when the dock marker image has loaded
- *  (no-op if it already has). Callers use it to trigger one extra redraw. */
 export function onDockImageReady(fn: () => void) {
     if (dockReady) return
     dockReadyListeners.add(fn)
@@ -422,11 +415,6 @@ export interface BasePose {
     dir: number
 }
 
-/**
- * Draws the dock + robot marker at the base pose, rotated to the dock
- * heading. `resolution` is mm per map cell (floorplan/metadata resolution),
- * used to size the marker to the robot's real footprint.
- */
 export function drawBase(
     ctx: CanvasRenderingContext2D,
     base: BasePose,
@@ -447,9 +435,6 @@ export function drawBase(
 
     ctx.save()
     ctx.translate(cx, cy)
-    // base.dir is the dock heading in the floorplan's own frame, as reported
-    // by the robot on every dock (maps.create -> robot.base.dir). Positive
-    // canvas rotation = clockwise on screen, verified on hardware (D10).
     ctx.rotate(base.dir * Math.PI / 180)
     ctx.drawImage(img, DOCK_VIEWBOX.x * s, DOCK_VIEWBOX.y * s, DOCK_VIEWBOX.w * s, DOCK_VIEWBOX.h * s)
     ctx.restore()

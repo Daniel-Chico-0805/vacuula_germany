@@ -1,11 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -18 20 36" width="20" height="36">
-  <!--
-    Dock marker (ported from Vacuula 2 renderBaseMarker, robot silhouette
-    removed on request). Units: R = 16 = robot radius. Origin (0,0) = dock
-    centre = the base x,y the robot reports. The dock's long side (2R) is
-    perpendicular to the robot heading (+X); rotate the image by base.dir
-    when drawing. Soft light outline (#e5e7eb at 55%) for dark map floors.
-  -->
   <g stroke-linejoin="round">
     <rect x="-8" y="-16" width="16" height="32" rx="4" ry="4"
           fill="#1f2937" stroke="#475569" stroke-width="1"/>

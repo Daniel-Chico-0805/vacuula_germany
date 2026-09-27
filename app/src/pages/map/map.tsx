@@ -53,8 +53,7 @@ export default () => {
     const { data: persistentMaps, refresh: updatePersistentMaps } = usePersistentMaps()
     const getPromotedFloorplan = useGetPromotedFloorplan()
 
-    // The dock marker is an image loaded asynchronously; bump once it is ready
-    // so the first frame after load re-runs extraDraw (via redrawKey).
+    // TODO: the dock marker should be moved to the usemap thing 
     const [dockReady, setDockReady] = useState(false)
     useEffect(() => { onDockImageReady(() => setDockReady(true)) }, [])
 

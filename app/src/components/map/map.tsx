@@ -7,21 +7,19 @@ import { Http } from '../../http'
 import { usePersistentMap } from '../../loaders/resources'
 import { useTranslation } from 'react-i18next'
 import { useCallback, useEffect, useState } from 'react'
-import { drawBase, onDockImageReady, type BasePose } from './drawingFunctions'
+import { drawBase, onDockImageReady } from './drawingFunctions'
 import type { ExtraDrawFn } from './useMap'
+import type { VacuulaMapData } from './types'
 
 interface MapProps {
     mapId: string
     runId?: string
 }
 
-/** Dock pose in normalised map coordinates from a floormap.json payload
- *  (metadata.origin_x/origin_y/resolution + img_size) and the floorplan's
- *  base [x_mm, y_mm, dir_deg]. Undefined when the map has no usable base. */
-function basePoseFromMapData(data: any): { pose: BasePose, resolution: number } | undefined {
-    const base = data?.base
-    const md = data?.metadata
-    const img = data?.img_size
+function basePoseFromMapData(data: VacuulaMapData) {
+    const base = data.base
+    const md = data.metadata
+    const img = data.img_size
     if (!Array.isArray(base) || !md || !Array.isArray(img)) return
     const NO_BASE = 2147483647
     if (base[0] === NO_BASE || base[1] === NO_BASE) return
@@ -41,7 +39,6 @@ export default function Map({ mapId, runId }: MapProps) {
     const { robot } = useRobot()
     const { data: persistantMapData, refresh: refreshPersistantMapData } = usePersistentMap(mapId);
 
-    // Redraw once the dock marker image has loaded (it is fetched asynchronously).
     const [dockReady, setDockReady] = useState(false)
     useEffect(() => { onDockImageReady(() => setDockReady(true)) }, [])
 
