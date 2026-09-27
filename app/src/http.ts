@@ -5,7 +5,7 @@ import { EVENT_CALLBACKS } from "./http/events";
 import { Neato, type QuickRobotInfo } from "./types";
 import type * as Gen3 from './types/neato/gen3'
 import type * as Gen4 from './types/neato/gen4'
-import type { NoGoLine, Zone } from "./components/map/types";
+import type { NoGoLine, VacuulaMapData, Zone } from "./components/map/types";
 
 // Store for loading state callback - will be set by AppContext
 let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
@@ -57,7 +57,7 @@ export class Http {
   }
 
   static getPersistentMap(serial: string, mapId: string) {
-    return instance.get<rle_data>(`/robot/${serial}/maps/${mapId}`) // TODO: type!
+    return instance.get<VacuulaMapData>(`/robot/${serial}/maps/${mapId}`)
   }
 
   static postUseMapAsFloorPlan(serial: string, mapId: string) {

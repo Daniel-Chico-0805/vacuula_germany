@@ -76,6 +76,7 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
         return
     elif floorplan is not None:
         data["in_maps_list"] = floorplan.in_maps_list
+        data["base"] = floorplan.base
 
     req.send_ok(data)
 

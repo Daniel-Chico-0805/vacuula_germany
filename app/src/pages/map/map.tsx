@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import type { NoGoLine, Point, UseState, Zone } from '../../components/map/types'
-import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline } from '../../components/map/drawingFunctions'
+import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline, onDockImageReady } from '../../components/map/drawingFunctions'
 import { upsertPreserveOrder } from '../../components/map/utils'
 import { isDocked } from '../../components/topbar/robotInfo'
 
@@ -53,6 +53,10 @@ export default () => {
     const { data: persistentMaps, refresh: updatePersistentMaps } = usePersistentMaps()
     const getPromotedFloorplan = useGetPromotedFloorplan()
 
+    // TODO: the dock marker should be moved to the usemap thing 
+    const [dockReady, setDockReady] = useState(false)
+    useEffect(() => { onDockImageReady(() => setDockReady(true)) }, [])
+
 
     const extraDraw = useCallback((ctx, canvas, currentZoom, currentOffset, mapSize) => {
         const showBoundaries = mode === 'boundary-edit'
@@ -65,13 +69,15 @@ export default () => {
         const map = persistentMaps?.find(p => p.id === persistentMap)
         const basicdata = map?.base
         const NO_BASE = 2147483647
-        if (basicdata && basicdata[0] !== NO_BASE && basicdata[1] !== NO_BASE) {
+        // Gen4: base = [x_mm, y_mm, dir_deg] in the map frame. Gen3 stores an
+        // object without heading; it is drawn unrotated when present.
+        if (map && 'origin' in map && Array.isArray(basicdata) && basicdata[0] !== NO_BASE && basicdata[1] !== NO_BASE) {
             const [originX, originY] = map.origin
             const resolution = map.resolution
             const [imgW, imgH] = map.imgsize
             const normX = ((basicdata[0] - originX) / resolution) / imgW
             const normY = ((basicdata[1] - originY) / resolution) / imgH
-            drawBase(ctx, { x: normX, y: normY, width: 4 / imgW, height: 4 / imgH }, currentZoom, currentOffset, mapSize)
+            drawBase(ctx, { x: normX, y: normY, dir: basicdata[2] ?? 0 }, currentZoom, currentOffset, mapSize, resolution)
         }
 
         if (mode === 'boundary-edit') {
@@ -82,7 +88,7 @@ export default () => {
                 drawInProgressPolyline(ctx, currentLinePoints, currentZoom, currentOffset, mapSize)
             }
         }
-    }, [boundaries, activeBoundaryId, mode, currentLinePoints, closedAsPolygon, editForm.color, persistentMaps, persistentMap])
+    }, [boundaries, activeBoundaryId, mode, currentLinePoints, closedAsPolygon, editForm.color, persistentMaps, persistentMap, dockReady])
 
     // Fetch boundaries when persistentMap changes
     useEffect(() => {
