@@ -187,8 +187,10 @@
         gap: 1rem;
         padding: 1rem;
         background: $surface;
+        border: 1px solid transparent;
         border-radius: 1rem;
         justify-content: space-between;
+        @include hoverable;
 
         .info {
             display: flex;

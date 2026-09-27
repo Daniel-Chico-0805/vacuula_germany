@@ -141,7 +141,7 @@ export default () => {
 
                 <hr style={{ width: '90%' }} /> */}
 
-                <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => openCleanForm()}>
+                <div className={`${styles.item} ${styles.actionItem}`} onClick={() => openCleanForm()}>
                     <div className={styles.info}>
                         <span>{t('schedule.newSchedule')}</span>
                         <span className={styles.type}>{t('schedule.addOneMore')}</span>

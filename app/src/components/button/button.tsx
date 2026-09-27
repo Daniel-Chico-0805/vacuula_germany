@@ -16,7 +16,7 @@ type ButtonProps= BaseInputProps
 export default (prop: ButtonProps) => {
 
     return (
-        <button className={`${styles.button} ${styles[prop.style]}`} style={{ opacity: prop.disabled ? '0.4' : '1' }} onClick={e => {
+        <button className={`${styles.button} ${styles[prop.style]}`} disabled={prop.disabled} onClick={e => {
             e.preventDefault();
             e.stopPropagation();
             prop.onClick()

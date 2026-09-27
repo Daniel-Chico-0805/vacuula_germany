@@ -70,7 +70,7 @@ export default () => {
         <div className={styles.container}>
 
             <div className={styles.featureList}>
-                <div className={styles.item} style={{ background: 'var(--accent-soft)' }}>
+                <div className={`${styles.item} ${styles.staticItem}`}>
                     <div className={styles.info}>
                         <span>{t('schedule.schedule')}</span>
                     </div>
@@ -84,7 +84,7 @@ export default () => {
 
                 <hr style={{ width: '90%' }} />
 
-                <div className={styles.item} style={{ justifyContent: 'center', textAlign: 'center', background: 'var(--accent-soft)' }} onClick={() => setDrawerOpen(true)}>
+                <div className={`${styles.item} ${styles.actionItem}`} onClick={() => setDrawerOpen(true)}>
                     <div className={styles.info}>
                         <span>{t('schedule.newSchedule')}</span>
                         <span className={styles.type}>{t('schedule.addOneMore')}</span>

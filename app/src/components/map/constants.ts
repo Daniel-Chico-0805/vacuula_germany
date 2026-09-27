@@ -64,5 +64,6 @@ export const DRAWING = {
     PINCH_ZOOM_POWER: 0.5,
     MIN_MOVEMENT: 5, // Pixels before considering it a drag vs click
     RUN_OVERLAY_OPACITY: 0.55, // fallback only; the live value is --map-run-opacity (theme.css)
+    ZONE_FILL_ALPHA: 0.22, // zone interior: outline colour at this alpha so the floor stays visible
     MIN_PINCH_DISTANCE: 10,
 } as const
