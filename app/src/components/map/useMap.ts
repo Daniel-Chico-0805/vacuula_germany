@@ -6,6 +6,8 @@ import { drawMap, computeIgnoredRunValues, colorForPathValue, type CellShape } f
 import { Http } from '../../http'
 import type { Offset } from './types'
 import { useCleaning, usePersistentMap } from '../../loaders/resources'
+import { useRobot } from '../../context/useRobot'
+import { RobotType } from '../../types'
 
 export interface MapSize { width: number; height: number }
 
@@ -48,6 +50,8 @@ export function useMap({
     extraDrawRef.current = extraDraw
 
     const [mapSize, setMapSize] = useState<MapSize>()
+
+    const { robot } = useRobot(); // TODO: in the future, the map should not know about the robot but meh for now
 
     const {
         zoom, offset, isDragging, hasMoved,
@@ -110,7 +114,7 @@ export function useMap({
         if (!cleaningData) return;
         const runCells = decodeRLE(cleaningData.rle);
         runCellsRef.current = runCells;
-        runIgnoreSetRef.current = computeIgnoredRunValues(runCellsRef.current, 1)
+        runIgnoreSetRef.current = computeIgnoredRunValues(runCellsRef.current, robot.type === RobotType.NeatoGen4 ? 1 : 2);
         draw()
     }, [cleaningData])
 

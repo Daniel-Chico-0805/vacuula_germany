@@ -163,6 +163,7 @@
     "appLanguage": "Appens språk",
     "theme": "Tema",
     "theme_dark": "Mörkt",
+    "theme_soft": "Mörkt (mjukt)",
     "theme_light": "Ljust",
     "units": "Enheter",
     "units_metric": "Metriskt (m², cm)",

@@ -1,14 +1,14 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
 // Runtime theme: two independent axes persisted in localStorage.
-//   mode   -> data-theme  on <html>  ("dark" | "light")
+//   mode   -> data-theme  on <html>  ("dark" | "soft" | "light")
 //   accent -> data-accent on <html>  (one of ACCENTS)
 // The tokens themselves live in ./theme.css; index.html applies the stored
 // values before any CSS loads so there is no flash of the wrong background.
 
-export type ThemeMode = 'dark' | 'light'
+export type ThemeMode = 'dark' | 'soft' | 'light'
 
-export const THEME_MODES: ThemeMode[] = ['dark', 'light']
+export const THEME_MODES: ThemeMode[] = ['dark', 'soft', 'light']
 export const DEFAULT_THEME: ThemeMode = 'dark'
 export const THEME_STORAGE_KEY = 'vacuula.theme'
 
@@ -29,11 +29,12 @@ export const ACCENT_STORAGE_KEY = 'vacuula.accent'
 // Page background per mode. Must match --bg in theme.css and the script in index.html.
 const PAGE_BACKGROUND: Record<ThemeMode, string> = {
     dark: '#0f1113',
+    soft: '#25292e',
     light: '#f4f6f5',
 }
 
 const isThemeMode = (value: string | null): value is ThemeMode =>
-    value === 'dark' || value === 'light'
+    THEME_MODES.includes(value as ThemeMode)
 
 const readStorage = (key: string): string | null => {
     try {
@@ -67,7 +68,8 @@ export function applyTheme(mode: ThemeMode = getTheme(), accent: string = getAcc
     html.setAttribute('data-theme', mode)
     html.setAttribute('data-accent', accent)
     html.style.backgroundColor = PAGE_BACKGROUND[mode]
-    html.style.colorScheme = mode
+    // "soft" is a dark scheme too (only "light" flips native controls/scrollbars).
+    html.style.colorScheme = mode === 'light' ? 'light' : 'dark'
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', PAGE_BACKGROUND[mode])
 }
 
@@ -97,7 +99,7 @@ export function useTheme() {
     const accent = useSyncExternalStore(subscribe, getAccent, () => DEFAULT_ACCENT)
     const set = useCallback((mode: ThemeMode) => setTheme(mode), [])
     const setAccentCb = useCallback((id: string) => setAccent(id), [])
-    return { theme, setTheme: set, accent, setAccent: setAccentCb, isDark: theme === 'dark' }
+    return { theme, setTheme: set, accent, setAccent: setAccentCb, isDark: theme !== 'light' }
 }
 
 // Make sure the attributes are present even if index.html's inline script was
