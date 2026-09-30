@@ -186,10 +186,20 @@ def _build_pgm_bytes(img: Image.Image, floorplan: FloorPlan) -> bytes:
 def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
     """GET /robot/<serial>/maps/<map_id>/test - get boundaries"""
 
+    # Refuse up front, before demoting or touching the DB: promote talks to the
+    # robot, so without a connection there is nothing valid to do.
+    if serial not in robot_connections:
+        req.send_bad_request("Robot not connected")
+        return
+
     with get_session() as session:
         floorplan: FloorPlan = session.execute(
             select(FloorPlan).where(FloorPlan.id == map_id)
         ).scalar_one_or_none()
+
+        if floorplan is None or floorplan.robot != serial:
+            req.send_not_found("Map not found")
+            return
 
         boundaries: Sequence[Boundary] = session.execute(
             select(Boundary)
@@ -204,7 +214,11 @@ def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
             )
         )
 
-    if promoted_map_id is not None: demote_floorplan(serial, promoted_map_id)
+    if promoted_map_id is not None:
+        ok, msg = demote_floorplan(serial, promoted_map_id)
+        if not ok:
+            req.send_bad_request(msg)
+            return
 
     
     import base64, zlib
@@ -394,7 +408,13 @@ def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):
         return real_blob
 
 
-def demote_floorplan(serial: str, map_id: str):
+def demote_floorplan(serial: str, map_id: str) -> tuple[bool, str]:
+    """Returns (ok, message); (False, ...) when the robot is not connected so
+    callers can answer 400 instead of raising."""
+    conn = robot_connections.get(serial)
+    if conn is None:
+        return False, "Robot not connected"
+
     payload = {
         "ability": "maps.demote_floorplan",
         "rank_uuid":     map_id,
@@ -402,7 +422,7 @@ def demote_floorplan(serial: str, map_id: str):
 
     print(payload)
 
-    robot_send_request(robot_connections[serial], payload)
+    robot_send_request(conn, payload)
 
     with get_session() as session:
         session.execute(
@@ -415,11 +435,15 @@ def demote_floorplan(serial: str, map_id: str):
         )
 
         session.commit()
-    
+    return True, ""
+
 def delete_demote_floorplan(req: RouterHandler, serial: str, map_id: str) -> None:
     """DELETE /robot/<serial>/maps/<map_id> - demote floorplan"""
 
-    demote_floorplan(serial, map_id)
+    ok, msg = demote_floorplan(serial, map_id)
+    if not ok:
+        req.send_bad_request(msg)
+        return
 
     req.send_ok()
 

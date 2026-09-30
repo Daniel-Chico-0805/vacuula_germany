@@ -7,3 +7,7 @@ pillow==12.2.0
 SQLAlchemy==2.0.50
 typing_extensions==4.15.0
 zeroconf
+# Host timezone -> IANA name (Windows registry mapping, /etc/localtime, TZ in containers)
+tzlocal==5.3.1
+# IANA zone database for zoneinfo on platforms without a system one (Windows, slim containers)
+tzdata==2026.4

@@ -25,17 +25,7 @@ if TYPE_CHECKING:
 #     'firmware': '1.7.0-2933'
 # }
 import uuid
-
-def _robot_timezone():
-    import os
-    tz = os.environ.get("VACUULA_TZ")
-    if tz:
-        return tz
-    try:
-        import tzlocal
-        return tzlocal.get_localzone_name()
-    except Exception:
-        return "Europe/Lisbon"
+from server_tz import server_timezone
 
 
 def handle_login(rc: RobotConn, msg):
@@ -64,7 +54,7 @@ def handle_login(rc: RobotConn, msg):
         "datetime": now_iso(),
         "body": {
             "ip_address": "192.168.205.113",
-            "timezone": _robot_timezone(),
+            "timezone": server_timezone(),
             "robot_id": serial,
             "user_id": "local-user",
         },
