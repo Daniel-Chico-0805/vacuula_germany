@@ -57,8 +57,10 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
     """GET /robot/<serial>/maps/<map_id> - return map data to user"""
     file = f"uploads/maps/{serial}/{map_id}/floormap.json"
 
+    table = PersistentMap if '-' in serial else FloorPlan
+
     with get_session() as session:
-        floorplan = session.get(FloorPlan, map_id)
+        floorplan = session.get(table, map_id)
 
     if not os.path.isfile(file):
         req.send_not_found("Map not found")
@@ -71,7 +73,9 @@ def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
         req.send_internal_error("Failed to read map")
         return
     
-    if '-' not in serial and floorplan is None:
+
+    ## TODO: quickfix hack to get data to fe, rework later...
+    if floorplan is None:
         req.send_not_found("Map not found")
         return
     elif floorplan is not None:

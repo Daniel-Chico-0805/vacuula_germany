@@ -13,23 +13,37 @@ import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/sta
 import { Http } from '../../http'
 import { useApp } from '../../context/useApp'
 import { RobotDay } from '../../types/neato/gen3/api'
-import type { UseState } from '../map/types'
 import { GEN4_COMMANDS } from '../../http/gen4'
-import { RobotType } from '../../types'
+import { Neato, RobotType } from '../../types'
 import Scheudle_gen4 from './scheudle_gen4'
 import { useTranslation } from 'react-i18next'
 import { dayKey } from '../../i18n/days'
+import { useRobot } from '../../context/useRobot'
+import { usePersistentMaps } from '../../loaders/resources'
+import type { UseState } from '../../components/map/types'
+import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Boundaries'
 
 export default () => {
     const { t } = useTranslation()
 
-    const { robot, persistentMaps } = useApp()
+    const { robot } = useRobot()
 
     if (robot?.type === RobotType.NeatoGen4) return <Scheudle_gen4 />
 
 
     const [schedule, setSchedule] = useState<GetSchedule>()
     const [drawerOpen, setDrawerOpen] = useState(false)
+
+    const { data: persistentMaps } = usePersistentMaps()
+
+    useEffect(() => {
+        if (robot.type !== RobotType.NeatoGen3 || !persistentMaps) return
+        fetchAllGen3Boundaries(robot.serial, persistentMaps)
+    }, [robot.serial, persistentMaps])
+
+    const zoneOptions = (persistentMaps ?? [])
+        .filter(m => 'enabled' in m && m.enabled)
+        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: `${m.id}:${z.id}`, label: `${m.name} - ${z.name}` })))
 
 
     const [scheduleForm, SetScheduleForm] = useState<ScheduleEvent>({
@@ -147,10 +161,14 @@ export default () => {
                         onChange={(startTime) => updateForm(SetScheduleForm, { startTime })} />
 
                     <Input
-                        type="text"
-                        label={t('schedule.boundaryId')}
+                        type="select"
+                        label={t('schedule.selectZones')}
+                        extraInfo={t('schedule.selectZonesHelp')}
+                        options={zoneOptions}
+                        allowDeselect
                         value={scheduleForm.boundaryId}
-                        onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })} />
+                        onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })}
+                    />
 
                     <Button text={t('common.save')} style='success' onClick={() => {
                         setDrawerOpen(false)

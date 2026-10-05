@@ -5,7 +5,6 @@
 import { createLoader } from './createLoader'
 import { Http } from '../http'
 import { useRobot } from '../context/useRobot'
-import { useEffect } from 'react'
 
 export const persistentMapsLoader = createLoader((serial: string) =>
     Http.getPersistentMaps(serial).then(res => res.data)

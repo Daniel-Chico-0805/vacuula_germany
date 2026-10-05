@@ -62,11 +62,11 @@ function resumeCleaning(serial: string) {
     return Http.sendCmd(serial, { cmd: "resumeCleaning" })
 }
 
-function startCleaning(serial: string, mode: CleaningMode, navigationMode: CleaningNavigationMode) {
+function startCleaning(serial: string, category: CleaningCategory, mode: CleaningMode, navigationMode: CleaningNavigationMode) {
     return Http.sendCmd(serial, {
         cmd: "startCleaning",
         params: {
-            category: CleaningCategory.MAP,
+            category,
             mode,
             navigationMode,
         }
@@ -86,14 +86,14 @@ function startCleaningSpot(serial: string, height: number, width: number, mode: 
     })
 }
 
-function startCleaningZone(serial: string, zoneId: string, mode: CleaningMode, navigationMode: CleaningNavigationMode) {
+function startCleaningZone(serial: string, mapId: string, zoneId: string, mode: CleaningMode, navigationMode: CleaningNavigationMode) {
     return Http.sendCmd(serial, {
         cmd: "startCleaning",
         params: {
             category: CleaningCategory.MAP,
             mode,
             navigationMode,
-            mapId: "2026-05-23T17:21:45Z",
+            mapId,
             boundaryId: zoneId,
         }
     })

@@ -19,10 +19,11 @@ import i18n from '../../i18n'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import type { NoGoLine, Point, UseState, Zone } from '../../components/map/types'
 import { drawZones, drawNoGoLines, drawBase, drawCrosshair, drawInProgressPolyline, onDockImageReady } from '../../components/map/drawingFunctions'
-import { upsertPreserveOrder } from '../../components/map/utils'
+import { calcRelevancy, upsertPreserveOrder } from '../../components/map/utils'
 import { normalizeHex, pickUnusedPreset, withAlpha } from '../../components/map/color'
 import ColorPicker from '../../components/colorPicker/ColorPicker'
 import { isDocked } from '../../components/topbar/robotInfo'
+import { fetchGen3MapBoundaries } from '../../loaders/gen3Boundaries'
 
 
 export default () => {
@@ -68,18 +69,21 @@ export default () => {
         drawZones(ctx, showBoundaries.filter(b => b.type === 'polygon'), currentZoom, currentOffset, mapSize)
         drawNoGoLines(ctx, showBoundaries.filter(b => b.type === 'polyline'), currentZoom, currentOffset, mapSize)
 
+        // TODO: rework this base drawing, very hacky for quick release...
         const map = persistentMaps?.find(p => p.id === persistentMap)
-        const basicdata = map?.base
+        const baseData = map?.base
         const NO_BASE = 2147483647
         // Gen4: base = [x_mm, y_mm, dir_deg] in the map frame. Gen3 stores an
         // object without heading; it is drawn unrotated when present.
-        if (map && 'origin' in map && Array.isArray(basicdata) && basicdata[0] !== NO_BASE && basicdata[1] !== NO_BASE) {
+        if (map && 'origin' in map && Array.isArray(baseData) && baseData[0] !== NO_BASE && baseData[1] !== NO_BASE) {
             const [originX, originY] = map.origin
             const resolution = map.resolution
             const [imgW, imgH] = map.imgsize
-            const normX = ((basicdata[0] - originX) / resolution) / imgW
-            const normY = ((basicdata[1] - originY) / resolution) / imgH
-            drawBase(ctx, { x: normX, y: normY, dir: basicdata[2] ?? 0 }, currentZoom, currentOffset, mapSize, resolution)
+            const normX = ((baseData[0] - originX) / resolution) / imgW
+            const normY = ((baseData[1] - originY) / resolution) / imgH
+            drawBase(ctx, { x: normX, y: normY, dir: baseData[2] ?? 0 }, currentZoom, currentOffset, mapSize, resolution)
+        } else if (Array.isArray(baseData) && robot.type === RobotType.NeatoGen3) {
+            drawBase(ctx, { x: baseData[0], y: baseData[0], dir: baseData[2] ?? 0 }, currentZoom, currentOffset, mapSize, 0)
         }
 
         if (mode === 'boundary-edit') {
@@ -95,12 +99,7 @@ export default () => {
     // Fetch boundaries when persistentMap changes
     useEffect(() => {
         if (!persistentMap) return
-        skipNextPostRef.current = true
-        if (robot.type === RobotType.NeatoGen4) {
-            Http.getBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data))
-        } else {
-            GEN3_COMMANDS.getMapBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.data.boundaries))
-        }
+        getMapBoundaries();
         setMode('boundaries')
     }, [persistentMap])
 
@@ -113,10 +112,16 @@ export default () => {
         })
     }
 
-    useEffect(() => {
-        if (!robot) return;
-        updatePersistentMaps();
-    }, [robot.serial])
+    const getMapBoundaries = () => {
+        if (!persistentMap) return
+        skipNextPostRef.current = true
+        if (robot.type === RobotType.NeatoGen4) {
+            Http.getBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data))
+        } else {
+            // GEN3_COMMANDS.getMapBoundaries(robot.serial, persistentMap).then(res => setBoundaries(res.data.data.boundaries))
+            fetchGen3MapBoundaries(robot.serial, persistentMap).then(b => setBoundaries([...b]))
+        }
+    }
 
     useEffect(() => {
         if (!persistentMap) return;
@@ -124,8 +129,22 @@ export default () => {
             skipNextPostRef.current = false
             return
         }
-        console.log(boundaries);
-        Http.postBoundaries(robot.serial, persistentMap, boundaries);
+        if (robot.type === RobotType.NeatoGen4) {
+            Http.postBoundaries(robot.serial, persistentMap, boundaries).then(() => getMapBoundaries());
+            return
+        }
+
+        const updatedBoundaries = boundaries.map(boundary =>
+            boundary.type === 'polygon'
+                ? {
+                    ...boundary,
+                    relevancy: calcRelevancy(boundary.vertices)
+                }
+                : boundary
+        );
+        GEN3_COMMANDS.setMapBoundaries(robot.serial, persistentMap, updatedBoundaries).catch(() => {
+            getMapBoundaries();
+        });
     }, [boundaries]);
 
     // mode changes
@@ -222,8 +241,9 @@ export default () => {
     }
 
     const cleanZone = async (zone: Zone) => {
+        if (!persistentMap) return
         if (robot.type === RobotType.NeatoGen3) {
-            GEN3_COMMANDS.startCleaningZone(robot.serial, zone.id, Neato.Gen3.CleaningMode.ECO, Neato.Gen3.CleaningNavigationMode.EXTRA_CARE)
+            GEN3_COMMANDS.startCleaningZone(robot.serial, persistentMap, zone.id, Neato.Gen3.CleaningMode.ECO, Neato.Gen3.CleaningNavigationMode.EXTRA_CARE)
             return;
         }
         const promotedFloorplan = await getPromotedFloorplan();
@@ -452,7 +472,7 @@ const EditBoundaryDetails = (props: EditBoundaryDetailsProps) => {
     return (
         <div className={styles.editBoundaryDetails}>
 
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <Input
                     type="text"
                     label={t('common.name')}
