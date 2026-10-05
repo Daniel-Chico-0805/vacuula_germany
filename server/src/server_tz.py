@@ -1,9 +1,4 @@
-"""Server (host) timezone, resolved once per process.
-
-The robot needs an IANA zone name (e.g. "Europe/Lisbon"); it is sent in the
-Gen4 login response and, for Gen3, exposed to the web app so schedule times
-can be displayed in local time.
-
+"""
 Resolution order:
   1. VACUULA_TZ environment variable - explicit override for hosts whose clock
      is not in the robot's timezone (e.g. a server in a data centre).
