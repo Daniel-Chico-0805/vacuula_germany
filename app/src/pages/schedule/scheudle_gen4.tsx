@@ -127,19 +127,6 @@ export default () => {
         <div className={styles.container}>
 
             <div className={styles.featureList}>
-                {/* <div className={styles.item} style={{ background: 'var(--accent-soft)' }}>
-                    <div className={styles.info}>
-                        <span>Schedule</span>
-                    </div>
-                    <Input type="switch" skipSection={true} value={schedule.enabled} onChange={() => {
-                        console.log('schedule', schedule)
-                        let cmd = GEN4_COMMANDS.enableSchedule;
-                        if (schedule.enabled) cmd = GEN4_COMMANDS.disableSchedule;
-                        cmd(robot.serial).then(() => getSchedule());
-                    }} />
-                </div>
-
-                <hr style={{ width: '90%' }} /> */}
 
                 <div className={`${styles.item} ${styles.actionItem}`} onClick={() => openCleanForm()}>
                     <div className={styles.info}>
@@ -172,7 +159,7 @@ export default () => {
                 title={t('schedule.addEvent')}
             >
 
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <Input
                         type="multi-select"
                         label={t('common.day')}
@@ -214,7 +201,7 @@ export default () => {
                     />
 
                     <Input
-                        type="text"
+                        type="time"
                         label={t('common.time')}
                         value={scheduleForm.time}
                         onChange={(time) => updateForm(setScheduleForm, { time })} />
@@ -238,7 +225,7 @@ export default () => {
                                         onChange={setNogoEnabled}
                                     />
 
-                                    {boundaries && (
+                                    {boundaries.length > 0 && (
                                         <>
                                             <Input
                                                 type="multi-select"
@@ -254,12 +241,6 @@ export default () => {
                             )}
                         </>
                     )}
-
-                    {/* <Input
-                        type="text"
-                        label="boundaryId"
-                        value={scheduleForm.boundaryId}
-                        onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })} /> */}
 
                     <Button text={t('common.save')} style='success' onClick={() => {
                         if (!scheduleFormNavigationMode || !scheduleFormCleaningMode) return;

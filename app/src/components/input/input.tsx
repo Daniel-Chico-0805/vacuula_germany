@@ -9,6 +9,14 @@ interface TextInputProps {
     disabled?: boolean
 }
 
+interface TimeInputProps {
+    type: 'time',
+    onChange: (value: string) => void,
+    value?: string,
+    placeholder?: string,
+    disabled?: boolean
+}
+
 interface SelectInputProps<T> {
     type: 'select',
     options: { value: T, label: string }[],
@@ -49,7 +57,7 @@ interface BaseInputProps {
     skipSection?: true,
 }
 
-type InputProps<T> = (TextInputProps | SelectInputProps<T> | DropdownInputProps<T> | MultiSelectInputProps<T> | SwitchInputProps | CustomInputProps) & BaseInputProps
+type InputProps<T> = (TextInputProps | TimeInputProps | SelectInputProps<T> | DropdownInputProps<T> | MultiSelectInputProps<T> | SwitchInputProps | CustomInputProps) & BaseInputProps
 
 export default function Input<T>(props: InputProps<T>) {
 
@@ -59,6 +67,17 @@ export default function Input<T>(props: InputProps<T>) {
                 <input
                     className={styles.text}
                     type="text"
+                    disabled={props.disabled}
+                    value={props.value}
+                    placeholder={props.placeholder}
+                    onChange={(e) => props.onChange(e.target.value)}
+                />
+            )}
+
+            {props.type === 'time' && (
+                <input
+                    className={styles.text}
+                    type="time"
                     disabled={props.disabled}
                     value={props.value}
                     placeholder={props.placeholder}

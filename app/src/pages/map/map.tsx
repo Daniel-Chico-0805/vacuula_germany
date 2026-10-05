@@ -317,7 +317,7 @@ export default () => {
                 )}
 
                 {mode === 'map-edit' && mapEditform && persistentMap && (
-                    <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <Input
                             type="text"
                             label={t('common.name')}

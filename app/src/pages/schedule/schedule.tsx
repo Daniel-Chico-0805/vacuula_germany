@@ -1,20 +1,17 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './schedule.module.scss'
 import Drawer from '../../components/drawer/drawer'
 
 import type { GetSchedule, ScheduleEvent } from './types'
-import { FaPlus, FaTimes, FaUndo, FaPen, FaCheckCircle, FaCircle, FaTrash } from 'react-icons/fa'
+import { FaTrash } from 'react-icons/fa'
 import Input from '../../components/input/input'
-import { PiBoundingBox } from "react-icons/pi";
-import { biEnum } from '../../types/.helpers'
 import Button from '../../components/button/button'
 import { GEN3_COMMANDS } from '../../http/gen3'
-import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
+import { CleaningMode } from '../../types/neato/gen3/state'
 import { Http, type ServerInfo } from '../../http'
 import { useRobot } from '../../context/useRobot'
 import { RobotDay } from '../../types/neato/gen3/api'
-import { GEN4_COMMANDS } from '../../http/gen4'
-import { Neato, RobotType } from '../../types'
+import { RobotType } from '../../types'
 import Scheudle_gen4 from './scheudle_gen4'
 import { useTranslation } from 'react-i18next'
 import { dayKey } from '../../i18n/days'
@@ -149,7 +146,7 @@ export default () => {
                 title={t('schedule.addEvent')}
             >
 
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <Input
                         type="select"
                         label={t('common.day')}
@@ -178,7 +175,7 @@ export default () => {
                     />
 
                     <Input
-                        type="text"
+                        type="time"
                         label={`${t('common.time')} (${serverInfo?.timezone ?? 'UTC'})`}
                         value={scheduleForm.startTime}
                         onChange={(startTime) => updateForm(SetScheduleForm, { startTime })} />
