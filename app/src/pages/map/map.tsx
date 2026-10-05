@@ -130,7 +130,14 @@ export default () => {
             return
         }
         if (robot.type === RobotType.NeatoGen4) {
-            Http.postBoundaries(robot.serial, persistentMap, boundaries).then(() => getMapBoundaries());
+            Http.postBoundaries(robot.serial, persistentMap, boundaries).then(() => {
+                getMapBoundaries();
+                const map = persistentMaps?.find(p => p.id === persistentMap)
+                // If the map is promoted, promote it again
+                if (map && 'promoted' in map && map.promoted) {
+                    Http.promoteFloorplan(robot.serial, map.id).then(() => updatePersistentMaps());
+                }
+            });
             return
         }
 
@@ -533,6 +540,6 @@ const PromoteDemoteBtn = ({ robot, map, onSuccess }: PromoteDemoteBtnProps) => {
     const { t } = useTranslation()
     return <Button text={map.promoted ? t('map.demote') : t('map.promote')} onClick={() => {
         if (map.promoted) Http.demoteFloorplan(robot.serial, map.id).finally(() => onSuccess())
-        else Http.test(robot.serial, map.id).finally(() => onSuccess());
+        else Http.promoteFloorplan(robot.serial, map.id).finally(() => onSuccess());
     }} style={map.promoted ? 'fail' : 'success'} />
 }

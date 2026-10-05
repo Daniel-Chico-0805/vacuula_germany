@@ -183,8 +183,8 @@ def _build_pgm_bytes(img: Image.Image, floorplan: FloorPlan) -> bytes:
     pixels_16[1::2] = pixels_8   # low byte
     return header + bytes(pixels_16)
 
-def get_test(req: RouterHandler, serial: str, map_id: str) -> None:
-    """GET /robot/<serial>/maps/<map_id>/test - get boundaries"""
+def post_promote(req: RouterHandler, serial: str, map_id: str) -> None:
+    """POST /robot/<serial>/maps/<map_id>/promote - promote floorplan"""
 
     # Refuse up front, before demoting or touching the DB: promote talks to the
     # robot, so without a connection there is nothing valid to do.

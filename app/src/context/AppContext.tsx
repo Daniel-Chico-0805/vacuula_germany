@@ -1,6 +1,6 @@
 import { createContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Http } from '../http'
+import { Http, type LoadingState } from '../http'
 import { GEN3_COMMANDS } from '../http/gen3'
 import type { UseState } from '../pages/map/types'
 import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
@@ -31,8 +31,8 @@ interface AppContextType {
 
     isLoading: boolean
     setIsLoading: (loading: boolean) => void
-    loadingState: { isLoading: boolean, message?: string }
-    setLoadingState: (state: { isLoading: boolean, message?: string }) => void
+    loadingState: LoadingState
+    setLoadingState: (state: LoadingState) => void
 
     message: string | null
     setMessage: (msg: string | null) => void
@@ -51,7 +51,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { isDark: isDarkMode, setTheme } = useTheme()
     const setIsDarkMode = (dark: boolean) => setTheme(dark ? 'dark' : 'light')
     const [isLoading, setIsLoading] = useState(false)
-    const [loadingState, setLoadingState] = useState<{ isLoading: boolean, message?: string }>({ isLoading: false })
+    const [loadingState, setLoadingState] = useState<LoadingState>({ isLoading: false })
     const [message, setMessage] = useState<string | null>(null)
 
     useEffect(() => {

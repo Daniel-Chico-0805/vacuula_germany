@@ -7,6 +7,12 @@ import type * as Gen3 from './types/neato/gen3'
 import type * as Gen4 from './types/neato/gen4'
 import type { NoGoLine, VacuulaMapData, Zone } from "./components/map/types";
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipLoader?: boolean;
+  }
+}
+
 /** GET /api/server */
 export interface ServerInfo {
   /** IANA timezone the server runs in (what Gen4 robots get at login). */
@@ -16,41 +22,53 @@ export interface ServerInfo {
 }
 
 // Store for loading state callback - will be set by AppContext
-let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
+// let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
   baseURL: `http://${location.hostname}:80/api`, // IMPORTANT: keep like this for now, this will work perfectly when built and in dev. currently some issues with the vite proxy, will fix it after initial release!!
 });
 
+export type LoadingState = { isLoading: boolean; message?: string };
 
-// Add request interceptor
-instance.interceptors.request.use(
-  (config) => {
-    if (loadingStateCallback) {
-      loadingStateCallback({ isLoading: true, message: i18n.t('common.sendingCommand') });
-    }
-    return config;
-  },
-  (error) => {
-    if (loadingStateCallback) {
-      loadingStateCallback({ isLoading: false });
-    }
-    return Promise.reject(error);
+let loadingStateCallback: ((state: LoadingState) => void) | null = null;
+let pendingRequests = 0;
+let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+const startLoading = () => {
+  pendingRequests += 1;
+  if (hideTimer) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
   }
-);
+  if (pendingRequests === 1) {
+    loadingStateCallback?.({ isLoading: true, message: i18n.t('common.sendingCommand') });
+  }
+};
 
-// Add response interceptor
+const stopLoading = () => {
+  pendingRequests = Math.max(0, pendingRequests - 1);
+  if (pendingRequests === 0) {
+    // small delay avoids flicker when requests fire back to back
+    hideTimer = setTimeout(() => {
+      hideTimer = null;
+      loadingStateCallback?.({ isLoading: false });
+    }, 150);
+  }
+};
+
+
+instance.interceptors.request.use((config) => {
+  if (!config.skipLoader) startLoading();
+  return config;
+});
+
 instance.interceptors.response.use(
   (response) => {
-    if (loadingStateCallback) {
-      loadingStateCallback({ isLoading: false });
-    }
+    if (!response.config.skipLoader) stopLoading();
     return response;
   },
   (error) => {
-    if (loadingStateCallback) {
-      loadingStateCallback({ isLoading: false });
-    }
+    if (!error.config?.skipLoader) stopLoading();
     return Promise.reject(error);
   }
 );
@@ -88,8 +106,8 @@ export class Http {
     return instance.get(`/robot/${serial}/maps/${mapId}/boundaries`)
   }
 
-  static test(serial: string, mapId: string) {
-    return instance.get(`/robot/${serial}/maps/${mapId}/test`)
+  static promoteFloorplan(serial: string, mapId: string) {
+    return instance.post(`/robot/${serial}/maps/${mapId}/promote`)
   }
 
   static getCleanings(serial: string) {
@@ -121,8 +139,8 @@ export class Http {
     return instance.post(`/robot/${serial}`, data)
   }
 
-  static setLoadingStateCallback(callback: (state: { isLoading: boolean; message?: string }) => void) {
-    loadingStateCallback = callback;
+  static setLoadingStateCallback(cb: ((state: LoadingState) => void) | null) {
+    loadingStateCallback = cb;
   }
 }
 
