@@ -1,4 +1,6 @@
-import type { Point } from './types'
+import { GEN3_COMMANDS } from '../../http/gen3'
+import type { Neato } from '../../types'
+import type { NoGoLine, Point, Zone } from './types'
 
 // RLE Decode helper
 export function decodeRLE(rle: Array<any>) {
@@ -126,3 +128,31 @@ export function calcFitZoomAndOffset(
     }
 }
 
+export interface Gen3MapWithZones {
+    map: Neato.Gen3.PersistentMap
+    boundaries: (NoGoLine | Zone)[]
+    zones: Zone[]
+}
+
+export async function getAllGen3MapsWithZones(
+    serial: string,
+    maps: Neato.Gen3.PersistentMap[],
+): Promise<Gen3MapWithZones[]> {
+    return Promise.all(
+        maps.map(async (map) => {
+            if (!map.enabled) return { map, boundaries: [], zones: [] };
+            try {
+                const res = await GEN3_COMMANDS.getMapBoundaries(serial, map.id)
+                const boundaries: (NoGoLine | Zone)[] = (res.data.data.boundaries ?? [])
+                return {
+                    map,
+                    boundaries,
+                    zones: boundaries.filter((b): b is Zone => b.type === 'polygon'),
+                }
+            } catch (err) {
+                console.error(`Failed to fetch boundaries for map ${map.id}`, err)
+                return { map, boundaries: [], zones: [] }
+            }
+        }),
+    )
+}

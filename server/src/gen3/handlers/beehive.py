@@ -47,6 +47,7 @@ def persistent_maps(req: RouterHandler) -> None:
         maps = session.execute(
             select(PersistentMap.id, PersistentMap.robot)
             .where(PersistentMap.enabled == True)
+            .where(PersistentMap.in_maps_list == True)
             .where(PersistentMap.robot == serial)
         ).all()
 
@@ -136,43 +137,61 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     # we can now close the connection for the maps, further parsing can be done of data
     req.send_ok() # TODO: send ok for actaully closing the upload
 
-    floor_data, run_data = parse_session(floor_map_path, run_map_path, job_folder)
+    print("add new map!")
+    # run = data['run']
+    # id = run['start_at']
 
+    job_folder = f"uploads/maps/{serial}/{run_id}"
+    floor_map_path = f"{job_folder}/FloorMap.png"
+    run_map_path = f"{job_folder}/RunMap.png"
+    manifest_path = f"{job_folder}/manifest.json"
+    floormap_meta, run_meta = parse_session(floor_map_path, run_map_path, job_folder)
 
-    start_at = run.get("start_at", "")
-    start_at_ts = int(datetime.fromisoformat(start_at.replace("Z", "+00:00")).timestamp() * 1000)
-    end_at = run.get("end_at", "")
-    end_at_ts = int(datetime.fromisoformat(end_at.replace("Z", "+00:00")).timestamp() * 1000)
-
-    charge_at_start = run.get("run_charge_at_start")
-    charge_at_end = run.get("run_charge_at_end")
-    cleaned_area = run.get("cleaned_area")
-
-    persistent_map_id = run.get("persistent_map_id")
-
+    print(floormap_meta)
+    print("---")
+    print(run_meta)
 
     with get_session() as session:
-        if valid_as_persistent_map:
-            if not db_commit(session, req, PersistentMap(
-                id=run_id,
-                robot=serial,
-                name="Persistent Map",
-                enabled=True,
-                base=0.5,
-                baseY=0.5
-            )):
-                # TODO: error
-                return
 
-        if not db_commit(session, req, Run(
+        session.add(PersistentMap(
             id=run_id,
             robot=serial,
-            persistent_map=persistent_map_id,
-            start_at=start_at_ts,
-            end_at=end_at_ts,
-            charge_at_start=charge_at_start,
-            charge_at_end=charge_at_end,
-            cleaned_area=cleaned_area
-        )):
-            # TODO: error
-            return
+            name="???",
+            base=(floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"]),
+            enabled=run['valid_as_persistent_map'],
+            in_maps_list=run['valid_as_persistent_map']
+        ))
+
+        session.add(Gen3__Run(
+            id=run_id,
+            robot=serial,
+            persistent_map=run_id,
+            run=run
+        ))
+
+        session.commit()
+
+        # if valid_as_persistent_map:
+        #     if not db_commit(session, req, PersistentMap(
+        #         id=run_id,
+        #         robot=serial,
+        #         name="Persistent Map",
+        #         enabled=True,
+        #         in_maps_list=True,
+        #         base=(0.5, 0.5) # TODO: get from manifest,
+        #     )):
+        #         # TODO: error
+        #         return
+
+        # if not db_commit(session, req, Run(
+        #     id=run_id,
+        #     robot=serial,
+        #     persistent_map=persistent_map_id,
+        #     start_at=start_at_ts,
+        #     end_at=end_at_ts,
+        #     charge_at_start=charge_at_start,
+        #     charge_at_end=charge_at_end,
+        #     cleaned_area=cleaned_area
+        # )):
+        #     # TODO: error
+        #     return

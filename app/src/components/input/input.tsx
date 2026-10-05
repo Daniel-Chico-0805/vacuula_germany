@@ -14,6 +14,7 @@ interface SelectInputProps<T> {
     options: { value: T, label: string }[],
     value: T,
     onChange: (value: T) => void,
+    allowDeselect?: boolean,
 }
 
 interface DropdownInputProps<T> {
@@ -73,7 +74,9 @@ export default function Input<T>(props: InputProps<T>) {
                             className={`${styles.selectButton} ${props.value === option.value ? styles.activeSelectButton : ''}`}
                             onClick={(e) => {
                                 e.preventDefault();
-                                props.onChange(option.value);
+                                // TODO: look into how to type this properly with the allowdeselect
+                                props.allowDeselect && props.value === option.value ?
+                                    props.onChange(undefined as any) : props.onChange(option.value);
                             }}
                         >
                             {option.label}

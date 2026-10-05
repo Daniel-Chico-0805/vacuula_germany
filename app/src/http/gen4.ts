@@ -95,7 +95,7 @@ function startCleaning(serial: string, mode: Neato.Gen4.CleaningMode, navigation
         navigation_mode: navigationMode,
     };
     const runs = mapId === undefined ? [{ map: null, settings}] : 
-        zoneIds === undefined ? [{ map: { rank_id: mapId, track_id: null, nogo_enabled: nogoEnabled }, settings}] :
+        (zoneIds === undefined || zoneIds.length === 0) ? [{ map: { rank_id: mapId, track_id: null, nogo_enabled: nogoEnabled }, settings}] :
         zoneIds.map(z => ({ map: { rank_id: mapId, track_id: z, nogo_enabled: nogoEnabled }, settings}));
 
     return Http.sendCmd(serial, {

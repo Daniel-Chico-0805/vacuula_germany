@@ -22,6 +22,10 @@ import { useTranslation } from 'react-i18next'
 import { useTimeAgoFormatter } from '../../i18n/timeago'
 import { useUnits } from '../../units'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
+import { Http } from '../../http'
+import type { NoGoLine, Zone } from '../../components/map/types'
+import { usePersistentMaps } from '../../loaders/resources'
+import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Boundaries'
 
 
 // ── Alert card ────────────────────────────────────────────────────────────────
@@ -97,6 +101,32 @@ export default function Home() {
     const { lastHeartbeat } = useApp()
     const { robot } = useRobot();
     const getPromotedFloorplan = useGetPromotedFloorplan()
+
+    const [promotedFloorplan, setPromotedFloorplan] =
+        useState<Neato.Gen4.Floorplan>()
+    useEffect(() => {
+        getPromotedFloorplan().then(setPromotedFloorplan)
+    }, [getPromotedFloorplan])
+
+    const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
+    useEffect(() => {
+        if (!promotedFloorplan) return
+        Http.getBoundaries(robot.serial, promotedFloorplan.id).then(res => setBoundaries(res.data))
+    }, [promotedFloorplan])
+
+    const { data: persistentMaps } = usePersistentMaps()
+
+    useEffect(() => {
+        if (robot.type !== RobotType.NeatoGen3 || !persistentMaps) return
+        fetchAllGen3Boundaries(robot.serial, persistentMaps)
+    }, [robot.serial, persistentMaps])
+
+    const [selectedZones, setSelectedZones] = useState<string[]>([])
+    const [nogoEnabled, setNogoEnabled] = useState<boolean>(true)
+
+    const zoneOptions = (persistentMaps ?? [])
+        .filter(m => 'enabled' in m && m.enabled)
+        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: `${m.id}:${z.id}`, label: `${m.name} - ${z.name}` })))
 
     return (
         <div className={styles.home}>
@@ -237,12 +267,17 @@ export default function Home() {
                         ) : (
                             <button className={`${styles.start} ${!robot.availableCommands?.start ? styles.disabled : ''}`} aria-label={t('home.startCleaning')} onClick={async () => {
 
+                                // GEN3
                                 if (robot.type === RobotType.NeatoGen3) {
                                     if (gen3__cleaningCategory === CleaningCategory.SPOT) {
                                         GEN3_COMMANDS.startCleaningSpot(robot.serial, spotHeight, spotWidth, gen3__cleaningMode, gen3__navigationMode)
                                         return;
                                     }
-                                    GEN3_COMMANDS.startCleaning(robot.serial, gen3__cleaningMode, gen3__navigationMode)
+                                    GEN3_COMMANDS.startCleaning(robot.serial, gen3__cleaningCategory, gen3__cleaningMode, gen3__navigationMode)
+
+
+
+                                    // GEN4
                                 } else if (robot.type === RobotType.NeatoGen4) {
                                     // stuff is technically for gen3, but will piggyback of it for now, later make its own separate things? TODO
                                     if (gen3__cleaningCategory === CleaningCategory.HOUSE) {
@@ -250,19 +285,8 @@ export default function Home() {
                                         return
                                     }
 
-                                    const promotedFloorplan = await getPromotedFloorplan()
-                                    GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode, promotedFloorplan?.id)
+                                    GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode, promotedFloorplan?.id, nogoEnabled, selectedZones)
                                 }
-
-
-                                // const http = robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS;
-                                // if (gen3__cleaningCategory === CleaningCategory.SPOT) {
-                                //     GEN3_COMMANDS.startCleaningSpot(robot.serial, spotHeight, spotWidth, gen3__cleaningMode, gen3__navigationMode)
-                                // } else if (gen3__cleaningCategory === CleaningCategory.MAP) {
-                                //     GEN3_COMMANDS.startCleaning(robot.serial, gen3__cleaningMode, gen3__navigationMode)
-                                // } else {
-                                //     http.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode)
-                                // }
                             }}>
                                 <IoMdPlay size={34} />
                             </button>
@@ -292,7 +316,8 @@ export default function Home() {
                         options={[
                             { value: CleaningCategory.MAP, label: t('home.map') },
                             { value: CleaningCategory.HOUSE, label: t('home.house') },
-                            { value: CleaningCategory.SPOT, label: t('home.spot') },
+                            // once again here, we just piggyback off gen3 cleaning category for now, later make its own separate thing! TODO
+                            ...(robot.type === RobotType.NeatoGen3 ? [{ value: CleaningCategory.SPOT, label: t('home.spot') }] : []),
                         ]}
                         value={gen3__cleaningCategory}
                         onChange={(value) => gen3__setCleaningCategory(value)}
@@ -302,6 +327,47 @@ export default function Home() {
                                     gen3__cleaningCategory === CleaningCategory.SPOT ? t('home.modeSpotInfo') : ''
                         }
                     />
+
+
+                    {/* Map Settings */}
+                    {gen3__cleaningCategory === CleaningCategory.MAP && (
+                        <>
+                            {promotedFloorplan && boundaries.length > 0 && (
+                                <>
+                                    <Input
+                                        type="switch"
+                                        label={t('schedule.useNogoLayer')}
+                                        value={nogoEnabled}
+                                        onChange={setNogoEnabled}
+                                    />
+                                    {boundaries.filter(b => b.type === 'polygon').length > 0 && (
+                                        <>
+                                            <Input
+                                                type="multi-select"
+                                                label={t('schedule.selectZones')}
+                                                extraInfo={t('schedule.selectZonesHelp')}
+                                                options={boundaries.filter(b => b.type === 'polygon').map(b => ({ value: b.id, label: b.name }))}
+                                                value={selectedZones}
+                                                onChange={setSelectedZones}
+                                            />
+                                        </>
+                                    )}
+                                </>
+                            )}
+
+                            {robot.type === RobotType.NeatoGen3 && zoneOptions && (
+                                <Input
+                                    type="select"
+                                    label={t('schedule.selectZones')}
+                                    extraInfo={t('schedule.selectZonesHelp')}
+                                    options={zoneOptions}
+                                    allowDeselect={true}
+                                    value={selectedZones[0]}
+                                    onChange={(value) => value ? setSelectedZones([value]) : setSelectedZones([])}
+                                />
+                            )}
+                        </>
+                    )}
 
 
                     {/* Spot Settings */}
