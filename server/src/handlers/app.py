@@ -16,13 +16,22 @@ COMMAND_TIMEOUT_S = 30
 import os
 
 from gen4.handlers import robot_send_request
+from server_tz import server_timezone, utc_offset_minutes
 
 from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
     from router import RouterHandler
 
 
+def get_server_info(req: RouterHandler) -> None:
+    """GET /server - static facts about this server the web app needs.
 
+    timezone:           IANA name the server runs in (the one handed to Gen4 robots at login)
+    utc_offset_minutes: that zone's offset from UTC right now (DST-aware), for clients that
+                        display robot-side UTC clock values (Gen3 schedules) in local time
+    """
+    tz = server_timezone()
+    req.send_ok({"timezone": tz, "utc_offset_minutes": utc_offset_minutes(tz)})
 
 
 def get_robots(req: RouterHandler) -> None:

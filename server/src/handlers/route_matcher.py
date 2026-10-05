@@ -4,7 +4,7 @@ import re
 from typing import Callable, Optional, Tuple, List
 
 # general
-from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command
+from .app import get_robots, get_maps, get_map, get_run, post_map, post_robot, get_runs, connect_robot, post_robot_command, get_server_info
 from .events import get_events
 from handlers.setup import get_cert
 
@@ -34,6 +34,7 @@ BEEHIVE_ROUTES: List[Tuple[str, str, Handler]] = [
 
 APP_ROUTES: List[Tuple[str, str, Handler]] = [
     ("GET", "/api/cert", get_cert),
+    ("GET", "/api/server", get_server_info),
     ("GET", "/api/robots", get_robots),
     ("GET", "/api/events", get_events),
     ("GET", r"/api/robot/(.+)/connect", connect_robot),

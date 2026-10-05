@@ -7,6 +7,14 @@ import type * as Gen3 from './types/neato/gen3'
 import type * as Gen4 from './types/neato/gen4'
 import type { NoGoLine, VacuulaMapData, Zone } from "./components/map/types";
 
+/** GET /api/server */
+export interface ServerInfo {
+  /** IANA timezone the server runs in (what Gen4 robots get at login). */
+  timezone: string
+  /** Offset of that timezone from UTC right now, in minutes (DST-aware). */
+  utc_offset_minutes: number
+}
+
 // Store for loading state callback - will be set by AppContext
 let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
@@ -98,6 +106,11 @@ export class Http {
 
   static getRobots() {
     return instance.get<QuickRobotInfo>('/robots');
+  }
+
+  /** Server facts the UI needs: the IANA timezone it runs in and its current UTC offset. */
+  static getServerInfo() {
+    return instance.get<ServerInfo>('/server');
   }
 
   static getVacuulaCert() {

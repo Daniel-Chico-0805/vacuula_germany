@@ -10,15 +10,15 @@ import { biEnum } from '../../types/.helpers'
 import Button from '../../components/button/button'
 import { GEN3_COMMANDS } from '../../http/gen3'
 import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
-import { Http } from '../../http'
-import { useApp } from '../../context/useApp'
+import { Http, type ServerInfo } from '../../http'
+import { useRobot } from '../../context/useRobot'
 import { RobotDay } from '../../types/neato/gen3/api'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { Neato, RobotType } from '../../types'
 import Scheudle_gen4 from './scheudle_gen4'
 import { useTranslation } from 'react-i18next'
 import { dayKey } from '../../i18n/days'
-import { useRobot } from '../../context/useRobot'
+import { formatUtcOffset, localSlotToUtc, utcSlotToLocal, type Weekday } from '../../utils/clockTime'
 import { usePersistentMaps } from '../../loaders/resources'
 import type { UseState } from '../../components/map/types'
 import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Boundaries'
@@ -34,6 +34,9 @@ export default () => {
     const [schedule, setSchedule] = useState<GetSchedule>()
     const [drawerOpen, setDrawerOpen] = useState(false)
 
+    // due to the way we have gen3, the interial clock is always UTC. Correct it with the server offset to display local time.
+    const [serverInfo, setServerInfo] = useState<ServerInfo>()
+    const offset = serverInfo?.utc_offset_minutes ?? 0
     const { data: persistentMaps } = usePersistentMaps()
 
     useEffect(() => {
@@ -61,6 +64,10 @@ export default () => {
     }
 
     useEffect(() => {
+        Http.getServerInfo().then(res => setServerInfo(res.data)).catch(() => setServerInfo(undefined))
+    }, [])
+
+    useEffect(() => {
         if (!robot) return;
         getSchedule();
     }, [robot])
@@ -78,6 +85,16 @@ export default () => {
         }))
     }
 
+    /** Robot (UTC) event -> server-local time and weekday for display. */
+    const toLocal = (ev: ScheduleEvent) =>
+        utcSlotToLocal({ time: ev.startTime, day: ev.day as Weekday }, offset)
+
+    /** Form (server-local) -> UTC as the robot stores it. */
+    const toRobot = (ev: ScheduleEvent): ScheduleEvent => {
+        const utc = localSlotToUtc({ time: ev.startTime, day: ev.day as Weekday }, offset)
+        return { ...ev, startTime: utc.time, day: utc.day as RobotDay }
+    }
+
     if (!schedule) return
 
     return (
@@ -87,6 +104,9 @@ export default () => {
                 <div className={`${styles.item} ${styles.staticItem}`}>
                     <div className={styles.info}>
                         <span>{t('schedule.schedule')}</span>
+                        {serverInfo && (
+                            <span className={styles.type}>{serverInfo.timezone} ({formatUtcOffset(offset)})</span>
+                        )}
                     </div>
                     <Input type="switch" skipSection={true} value={schedule.enabled} onChange={() => {
                         console.log('schedule', schedule)
@@ -105,15 +125,18 @@ export default () => {
                     </div>
                 </div>
 
-                {schedule.events?.map((item, i) => (
-                    <div key={i} className={styles.item} onClick={() => alert(item)}>
-                        <div className={styles.info}>
-                            <span>{item.startTime}</span>
-                            <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(item.day)}`), mode: CleaningMode[item.mode] })}</span>
+                {schedule.events?.map((item, i) => {
+                    const local = toLocal(item)
+                    return (
+                        <div key={i} className={styles.item} onClick={() => alert(item)}>
+                            <div className={styles.info}>
+                                <span>{local.time}</span>
+                                <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(local.day)}`), mode: CleaningMode[item.mode] })}</span>
+                            </div>
+                            <FaTrash onClick={() => removeEvent(i)} />
                         </div>
-                        <FaTrash onClick={() => removeEvent(i)} />
-                    </div>
-                ))}
+                    )
+                })}
                 {persistentMaps?.length === 0 && (
                     <span style={{ textAlign: 'center' }}>{t('schedule.noSchedules')}</span>
                 )}
@@ -156,7 +179,7 @@ export default () => {
 
                     <Input
                         type="text"
-                        label={t('common.time')}
+                        label={`${t('common.time')} (${serverInfo?.timezone ?? 'UTC'})`}
                         value={scheduleForm.startTime}
                         onChange={(startTime) => updateForm(SetScheduleForm, { startTime })} />
 
@@ -172,7 +195,7 @@ export default () => {
 
                     <Button text={t('common.save')} style='success' onClick={() => {
                         setDrawerOpen(false)
-                        GEN3_COMMANDS.setSchedule(robot.serial, [scheduleForm, ...schedule.events]).finally(() => getSchedule())
+                        GEN3_COMMANDS.setSchedule(robot.serial, [toRobot(scheduleForm), ...schedule.events]).finally(() => getSchedule())
                     }} />
                 </div>
 
