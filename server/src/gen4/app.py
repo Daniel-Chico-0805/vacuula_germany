@@ -260,8 +260,8 @@ def post_promote(req: RouterHandler, serial: str, map_id: str) -> None:
     #     f.write(nogo_raw)
 
 
-    with open(f'uploads/maps/{serial}/{map_id}/rank_binary.pgm.nz', 'rb') as rank:
-        with open(f'uploads/maps/{serial}/{map_id}/real_binary.pgm.nz', 'rb') as real:
+    with open(f'data/uploads/maps/{serial}/{map_id}/rank_binary.pgm.nz', 'rb') as rank:
+        with open(f'data/uploads/maps/{serial}/{map_id}/real_binary.pgm.nz', 'rb') as real:
             # TODO: verify if this patching is really needed!!!!
             real_binary_patched = _mark_targets_inside_zones(real.read(), cleaning_zones, floorplan)
             payload = {

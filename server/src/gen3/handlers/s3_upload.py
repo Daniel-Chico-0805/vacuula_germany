@@ -82,7 +82,7 @@ def s3_upload(req: RouterHandler) -> None:
         req.send_bad_request("Missing file")
         return
 
-    folder = os.path.join('uploads', upload_type, robot_serial, upload_id)
+    folder = os.path.join('data', 'uploads', upload_type, robot_serial, upload_id)
     upload_file = os.path.join(folder, filename)
 
     try:

@@ -106,7 +106,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     
     # only maps should get the extra parsing
 
-    job_folder = f"uploads/maps/{serial}/{job_id}"
+    job_folder = f"data/uploads/maps/{serial}/{job_id}"
     floor_map_path = f"{job_folder}/FloorMap.png"
     manifest_path = f"{job_folder}/manifest.json"
     run_map_path = f"{job_folder}/RunMap.png"
@@ -141,7 +141,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     # run = data['run']
     # id = run['start_at']
 
-    job_folder = f"uploads/maps/{serial}/{run_id}"
+    job_folder = f"data/uploads/maps/{serial}/{run_id}"
     floor_map_path = f"{job_folder}/FloorMap.png"
     run_map_path = f"{job_folder}/RunMap.png"
     manifest_path = f"{job_folder}/manifest.json"

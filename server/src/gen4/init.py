@@ -1,6 +1,6 @@
 from http.server import ThreadingHTTPServer
 from handlers.router import RouterHandler
-from tls import create_ssl_context
+from tls import CERT, KEY
 import threading
 import socket, ssl, struct, json
 from utils import Generation
@@ -15,7 +15,7 @@ ROBOT_SOCKET_TIMEOUT_S = 20
 
 def start():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ctx.load_cert_chain("ssl/cert.pem", "ssl/privkey.pem")
+    ctx.load_cert_chain(CERT, KEY)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

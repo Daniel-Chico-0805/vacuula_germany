@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 engine = create_engine(
-    "sqlite:///vacuula.db",
+    "sqlite:///data/vacuula.db",
     echo=False
 )
 

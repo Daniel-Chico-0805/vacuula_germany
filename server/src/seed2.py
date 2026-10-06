@@ -13,7 +13,7 @@ def maps_create(serial: str, data: dict):
     run = data['run']
     id = run['start_at']
 
-    job_folder = f"uploads/maps/{serial}/{id}"
+    job_folder = f"data/uploads/maps/{serial}/{id}"
     floor_map_path = f"{job_folder}/FloorMap.png"
     run_map_path = f"{job_folder}/RunMap.png"
     manifest_path = f"{job_folder}/manifest.json"
@@ -72,7 +72,7 @@ with get_session() as session:
     robot: Robot | None = session.get(Robot, serial)
     print(robot.name)
 
-for path in os.walk(f'uploads/maps/{serial}'):
+for path in os.walk(f'data/uploads/maps/{serial}'):
     if not 'manifest.json' in path[2]:
         print('Missing manifest.json!')
         print(path)

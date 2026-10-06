@@ -186,7 +186,7 @@ def maps_create(rc: RobotConn, data: dict):
 
     compressed = base64.b64decode(body["map"]["rank_binary"])
 
-    folder = os.path.join('uploads', 'maps', rc.serial, body['rank_uuid'])
+    folder = os.path.join('data', 'uploads', 'maps', rc.serial, body['rank_uuid'])
     upload_file = os.path.join(folder, 'rank_binary.pgm.nz')
 
     try:
@@ -199,7 +199,7 @@ def maps_create(rc: RobotConn, data: dict):
 
     compressed = base64.b64decode(body["map"]["real_binary"])
 
-    folder = os.path.join('uploads', 'maps', rc.serial, body['rank_uuid'])
+    folder = os.path.join('data', 'uploads', 'maps', rc.serial, body['rank_uuid'])
     upload_file = os.path.join(folder, 'real_binary.pgm.nz')
 
     try:
@@ -214,7 +214,7 @@ def maps_create(rc: RobotConn, data: dict):
         return
 
 
-    job_folder = f"uploads/maps/{rc.serial}/{body['rank_uuid']}"
+    job_folder = f"data/uploads/maps/{rc.serial}/{body['rank_uuid']}"
     floor_map_path = f"{job_folder}/rank_binary.pgm.nz"
     run_map_path = f"{job_folder}/real_binary.pgm.nz"
     # manifest_path = f"{job_folder}/manifest.json"

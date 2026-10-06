@@ -1,16 +1,43 @@
 from zeroconf import Zeroconf, ServiceInfo
 import socket
 from pathlib import Path
-
+import subprocess
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 
-from pathlib import Path
+def ensure_ssl_certificate():
+    ssl_dir = Path("data/ssl")
 
-CERT_PATH = Path("ssl/cert.pem")
+    cert = ssl_dir / "cert.pem"
+    key = ssl_dir / "privkey.pem"
+    config = ssl_dir / "vacuula.cnf"
+
+    if cert.exists() and key.exists():
+        print("SSL certificate and key already exist, skipping generation.")
+        return
+
+    ssl_dir.mkdir(parents=True, exist_ok=True)
+
+    subprocess.run(
+        [
+            "openssl",
+            "req",
+            "-x509",
+            "-newkey", "rsa:4096",
+            "-sha256",
+            "-days", "3650",
+            "-nodes",
+            "-keyout", str(key),
+            "-out", str(cert),
+            "-config", str(config),
+        ],
+        check=True,
+    )
+
+CERT_PATH = Path("data/ssl/cert.pem")
 
 def get_cert(req: RouterHandler) -> None:
     """GET /cert - download the certificate."""
@@ -59,6 +86,8 @@ class MDNSAdvertiser:
             properties={
                 "version": "1",
                 "cert-path": "/api/cert",
+                "protocol": "http",
+                "url": "http://vacuula.local",
             },
         )
 

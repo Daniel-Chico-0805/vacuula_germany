@@ -53,7 +53,7 @@ def maps_create(serial: str, data: dict):
     print("add new map!")
     body = data["body"]
 
-    job_folder = f"uploads/maps/{serial}/{body['rank_uuid']}"
+    job_folder = f"data/uploads/maps/{serial}/{body['rank_uuid']}"
     floor_map_path = f"{job_folder}/rank_binary.pgm.nz"
     run_map_path = f"{job_folder}/real_binary.pgm.nz"
     # manifest_path = f"{job_folder}/manifest.json"
@@ -131,7 +131,7 @@ with get_session() as session:
 
 
 
-    for path in os.walk(f'uploads/maps/{serial}'):
+    for path in os.walk(f'data/uploads/maps/{serial}'):
         if not 'msg.json' in path[2]:
             print('Missing msg.json!')
             print(path)

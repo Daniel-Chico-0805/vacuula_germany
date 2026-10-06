@@ -64,7 +64,7 @@ def get_maps(req: RouterHandler, serial: str) -> None:
 
 def get_map(req: RouterHandler, serial: str, map_id: str) -> None:
     """GET /robot/<serial>/maps/<map_id> - return map data to user"""
-    file = f"uploads/maps/{serial}/{map_id}/floormap.json"
+    file = f"data/uploads/maps/{serial}/{map_id}/floormap.json"
 
     table = PersistentMap if '-' in serial else FloorPlan
 
@@ -162,7 +162,7 @@ def get_runs(req: RouterHandler, serial: str) -> None:
 
 def get_run(req: RouterHandler, serial: str, run_id: str) -> None:
     """GET /robot/<serial>/run/<run_id> - list all runs to user"""
-    file = f"uploads/maps/{serial}/{run_id}/runmap.json"
+    file = f"data/uploads/maps/{serial}/{run_id}/runmap.json"
 
     if not os.path.isfile(file):
         req.send_not_found("Map not found")

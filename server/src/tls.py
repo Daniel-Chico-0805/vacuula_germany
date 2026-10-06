@@ -1,7 +1,7 @@
 import ssl
 
-CERT = "./ssl/cert.pem"
-KEY = "./ssl/privkey.pem"
+CERT = "./data/ssl/cert.pem"
+KEY = "./data/ssl/privkey.pem"
 
 
 def create_ssl_context():
