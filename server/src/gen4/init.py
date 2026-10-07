@@ -1,3 +1,4 @@
+from __future__ import annotations
 from http.server import ThreadingHTTPServer
 from handlers.router import RouterHandler
 from tls import CERT, KEY

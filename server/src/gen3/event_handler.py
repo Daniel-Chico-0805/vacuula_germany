@@ -1,3 +1,4 @@
+from __future__ import annotations
 import state
 import json
 import queue

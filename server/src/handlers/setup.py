@@ -1,3 +1,4 @@
+from __future__ import annotations
 from zeroconf import Zeroconf, ServiceInfo
 import socket
 from pathlib import Path

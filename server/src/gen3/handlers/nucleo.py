@@ -1,3 +1,4 @@
+from __future__ import annotations
 from gen3.commands import send_chunk, build_heartbeat
 from state import robot_connections
 from handlers.events import notify_robots_changed

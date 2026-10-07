@@ -1,3 +1,4 @@
+from __future__ import annotations
 # from flask_sqlalchemy import SQLAlchemy
 
 # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
