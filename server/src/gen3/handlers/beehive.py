@@ -1,8 +1,6 @@
 from __future__ import annotations
 import json
-import re
-import state
-from gen3.utils import extract_robot_serial, get_robot_serial
+from gen3.utils import get_robot_serial
 from gen3.map_utils import parse_session
 from db import get_session, db_commit
 from models.robot import Robot
@@ -10,8 +8,6 @@ from models.persistent_map import PersistentMap
 from models.run import Gen3__Run
 import os
 from sqlalchemy import select
-import socket
-from datetime import datetime
 
 from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:

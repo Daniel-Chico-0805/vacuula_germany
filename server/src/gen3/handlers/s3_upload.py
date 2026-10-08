@@ -1,10 +1,11 @@
+from __future__ import annotations
 import re
 import os
 import tarfile
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from router import RouterHandler
+    from handlers.router import RouterHandler
 
 
 def parse_multipart_form_data(body: bytes, boundary: str) -> tuple[dict, bytes | None, str | None]:

@@ -1,4 +1,5 @@
 """Shared routing utilities for handler pattern matching"""
+from __future__ import annotations
 
 import re
 from typing import Callable, Optional, Tuple, List

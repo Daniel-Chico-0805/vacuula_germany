@@ -1,3 +1,4 @@
+from __future__ import annotations
 from conn import RobotConn
 from typing import Dict
 import threading, queue

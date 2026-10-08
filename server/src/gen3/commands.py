@@ -1,8 +1,9 @@
+from __future__ import annotations
 import hmac
 import hashlib
 from datetime import datetime, timezone
 from db import get_session
-from utils import get_robot_by_serial
+from generation import get_robot_by_serial
 import json
 import time
 

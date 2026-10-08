@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Resolution order:
   1. VACUULA_TZ environment variable - explicit override for hosts whose clock

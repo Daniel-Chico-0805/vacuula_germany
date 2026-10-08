@@ -1,3 +1,4 @@
+from __future__ import annotations
 from http.server import BaseHTTPRequestHandler
 from handlers.route_matcher import BrainslugHandler, BEEHIVE_ROUTES, NUCLEO_ROUTES, APP_ROUTES, S3_ROUTES
 import json

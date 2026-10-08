@@ -1,13 +1,9 @@
 from __future__ import annotations
 import state
 import json
-import queue
 import time
 from state import pending_requests, put_drop_oldest
 import typing
-
-if typing.TYPE_CHECKING:
-    from handlers.router import RouterHandler
 
 # per-robot temporary buffers
 # serial --> size

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from db import get_session
 from models.robot import Robot
 from models.persistent_map import FloorPlan, PersistentMap

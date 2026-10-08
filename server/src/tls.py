@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ssl
 
 CERT = "./data/ssl/cert.pem"

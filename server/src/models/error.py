@@ -1,3 +1,4 @@
+from __future__ import annotations
 import time
 
 from sqlalchemy import String, Integer, Boolean, Float, ForeignKey

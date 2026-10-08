@@ -8,7 +8,7 @@ from gen3.event_handler import robot_data
 from models.robot import Robot
 from sqlalchemy import select
 from typing import TYPE_CHECKING
-from utils import get_robot_by_serial, Generation
+from generation import get_robot_by_serial, Generation
 from conn import RobotConn, Gen2Gen3Conn
 import traceback
 if TYPE_CHECKING:

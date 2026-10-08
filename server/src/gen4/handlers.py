@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from conn import RobotConn
-from db import get_session, db_commit2
+from db import get_session
 from gen4.map_utils import parse_session
 from models.robot import Robot
 from models.persistent_map import FloorPlan
@@ -9,13 +9,9 @@ import threading
 from models.run import Gen4__Run
 from state import put_drop_oldest, robot_connections
 from handlers.events import notify_robots_changed
-from utils import Generation
+from generation import Generation
 
 from state import pending_requests, client_connections
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from handlers.router import RouterHandler
 
 # init
 # {

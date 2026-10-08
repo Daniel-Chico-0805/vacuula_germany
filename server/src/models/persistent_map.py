@@ -1,4 +1,4 @@
-import time
+from __future__ import annotations
 
 from typing import List, Tuple
 from sqlalchemy import String, JSON, Boolean, Float, ForeignKey, Index

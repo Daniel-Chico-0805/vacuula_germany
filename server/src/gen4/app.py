@@ -1,21 +1,13 @@
-from re import search
-from gen3.commands import send_chunk, build_command, build_heartbeat # TODO
-from state import PendingRequest, robot_connections, client_connections, pending_requests
+from __future__ import annotations
+from state import PendingRequest, robot_connections, pending_requests
 from db import get_session, db_commit
 from models.persistent_map import Boundary, FloorPlan
-from models.robot import Robot
-from models.run import Gen3__Run
 from sqlalchemy import select, update
-from utils import Generation, get_robot_by_serial
-import json
-import time
-import os
-
-from gen4.handlers import robot_send_request, send_json
+from gen4.handlers import robot_send_request
 
 from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
-    from router import RouterHandler
+    from handlers.router import RouterHandler
 
 
 def post_update_floorplan_in_use(req: RouterHandler, serial: str, map_id: str) -> None:

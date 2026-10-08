@@ -1,5 +1,6 @@
+from __future__ import annotations
 
-from utils import Generation
+from generation import Generation
 from socketserver import StreamRequestHandler
 from ssl import SSLSocket
 import threading
