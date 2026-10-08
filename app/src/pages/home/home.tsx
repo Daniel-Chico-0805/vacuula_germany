@@ -90,7 +90,7 @@ export default function Home() {
 
     const [gen3__cleaningMode, gen3__setCleaningMode] = useState<CleaningMode>(CleaningMode.ECO)
     const [gen3__navigationMode, gen3__setNavigationMode] = useState<CleaningNavigationMode>(CleaningNavigationMode.NORMAL)
-    const [gen3__cleaningCategory, gen3__setCleaningCategory] = useState<CleaningCategory>(CleaningCategory.HOUSE)
+    const [gen3__cleaningCategory, gen3__setCleaningCategory] = useState<CleaningCategory>(CleaningCategory.MAP)
 
     const [gen4__cleaningMode, gen4__setCleaningMode] = useState<Neato.Gen4.CleaningMode>(Neato.Gen4.CleaningMode.ECO)
     const [gen4__navigationMode, gen4__setNavigationMode] = useState<Neato.Gen4.CleaningNavigationMode>(Neato.Gen4.CleaningNavigationMode.NORMAL)
@@ -280,7 +280,7 @@ export default function Home() {
                                     // GEN4
                                 } else if (robot.type === RobotType.NeatoGen4) {
                                     // stuff is technically for gen3, but will piggyback of it for now, later make its own separate things? TODO
-                                    if (gen3__cleaningCategory === CleaningCategory.HOUSE) {
+                                    if (gen3__cleaningCategory === CleaningCategory.HOUSE || !promotedFloorplan) {
                                         GEN4_COMMANDS.startCleaning(robot.serial, gen4__cleaningMode, gen4__navigationMode)
                                         return
                                     }
@@ -293,13 +293,29 @@ export default function Home() {
                         )
                     }
 
-
-                    <CtrlBtn disabled={
-                        robot.type === RobotType.NeatoGen3 ? !robot.availableCommands?.goToBase :
-                            robot.type === RobotType.NeatoGen4 ? !robot.availableCommands?.return_to_base : true
-                    } icon={<TbHome size={22} />} label={t('home.base')} onClick={() => {
-                        (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).sendToBase(robot.serial)
-                    }} />
+                    {/* if pause is possible, show the send to base, if gotobase is possible, also show the ctrlbtn */}
+                    <CtrlBtn 
+                        disabled={
+                            !robot.availableCommands.pause &&
+                            !(
+                                robot.type === RobotType.NeatoGen3
+                                    ? robot.availableCommands.goToBase
+                                    : robot.type === RobotType.NeatoGen4
+                                        ? robot.availableCommands.return_to_base
+                                        : false
+                            )
+                        }
+                        icon={<TbHome size={22} />} 
+                        label={t('home.base')} 
+                        onClick={() => {
+                            if (robot.availableCommands.pause) {
+                                (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).pauseCleaning(robot.serial).then(() => {
+                                    setTimeout(() => {
+                                        (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).sendToBase(robot.serial);
+                                    }, 3500) // pulled my my arsle, more trial and error needed here! TODO: flag based actions, not in initial release however
+                                })
+                            } else (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).sendToBase(robot.serial);
+                        }} />
                 </div>
 
 

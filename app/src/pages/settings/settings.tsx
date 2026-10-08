@@ -16,6 +16,7 @@ import { THEME_MODES, useTheme, type ThemeMode } from '../../theme'
 import { UNITS, useUnits, type Units } from '../../units'
 import { MASCOTS, useMascot } from '../../mascot'
 import { GrCertificate } from 'react-icons/gr'
+import { VscFeedback } from 'react-icons/vsc'
 
 export default () => {
     const { t, i18n } = useTranslation()
@@ -133,6 +134,7 @@ export default () => {
                         <Button icon={<SiBuymeacoffee size={20} />} text='Buy Me a Coffee' style='secondary' onClick={() => window.open('https://www.buymeacoffee.com/philip2809')} />
 
                         <Button icon={<GrCertificate size={20} />} text={t('settings.downloadCert')} style='secondary' onClick={() => window.open("/api/cert")}/>
+                        <Button icon={<VscFeedback size={20} />} text={t('settings.giveFeedback')} style='secondary' onClick={() => window.open("https://feedback.vacuula.phma.dev/")}/>
                     </div>
                 </Input>
 
@@ -311,14 +313,12 @@ const FactoryResetButton = ({ serial }: FactoryResetButtonProps) => {
         if (nextCount >= FACTORY_RESET_TAPS_REQUIRED) {
             clearTimeout(idleResetRef.current)
             setIsResetting(true)
-            // TODO: swap in the real factory-reset endpoint — this is a placeholder
-            console.warn("FACTORY RESET!!")
-            // GEN4_COMMANDS.factoryReset(serial)
-            //     .catch(err => console.error('Factory reset failed', err))
-            //     .finally(() => {
-            //         setIsResetting(false)
-            //         setTapCount(0)
-            //     })
+            GEN4_COMMANDS.factoryReset(serial)
+                .catch(err => console.error('Factory reset failed', err))
+                .finally(() => {
+                    setIsResetting(false)
+                    setTapCount(0)
+                })
             return
         }
 

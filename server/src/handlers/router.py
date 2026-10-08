@@ -103,7 +103,7 @@ class RouterHandler(BaseHTTPRequestHandler):
         try:
             content = requested.read_bytes()
         except OSError:
-            self.send_internal_error("Could not read file")
+            self.send_internal_error("Was not able to read files for webserver, did you build the frontend?")
             return
 
         content_type, _ = mimetypes.guess_type(str(requested))
