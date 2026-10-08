@@ -29,7 +29,7 @@ def maps_create(serial: str, data: dict):
             session.add(PersistentMap(
                 id=id,
                 robot=serial,
-                name="???",
+                name="(unnamed)",
                 base=(floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"]),
                 enabled=True,
                 in_maps_list=run['valid_as_persistent_map']

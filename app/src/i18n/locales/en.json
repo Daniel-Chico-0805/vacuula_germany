@@ -114,7 +114,7 @@
     "weekdays": "on weekdays",
     "navigation": "Navigation",
     "boundaryId": "Boundary ID",
-    "usePromoted": "Use promoted floorplan",
+    "usePromoted": "Use floorplan",
     "useNogoLayer": "Avoid nogo lines & zones",
     "selectZones": "Clean zones",
     "selectZonesHelp": "Optional, select one or more zones to clean, if none selected, it will clean entire map."
@@ -145,8 +145,8 @@
     "polygonHint": "To make a no-go line, don't press the button to close the polygon.",
     "lineHint": "To make a zone, move the cursor to the first point and click the zone button (blue, on the right); this connects the points and makes a zone.",
     "drawHint": "Drawing a line makes a no-go line; using the polygon button to connect the cursor with the first point makes a zone.",
-    "promote": "Promote",
-    "demote": "Demote"
+    "promote": "Use map",
+    "demote": "Stop using map"
   },
   "settings": {
     "serial": "Serial nr: {{serial}}",

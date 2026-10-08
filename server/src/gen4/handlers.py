@@ -222,7 +222,7 @@ def maps_create(rc: RobotConn, data: dict):
             session.add(FloorPlan(
                 id=body['rank_uuid'],
                 robot=rc.serial,
-                name="???",
+                name="(unnamed)",
                 promoted=False,
                 base=(body["robot"]["base"]["x"], body["robot"]["base"]["y"], body["robot"]["base"]["dir"]),
                 origin=(body["map"]["origin"]["x"], body["map"]["origin"]["y"]),

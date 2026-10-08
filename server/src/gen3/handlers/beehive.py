@@ -153,7 +153,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
         session.add(PersistentMap(
             id=run_id,
             robot=serial,
-            name="???",
+            name="(unnamed)",
             base=(floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"]),
             enabled=run['valid_as_persistent_map'],
             in_maps_list=run['valid_as_persistent_map']
