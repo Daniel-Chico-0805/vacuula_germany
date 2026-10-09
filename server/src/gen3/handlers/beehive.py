@@ -10,10 +10,14 @@ import os
 from sqlalchemy import select
 
 from typing import TYPE_CHECKING, Literal
+
+from server.src.handlers.setup import get_local_ip
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 
+ip = get_local_ip()
+hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
 
 def post_links(req: RouterHandler) -> None:
     """POST /links - link robot to server"""
@@ -65,7 +69,7 @@ def upload_init(req: RouterHandler, upload_type: Literal["maps", "logs"]) -> Non
 
     res = {
         "id": map_id,
-        "post_url": "test-s3.neatocloud.com",
+        "post_url": hostname,
         "params": {
             "key": serial,
             "AWSAccessKeyId": upload_type,
