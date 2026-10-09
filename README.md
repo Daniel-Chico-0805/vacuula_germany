@@ -40,10 +40,30 @@ _custom server for the undead robot vacuum cleaners_
 <i>Your robot not listed here? Get in touch!</i>
 <br><i>¹Sadly we were not able to fit the OG BotVac Connected into the initial release, sorry about this, support for this robot is in the works and here very soon!</i>
 
-
-# Repair my robot!
-
 > [!NOTE]
 > Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
 
+
+# Repair my robot!
+
+For the repair there is two part
+1. Setup a server <i>(we are looking into a community server, however thay is not done in time for initial release)</i>
+2. Configure the robot
+
+## Setup server
+
+
+## Configure the robot
+
+We have made an easy to use installer to set your robot up!
+
+> Dowload the latest version here for your OS here
+
+| [Windows]() | [Linux]() | [Mac]() |
+|---------|-------|-----|
+
+![Vacuula installer main screen](pics/guide/installer.png)
+
+<i>Source code is available at https://github.com/vacuula/installer</i>
+<br><i>If you have an more exotic setup and cannot run this installer in any way - get in touch and we will figure something out!</i>
 
