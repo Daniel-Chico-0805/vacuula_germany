@@ -47,10 +47,14 @@ _custom server for the undead robot vacuum cleaners_
 # Repair my robot!
 
 For the repair there is two part
-1. Setup a server <i>(we are looking into a community server, however thay is not done in time for initial release)</i>
-2. Configure the robot
+1. [Setup a server](#setup-server) <i>(we are looking into a community server, however thay is not done in time for initial release, so you will need to set a server up)</i>
+2. [Configure the robot](#configure-the-robot)
 
 ## Setup server
+
+There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./scripts/lxc.md)
+
+Since the server needs to always be on
 
 
 ## Configure the robot
@@ -67,3 +71,13 @@ We have made an easy to use installer to set your robot up!
 <i>Source code is available at https://github.com/vacuula/installer</i>
 <br><i>If you have an more exotic setup and cannot run this installer in any way - get in touch and we will figure something out!</i>
 
+## Features
+
+| Feature      | Status | Feature          | Status |
+|--------------|--------|------------------|--------|
+| Setup/Status | ✅      | Settings         | ✅      |
+| Maps         | ✅      | Zones/NoGo Lines | ✅      |
+| Historical   | ✅      |                  |        |
+| Schedule     | ✅      |                  |        |
+|              |        |                  |        |
+|              |        |                  |        |
