@@ -43,15 +43,15 @@ _custom server for the undead robot vacuum cleaners_
 > [!NOTE]
 > Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
 
-## Features
-| Feature          | Status | <br> | Feature              | Status |
-|------------------|--------|------|----------------------|--------|
-| Setup/Status     | ✅      | <br> | Notifications        | 🚧     |
-| Maps             | ✅      | <br> | Home Assistant       | 🚧     |
-| Historical runs  | ✅      | <br> | Drag to clean "here" | 🚧     |
-| Schedule         | ✅      | <br> | Custom sounds        | 🚧     |
-| Settings         | ✅      | <br> |                      |        |
-| Zones/NoGo Lines | ✅      | <br> |                      |        |
+| Feature          | Status              | <br> | Feature              | Status |
+|------------------|---------------------|------|----------------------|--------|
+| Setup/Status     | ✅                   | <br> | Notifications        | 🚧     |
+| Maps             | ✅                   | <br> | Home Assistant       | 🚧     |
+| Historical runs  | ✅                   | <br> | Drag to clean "here" | 🚧     |
+| Schedule         | ✅                   | <br> | Custom sounds        | 🚧     |
+| Settings         | ✅                   | <br> |                      |        |
+| Zones/NoGo Lines | ✅                   | <br> |                      |        |
+| MultiZones       | Gen4 ✅ Gen3/Gen2 🚧 |      |                      |        |
 
 # Repair my robot!
 
