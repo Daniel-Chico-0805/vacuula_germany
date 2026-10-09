@@ -43,6 +43,15 @@ _custom server for the undead robot vacuum cleaners_
 > [!NOTE]
 > Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
 
+## Features
+| Feature          | Status | <br> | Feature              | Status |
+|------------------|--------|------|----------------------|--------|
+| Setup/Status     | ✅      | <br> | Notifications        | 🚧     |
+| Maps             | ✅      | <br> | Home Assistant       | 🚧     |
+| Historical runs  | ✅      | <br> | Drag to clean "here" | 🚧     |
+| Schedule         | ✅      | <br> | Custom sounds        | 🚧     |
+| Settings         | ✅      | <br> |                      |        |
+| Zones/NoGo Lines | ✅      | <br> |                      |        |
 
 # Repair my robot!
 
@@ -70,24 +79,3 @@ We have made an easy to use installer to set your robot up!
 
 <i>Source code is available at https://github.com/vacuula/installer</i>
 <br><i>If you have an more exotic setup and cannot run this installer in any way - get in touch and we will figure something out!</i>
-
-## Features
-
-| Feature      | Status | Feature          | Status |
-|--------------|--------|------------------|--------|
-| Setup/Status | ✅      | Settings         | ✅      |
-| Maps         | ✅      | Zones/NoGo Lines | ✅      |
-| Historical   | ✅      |                  |        |
-| Schedule     | ✅      |                  |        |
-|              |        |                  |        |
-|              |        |                  |        |
-
-
-| Feature      | Status |   | Feature          | Status |
-|--------------|--------|---------|------------------|--------|
-| Setup/Status | ✅      | <br>    | Settings         | ✅      |
-| Maps         | ✅      | <br>    | Zones/NoGo Lines | ✅      |
-| Historical   | ✅      |         |                  |        |
-| Schedule     | ✅      |         |                  |        |
-|              |        |         |                  |        |
-|              |        |         |                  |        |
