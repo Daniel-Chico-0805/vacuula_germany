@@ -18,7 +18,7 @@ _custom server for the undead robot vacuum cleaners_
         Discord
       </a>
       <span> | </span>
-      <a href="./repair/repair.md" style="font-size:32px">
+      <a href="#repair-my-robot" style="font-size:32px">
         Repiar my robot!
       </a>
       <span> | </span>
@@ -26,3 +26,18 @@ _custom server for the undead robot vacuum cleaners_
         Vacuula Tools
       </a>
 </div>
+
+> Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
+
+| Gen1    | Gen2                  | Gen3 | Gen4     |
+|---------|-----------------------|------|----------|
+| No WiFi | BotVac Connected: WIP | D3 ✅ | D800 ✅   |
+|         |                       | D4 ✅ | D8     ✅ |
+|         |                       | D5 ✅ | D9     ✅ |
+|         |                       | D6 ✅ | D10   ✅  |
+|         |                       | D7 ✅ |          |
+
+<i>Your robot not listed here? Get in touch!</i>
+
+# Repair my robot!
+

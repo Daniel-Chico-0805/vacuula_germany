@@ -1,7 +1,7 @@
 <img alt="vacuula Logo" src="../pics/logo.svg" width="50">
 
 
-# Select your neato
+# Two things are needed
 
 
 GEN2 Connected | GEN3 | GEN4
