@@ -81,3 +81,13 @@ We have made an easy to use installer to set your robot up!
 | Schedule     | ✅      |                  |        |
 |              |        |                  |        |
 |              |        |                  |        |
+
+
+| Feature      | Status |   | Feature          | Status |
+|--------------|--------|---------|------------------|--------|
+| Setup/Status | ✅      | <br>    | Settings         | ✅      |
+| Maps         | ✅      | <br>    | Zones/NoGo Lines | ✅      |
+| Historical   | ✅      |         |                  |        |
+| Schedule     | ✅      |         |                  |        |
+|              |        |         |                  |        |
+|              |        |         |                  |        |
