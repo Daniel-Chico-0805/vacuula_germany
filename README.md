@@ -29,15 +29,21 @@ _custom server for the undead robot vacuum cleaners_
 
 > Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
 
-| Gen1    | Gen2                  | Gen3 | Gen4     |
-|---------|-----------------------|------|----------|
-| No WiFi | BotVac Connected: WIP | D3 ✅ | D800 ✅   |
-|         |                       | D4 ✅ | D8     ✅ |
-|         |                       | D5 ✅ | D9     ✅ |
-|         |                       | D6 ✅ | D10   ✅  |
-|         |                       | D7 ✅ |          |
+| Gen1    | Gen2                   | Gen3 | Gen4     |
+|---------|------------------------|------|----------|
+| No WiFi | BotVac Connected: WIP¹ | D3 ✅ | D800 ✅   |
+|         |                        | D4 ✅ | D8     ✅ |
+|         |                        | D5 ✅ | D9     ✅ |
+|         |                        | D6 ✅ | D10   ✅  |
+|         |                        | D7 ✅ |          |
 
 <i>Your robot not listed here? Get in touch!</i>
+<br><i>¹Sadly we were not able to fit the OG BotVac Connected into the initial release, sorry about this, support for this robot is in the works and here very soon!</i>
+
 
 # Repair my robot!
+
+> [!NOTE]
+> Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
+
 
