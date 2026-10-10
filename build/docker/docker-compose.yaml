@@ -1,0 +1,10 @@
+services:
+  vacuula:
+    image: vacuula:latest # if you want a spesific version, you can change "latest" to the version number
+    network_mode: host
+    volumes:
+      - vacuula-data:/server/data
+    restart: unless-stopped
+
+volumes:
+  vacuula-data:

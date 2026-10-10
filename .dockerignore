@@ -7,10 +7,14 @@
 **/*.pyc
 
 app/dist
-server/web
-
 app/.vite
 app/.cache
+
+server/data/ssl/*.pem
+server/data/uploads/
+server/data/vacuula.db
+server/data/devdb
+server/web
 
 .env
 .env.*
@@ -20,3 +24,7 @@ app/.cache
 .idea
 
 **/tests
+
+pics
+repair
+build

@@ -40,9 +40,6 @@ _custom server for the undead robot vacuum cleaners_
 <i>Your robot not listed here? Get in touch!</i>
 <br><i>¹Sadly we were not able to fit the OG BotVac Connected into the initial release, sorry about this, support for this robot is in the works and here very soon!</i>
 
-> [!NOTE]
-> Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
-
 | Feature          | Status              | <br> | Feature              | Status |
 |------------------|---------------------|------|----------------------|--------|
 | Setup/Status     | ✅                   | <br> | Notifications        | 🚧     |
@@ -52,6 +49,9 @@ _custom server for the undead robot vacuum cleaners_
 | Settings         | ✅                   | <br> |                      |        |
 | Zones/NoGo Lines | ✅                   | <br> |                      |        |
 | MultiZones       | Gen4 ✅ Gen3/Gen2 🚧 |      |                      |        |
+
+> [!NOTE]
+> Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
 
 # Repair my robot!
 
@@ -63,7 +63,15 @@ For the repair there is two part
 
 There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./scripts/lxc.md)
 
-Since the server needs to always be on
+Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
+1. Install docker
+2. Donwload [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
+3. Run `docker compose up -d`
+
+- To see logs do `docker compose logs vacuula`
+- To stop vacuula `docker compose stop vacuula`
+- To start vacuula `docker compose stop vacuula`
+- To permanently remove stored data `docker volume rm vacuula-data` <i>Vacuula needs to be stopped first</i>
 
 
 ## Configure the robot

@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -218,8 +217,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Vacuula
-ssl/*.pem
-server/ssl/*.pem
-uploads/
-vacuula.db
+server/data/ssl/*.pem
+server/data/uploads/
+server/data/vacuula.db
+server/data/devdb
 server/web
