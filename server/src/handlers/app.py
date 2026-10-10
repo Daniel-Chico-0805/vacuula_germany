@@ -1,5 +1,6 @@
 from __future__ import annotations
 from gen3.commands import send_chunk, build_command
+from env import GEN3_PORT, GEN4_PORT
 from state import robot_connections, client_connections, pending_requests, PendingRequest
 from handlers.events import robots_snapshot, notify_robots_changed, CLIENT_QUEUE_MAX
 from db import get_session
@@ -24,14 +25,16 @@ if TYPE_CHECKING:
 
 
 def get_server_info(req: RouterHandler) -> None:
-    """GET /server - static facts about this server the web app needs.
-
-    timezone:           IANA name the server runs in (the one handed to Gen4 robots at login)
-    utc_offset_minutes: that zone's offset from UTC right now (DST-aware), for clients that
-                        display robot-side UTC clock values (Gen3 schedules) in local time
-    """
+    """GET /server - static facts about this server the web app or installer needs."""
     tz = server_timezone()
-    req.send_ok({"timezone": tz, "utc_offset_minutes": utc_offset_minutes(tz)})
+    req.send_ok({
+        "version": "1.0.0",  # TODO: dynamically set this to the actual server version, but not in initial release
+        "gen3_port": GEN3_PORT,
+        "gen4_port": GEN4_PORT,
+   
+        "timezone": tz,
+        "utc_offset_minutes": utc_offset_minutes(tz),
+    })
 
 
 def get_robots(req: RouterHandler) -> None:

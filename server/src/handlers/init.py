@@ -3,15 +3,17 @@ from http.server import ThreadingHTTPServer
 from handlers.router import RouterHandler
 import threading
 
+from env import VACUULA_PORT
+
 
 def start():
-    # HTTP server on 80
-    http_server = ThreadingHTTPServer(("0.0.0.0", 80), RouterHandler)
+    # Vacuula server on vacuula port
+    http_server = ThreadingHTTPServer(("0.0.0.0", VACUULA_PORT), RouterHandler)
     
     http_thread = threading.Thread(target=http_server.serve_forever, daemon=True)
     
     http_thread.start()
     
-    print("Listening on http://0.0.0.0:80")
+    print(f"Vacuula Server listening on http://0.0.0.0:{VACUULA_PORT}")
 
 

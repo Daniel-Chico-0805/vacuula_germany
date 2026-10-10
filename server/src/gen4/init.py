@@ -1,4 +1,5 @@
 from __future__ import annotations
+from env import GEN4_PORT
 from tls import CERT, KEY
 import threading
 import socket, ssl, struct, json
@@ -7,7 +8,6 @@ from conn import RobotConn, Gen4Conn
 from gen4.handlers import handle_login, robot_response, heartbeat_thread, robot_event, roboot_request
 
 HOST = "0.0.0.0"
-PORT = 3443
 ROBOT_SOCKET_TIMEOUT_S = 20
 
 def start():
@@ -16,9 +16,9 @@ def start():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((HOST, PORT))
+        sock.bind((HOST, GEN4_PORT))
         sock.listen(5)
-        print(f"TLS server listening on {HOST}:{PORT}")
+        print(f"Gen4 listening on {HOST}:{GEN4_PORT}")
 
         while True:
             client, addr = sock.accept()

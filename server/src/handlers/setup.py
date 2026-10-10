@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 
 from typing import TYPE_CHECKING
+
+from env import VACUULA_PORT, get_host_ip
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
@@ -31,7 +33,7 @@ def ensure_ssl_certificate():
             "-sha256",
             "-days", "3650",
             "-nodes",
-            "-keyout", str(key),
+            "-keyout", str(key),§
             "-out", str(cert),
             "-config", str(config),
         ],
@@ -60,35 +62,24 @@ def get_cert(req: RouterHandler) -> None:
 SERVICE_TYPE = "_vacuula._tcp.local."
 SERVICE_NAME = "Vacuula Server._vacuula._tcp.local."
 MDNS_HOSTNAME = "vacuula.local."
-PORT = 80
-
-def get_local_ip() -> str:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        # Determines which local interface is used for outbound traffic.
-        sock.connect(("9.9.9.9", 53))
-        return sock.getsockname()[0]
-    finally:
-        sock.close()
-
 
 class MDNSAdvertiser:
     def __init__(self) -> None:
         self._zeroconf = Zeroconf()
 
-        ip = get_local_ip()
+        ip = get_host_ip()
 
         self._info = ServiceInfo(
             SERVICE_TYPE,
             SERVICE_NAME,
             addresses=[socket.inet_aton(ip)],
             server=MDNS_HOSTNAME,
-            port=PORT,
+            port=VACUULA_PORT,
             properties={
-                "version": "1",
+                "version": "1.0.0", # TODO: dynamically set this to the actual server version, but not in initial release
                 "cert-path": "/api/cert",
                 "protocol": "http",
-                "url": "http://vacuula.local",
+                "url": "http://vacuula.local" + (f":{VACUULA_PORT}" if VACUULA_PORT != 80 else ""),
             },
         )
 

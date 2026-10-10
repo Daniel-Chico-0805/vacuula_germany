@@ -2,6 +2,10 @@ services:
   vacuula:
     image: vacuula:latest # if you want a spesific version, you can change "latest" to the version number
     network_mode: host
+    environment: # defaults are set, based on your needs
+      - GEN3_PORT=335
+      - GEN4_PORT=336
+      - VACUULA_PORT=8050
     volumes:
       - vacuula-data:/server/data
     restart: unless-stopped

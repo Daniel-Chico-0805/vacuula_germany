@@ -11,13 +11,13 @@ from sqlalchemy import select
 
 from typing import TYPE_CHECKING, Literal
 
-from server.src.handlers.setup import get_local_ip
+from env import GEN3_PORT, get_host_ip
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 
-ip = get_local_ip()
-hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
+ip = get_host_ip()
+hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io:{GEN3_PORT}"
 
 def post_links(req: RouterHandler) -> None:
     """POST /links - link robot to server"""
@@ -177,28 +177,3 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
         ))
 
         session.commit()
-
-        # if valid_as_persistent_map:
-        #     if not db_commit(session, req, PersistentMap(
-        #         id=run_id,
-        #         robot=serial,
-        #         name="Persistent Map",
-        #         enabled=True,
-        #         in_maps_list=True,
-        #         base=(0.5, 0.5) # TODO: get from manifest,
-        #     )):
-        #         # TODO: error
-        #         return
-
-        # if not db_commit(session, req, Run(
-        #     id=run_id,
-        #     robot=serial,
-        #     persistent_map=persistent_map_id,
-        #     start_at=start_at_ts,
-        #     end_at=end_at_ts,
-        #     charge_at_start=charge_at_start,
-        #     charge_at_end=charge_at_end,
-        #     cleaned_area=cleaned_area
-        # )):
-        #     # TODO: error
-        #     return
