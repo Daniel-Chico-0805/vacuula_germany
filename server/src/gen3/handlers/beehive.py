@@ -11,13 +11,13 @@ from sqlalchemy import select
 
 from typing import TYPE_CHECKING, Literal
 
-from env import GEN3_PORT, get_host_ip
+from env import get_host_ip
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
 
 ip = get_host_ip()
-hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io:{GEN3_PORT}"
+hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
 
 def post_links(req: RouterHandler) -> None:
     """POST /links - link robot to server"""

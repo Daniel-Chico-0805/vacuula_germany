@@ -33,7 +33,7 @@ def ensure_ssl_certificate():
             "-sha256",
             "-days", "3650",
             "-nodes",
-            "-keyout", str(key),§
+            "-keyout", str(key),
             "-out", str(cert),
             "-config", str(config),
         ],

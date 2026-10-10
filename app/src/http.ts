@@ -25,7 +25,7 @@ export interface ServerInfo {
 // let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
-  baseURL: `http://${location.hostname}:80/api`, // IMPORTANT: keep like this for now, this will work perfectly when built and in dev. currently some issues with the vite proxy, will fix it after initial release!!
+  baseURL: `http://${location.host}/api`, // IMPORTANT: keep like this for now, this will work perfectly when built and in dev. currently some issues with the vite proxy, will fix it after initial release!!
 });
 
 export type LoadingState = { isLoading: boolean; message?: string };

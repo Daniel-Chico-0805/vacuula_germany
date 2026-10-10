@@ -31,6 +31,7 @@ class RouterHandler(BaseHTTPRequestHandler):
 
     def end_headers(self):
         """Override to add CORS headers to app responses"""
+        print(self)
         if (self.path.startswith("/api/")):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")

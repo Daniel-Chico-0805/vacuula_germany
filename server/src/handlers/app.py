@@ -1,6 +1,6 @@
 from __future__ import annotations
 from gen3.commands import send_chunk, build_command
-from env import GEN3_PORT, GEN4_PORT
+from env import GEN4_PORT
 from state import robot_connections, client_connections, pending_requests, PendingRequest
 from handlers.events import robots_snapshot, notify_robots_changed, CLIENT_QUEUE_MAX
 from db import get_session
@@ -29,7 +29,6 @@ def get_server_info(req: RouterHandler) -> None:
     tz = server_timezone()
     req.send_ok({
         "version": "1.0.0",  # TODO: dynamically set this to the actual server version, but not in initial release
-        "gen3_port": GEN3_PORT,
         "gen4_port": GEN4_PORT,
    
         "timezone": tz,
