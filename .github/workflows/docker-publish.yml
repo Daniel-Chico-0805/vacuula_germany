@@ -4,6 +4,7 @@ name: Docker build & release
 #   dbuild:2.3.1-b   -> build + push image tagged 2.3.1-b
 #   dbuild:1.0.0     -> build + push image tagged 1.0.0 AND latest
 #   release:1.0.0    -> same as dbuild, plus a GitHub Release with docker-compose.yaml attached
+# When using release, making a beta (-b or similar) it will make a prerelease, if no beta marker, it will make a draft release to be published
 
 on:
   push:
@@ -106,13 +107,15 @@ jobs:
           PRERELEASE: ${{ steps.parse.outputs.prerelease }}
           IMAGE: ${{ steps.img.outputs.name }}
         run: |
-          flags=()
-          if [[ "$PRERELEASE" == "true" ]]; then flags+=(--prerelease); fi
+          if [[ "$PRERELEASE" == "true" ]]; then
+            flag="--prerelease"   # e.g. 2.3.1-b: published right away as a pre-release
+          else
+            flag="--draft"        # e.g. 1.0.0: stays hidden until you publish it
+          fi
 
           gh release create "v$VERSION" \
             build/docker/docker-compose.yaml \
             --target "$GITHUB_SHA" \
             --title "v$VERSION" \
-            --generate-notes \
             --notes "Docker image: \`$IMAGE:$VERSION\`" \
-            "${flags[@]}"
+            $flag
