@@ -21,7 +21,6 @@ hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
 
 def post_links(req: RouterHandler) -> None:
     """POST /links - link robot to server"""
-    print("links!")
     if not (data := req.read_json()): return
     if not (serial := get_robot_serial(req)): return
 
@@ -33,8 +32,15 @@ def post_links(req: RouterHandler) -> None:
         req.send_bad_request("password or name missing")
         return
 
+    # if serial exists, update password, else create new robot
     with get_session() as session:
-        if not db_commit(session, req, Robot(serial=serial, name=name, password=password)):
+        robot = session.scalar(select(Robot).where(Robot.serial == serial))
+        if robot:
+            robot.password = password
+        else:
+            robot = Robot(serial=serial, name=name, password=password)
+    
+        if not db_commit(session, req, robot):
             return
 
     req.send_ok()
