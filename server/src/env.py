@@ -5,8 +5,8 @@ DOCKER_HOST_NAME = "host.docker.internal"
 
 # Gen3 cannot have its port modified, it is hardcoded to 443. You can make the robot connect and accept commands,
 # however if that works then the maps upload will fail, if you make the maps upload work, then the connection will fail.
-DEFAULT_GEN4_PORT = 336
-DEFAULT_VACUULA_PORT = 8050
+DEFAULT_GEN4_PORT = 3443
+DEFAULT_VACUULA_PORT = 80
 
 
 def _get_int_env(name: str, default: int) -> int:

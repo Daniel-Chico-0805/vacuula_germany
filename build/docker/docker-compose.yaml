@@ -2,9 +2,9 @@ services:
   vacuula:
     image: vacuula:latest # if you want a spesific version, you can change "latest" to the version number
     network_mode: host
-    environment: # defaults are set, based on your needs
-      - GEN4_PORT=336
-      - VACUULA_PORT=8050
+    environment:
+      # GEN4_PORT - the port the gen4 robots will use to connect to the server
+      # VACUULA_PORT - the port the web interface will be available on
     volumes:
       - vacuula-data:/server/data
     restart: unless-stopped
