@@ -80,7 +80,6 @@ cp "$ROOT_DIR/server/alembic.ini" "$INSTALL_DIR/alembic.ini"
 # Python project files
 cp "$ROOT_DIR/server/pyproject.toml" \
    "$ROOT_DIR/server/uv.lock" \
-   "$ROOT_DIR/server/.python-version" \
    "$INSTALL_DIR/"
 
 mkdir -p "$INSTALL_DIR/data/ssl"
