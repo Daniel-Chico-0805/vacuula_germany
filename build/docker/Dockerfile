@@ -14,16 +14,25 @@ COPY app/ ./
 RUN pnpm vite build
 
 
-# python dependencies
-FROM python:3.14-slim AS python-deps
+FROM python:3.14-slim AS python-build
+
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /uvx /bin/
 
 WORKDIR /server
 
-RUN pip install --no-cache-dir --upgrade pip
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
 
-COPY server/requirements.txt ./
+COPY server/pyproject.toml server/uv.lock ./
+RUN uv sync --frozen --no-dev --no-editable --no-install-project
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY server/src ./src
+
+RUN version="$(sed -nE 's/^version = "(.*)"/\1/p' pyproject.toml | head -1)" \
+    && printf 'APP_VERSION = "%s"\n' "${version:-0.0.0-dev}" > src/vacuula_server/_build_version.py
+
+RUN uv sync --frozen --no-dev --no-editable
 
 
 # final server image
@@ -36,15 +45,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Python dependencies
-COPY --from=python-deps /usr/local/lib/python3.14/site-packages \
-    /usr/local/lib/python3.14/site-packages
+ENV PATH="/server/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 
-COPY --from=python-deps /usr/local/bin \
-    /usr/local/bin
+COPY --from=python-build /server/.venv ./.venv
 
-# Server code
-COPY server/src ./src
 COPY server/data/ssl/vacuula.cnf ./data/ssl/vacuula.cnf
 COPY server/alembic.ini ./
 COPY server/migrations ./migrations
@@ -52,4 +56,4 @@ COPY server/migrations ./migrations
 # Built frontend
 COPY --from=frontend /app/dist ./web
 
-CMD ["sh", "-c", "alembic upgrade head && python -u src/main.py"]
+CMD ["sh", "-c", "alembic upgrade head && vacuula-server"]

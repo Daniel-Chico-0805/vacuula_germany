@@ -1,0 +1,179 @@
+from __future__ import annotations
+import json
+from vacuula_server.constants import MAPS_DIR
+from vacuula_server.gen3.utils import get_robot_serial
+from vacuula_server.gen3.map_utils import parse_session
+from vacuula_server.db import get_session, db_commit
+from vacuula_server.models.robot import Robot
+from vacuula_server.models.persistent_map import PersistentMap
+from vacuula_server.models.run import Gen3__Run
+import os
+from sqlalchemy import select
+
+from typing import TYPE_CHECKING, Literal
+
+from vacuula_server.env import get_host_ip
+if TYPE_CHECKING:
+    from vacuula_server.handlers.router import RouterHandler
+
+
+ip = get_host_ip()
+hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
+
+def post_links(req: RouterHandler) -> None:
+    """POST /links - link robot to server"""
+    if not (data := req.read_json()): return
+    if not (serial := get_robot_serial(req)): return
+
+    password = data.get("secret_key", "")
+    name = data.get("name", "")
+
+    if not password or not name:
+        print("[BEEHIVE ERROR] password or name not defined!")
+        req.send_bad_request("password or name missing")
+        return
+
+    # if serial exists, update password, else create new robot
+    with get_session() as session:
+        robot = session.scalar(select(Robot).where(Robot.serial == serial))
+        if robot:
+            robot.password = password
+        else:
+            robot = Robot(serial=serial, name=name, password=password)
+    
+        if not db_commit(session, req, robot):
+            return
+
+    req.send_ok()
+
+
+def persistent_maps(req: RouterHandler) -> None:
+    """GET /persistent_maps - list enabled persistent maps for robot"""
+    if not (serial := get_robot_serial(req)): return
+
+    with get_session() as session:
+        maps = session.execute(
+            select(PersistentMap.id, PersistentMap.robot)
+            .where(PersistentMap.enabled == True)
+            .where(PersistentMap.in_maps_list == True)
+            .where(PersistentMap.robot == serial)
+        ).all()
+
+    req.send_ok([{"id": m.id} for m in maps])
+
+
+def upload_init(req: RouterHandler, upload_type: Literal["maps", "logs"]) -> None:
+    """POST /maps/upload_jobs - robot initiate map upload"""
+
+    if not (data := req.read_json()): return
+    if not (serial := get_robot_serial(req)): return
+
+    map_id = data.get("group_id")
+    if not map_id:
+        print("[BEEHIVE ERROR] upload id not defined!")
+        req.send_bad_request("upload id missing")
+        return
+
+    res = {
+        "id": map_id,
+        "post_url": hostname,
+        "params": {
+            "key": serial,
+            "AWSAccessKeyId": upload_type,
+            "acl": "vacuula-unused",
+            "policy": "vacuula-unused",
+            "signature": map_id,
+            "Content-Type": "application/octet-stream",
+            "success_action_status": "201"
+        }
+    }
+
+    req.send_created(res, False)
+
+
+
+def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_id: str) -> None:
+    """PUT /maps/upload_jobs/{id} - update upload job status - robot done"""
+    if not (data := req.read_json()): return
+
+    if not job_id or upload_type not in ('maps', 'logs'):
+        req.send_bad_request("params bad")
+        return
+
+    if not (serial := get_robot_serial(req)): return
+
+    if not data.get('success'):
+        print("[BEEHIVE ERROR] upload did not work")
+        req.send_bad_request("You said upload failed?")
+    
+    
+    # we can now close the request to robot when we are getting logs
+    if upload_type == 'logs':
+        req.send_created()
+        return
+    
+    # only maps should get the extra parsing
+    job_folder = f"{MAPS_DIR}/{serial}/{job_id}"
+    floor_map_path = f"{job_folder}/FloorMap.png"
+    manifest_path = f"{job_folder}/manifest.json"
+    run_map_path = f"{job_folder}/RunMap.png"
+    if not all(os.path.isfile(p) for p in [floor_map_path, manifest_path, run_map_path]):
+        print(f"[BEEHIVE ERROR]: Missing files for job {job_id}")
+        req.send_bad_request('files missing for upload')
+        return
+    
+    manifest: dict
+    try:
+        with open(manifest_path, 'r') as f:
+            manifest = json.load(f)
+    except Exception:
+        print("[BEEHIVE ERROR] manifest read error!")
+        req.send_internal_error()
+        return
+
+    robot_serial_in_manifest = manifest.get("robot_serial")
+    run = manifest.get("run") or {}
+    run_id = run.get("id")
+    valid_as_persistent_map = run.get("valid_as_persistent_map")
+
+    if robot_serial_in_manifest != serial or run_id != job_id:
+        req.send_bad_request("stuff no match")
+        print("[BEEHIVE ERROR] stuff didnt match!")
+        return
+
+    # we can now close the connection for the maps, further parsing can be done of data
+    req.send_ok() # TODO: send ok for actaully closing the upload
+
+    print("add new map!")
+    # run = data['run']
+    # id = run['start_at']
+
+    job_folder = f"{MAPS_DIR}/{serial}/{run_id}"
+    floor_map_path = f"{job_folder}/FloorMap.png"
+    run_map_path = f"{job_folder}/RunMap.png"
+    manifest_path = f"{job_folder}/manifest.json"
+    floormap_meta, run_meta = parse_session(floor_map_path, run_map_path, job_folder)
+
+    print(floormap_meta)
+    print("---")
+    print(run_meta)
+
+    with get_session() as session:
+
+        session.add(PersistentMap(
+            id=run_id,
+            robot=serial,
+            name="(unnamed)",
+            base=(floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"]),
+            enabled=run['valid_as_persistent_map'],
+            in_maps_list=run['valid_as_persistent_map']
+        ))
+
+        session.add(Gen3__Run(
+            id=run_id,
+            robot=serial,
+            persistent_map=run_id,
+            run=run
+        ))
+
+        session.commit()

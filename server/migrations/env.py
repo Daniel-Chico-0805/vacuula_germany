@@ -6,15 +6,13 @@ from sqlalchemy import pool
 
 from alembic import context
 import sys
-sys.path.insert(0, "src")
-from db import Base
-import models.robot
-import models.persistent_map
-import models.run
+from vacuula_server.db import DATABASE_URL, Base
+from vacuula_server.models import persistent_map, robot, run
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

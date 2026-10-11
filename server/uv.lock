@@ -266,7 +266,7 @@ wheels = [
 [[package]]
 name = "vacuula-server"
 version = "1.0.0b13"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "greenlet" },
