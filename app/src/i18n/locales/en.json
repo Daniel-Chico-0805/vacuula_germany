@@ -181,6 +181,11 @@
     "giveFeedback": "Give feedback",
     "comingSoon": "Lots more coming soon - stay tuned!"
   },
+  "serverUnreachable": {
+    "title": "Could not connect to the server",
+    "subtitle": "The app could not connect to the Vacuula server! Please make sure the server is running and reachable from this device.",
+    "retry": "Try again"
+  },
   "robotErrorCode": {
     "neato": {
       "gen4": {

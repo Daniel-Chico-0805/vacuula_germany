@@ -3,7 +3,6 @@ import Map from "./pages/map/map"
 import styles from './app.module.scss'
 import { Routes, Route } from "react-router"
 import Runs from "./pages/runs/runs"
-import Scroll from "./pages/loading/loading"
 import Topbar from "./components/topbar/topbar"
 import Home from "./pages/home/home"
 import AppLoadingIndicator from "./components/appLoadingIndicator/appLoadingIndicator"

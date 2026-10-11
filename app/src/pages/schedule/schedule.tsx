@@ -23,7 +23,7 @@ import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Bounda
 export default () => {
     const { t } = useTranslation()
 
-    const { robot } = useRobot()
+    const { robot, serverInfo } = useRobot()
 
     if (robot?.type === RobotType.NeatoGen4) return <Scheudle_gen4 />
 
@@ -31,9 +31,7 @@ export default () => {
     const [schedule, setSchedule] = useState<GetSchedule>()
     const [drawerOpen, setDrawerOpen] = useState(false)
 
-    // due to the way we have gen3, the interial clock is always UTC. Correct it with the server offset to display local time.
-    const [serverInfo, setServerInfo] = useState<ServerInfo>()
-    const offset = serverInfo?.utc_offset_minutes ?? 0
+    const offset = serverInfo.utc_offset_minutes ?? 0
     const { data: persistentMaps } = usePersistentMaps()
 
     useEffect(() => {
@@ -59,10 +57,6 @@ export default () => {
 
         // GEN4_COMMANDS.getSchedule(robot.serial);
     }
-
-    useEffect(() => {
-        Http.getServerInfo().then(res => setServerInfo(res.data)).catch(() => setServerInfo(undefined))
-    }, [])
 
     useEffect(() => {
         if (!robot) return;

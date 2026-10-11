@@ -1,6 +1,6 @@
 import { createContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Http, type LoadingState } from '../http'
+import { Http, type LoadingState, type ServerInfo } from '../http'
 import { GEN3_COMMANDS } from '../http/gen3'
 import type { UseState } from '../pages/map/types'
 import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
@@ -8,8 +8,11 @@ import { GEN4_COMMANDS } from '../http/gen4'
 import { OrbitalServices, type AnyEvent } from '../types/neato/gen4'
 import { persistentMapsLoader } from '../loaders/resources'
 import { useTheme } from '../theme'
+import Loading from '../pages/loading/loading'
+import { ServerUnreachable } from '../components/require/emptyState'
 
 interface AppContextType {
+    serverInfo: ServerInfo,
     robot?: Robot,
     robots?: QuickRobotInfo,
     selectRobot: (serial: string) => void,
@@ -22,9 +25,6 @@ interface AppContextType {
 
     cleanings?: Neato.Gen4.Cleaning[] | Neato.Gen3.CleaningRun[]
     setCleanings: UseState<Neato.Gen4.Cleaning[] | Neato.Gen3.CleaningRun[] | undefined>
-
-    userId: string | null
-    setUserId: (id: string | null) => void
 
     isDarkMode: boolean
     setIsDarkMode: (dark: boolean) => void
@@ -46,8 +46,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [lastHeartbeat, setLastHeartbeat] = useState<number | undefined>()
     // const [persistentMaps, setPersistentMaps] = useState<PersistentMap[]>()
     const [cleanings, setCleanings] = useState<Neato.Gen4.Cleaning[] | Neato.Gen3.Cleaning[]>()
-
-    const [userId, setUserId] = useState<string | null>(null)
     const { isDark: isDarkMode, setTheme } = useTheme()
     const setIsDarkMode = (dark: boolean) => setTheme(dark ? 'dark' : 'light')
     const [isLoading, setIsLoading] = useState(false)
@@ -57,6 +55,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         Http.setLoadingStateCallback(setLoadingState)
     }, [])
+
+    const [serverInfo, setServerInfo] = useState<ServerInfo>()
+    const [serverInfoError, setServerInfoError] = useState(false)
+
+    const loadServerInfo = () => {
+        setServerInfoError(false)
+        Http.getServerInfo()
+            .then(res => setServerInfo(res.data))
+            .catch(err => {
+                console.error('Failed to fetch server info', err)
+                setServerInfoError(true)
+            })
+    }
+
+    useEffect(() => { loadServerInfo() }, [])
 
     const connectToRobot = (serial: string, type: RobotType, name: string) => {
         setRobot(undefined)
@@ -245,9 +258,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
     }, [robot?.serial, robot?.type]);
 
+    if (!serverInfo) {
+        // hooks must all be called before this early return
+        return serverInfoError
+            ? <ServerUnreachable onRetry={loadServerInfo} />
+            : <Loading />
+    }
+
     const value: AppContextType = {
-        userId,
-        setUserId,
+        serverInfo,
         isDarkMode,
         setIsDarkMode,
         isLoading,

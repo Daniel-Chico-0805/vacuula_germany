@@ -24,7 +24,7 @@ export default () => {
     const { units, setUnits } = useUnits()
     const { mascot, setMascot } = useMascot()
 
-    const { robot, updateRobotName } = useRobot()
+    const { robot, updateRobotName, serverInfo } = useRobot()
 
     const [robotName, setRobotName] = useState(robot.name)
 
@@ -121,7 +121,7 @@ export default () => {
                     label="Vacuula"
                     extraInfo={(
                         <>
-                            <span>Vacuula 1.0.0</span>
+                            <span>Vacuula {serverInfo.version}</span>
                             <br />
                             <span>{t('settings.comingSoon')}</span>
                         </>

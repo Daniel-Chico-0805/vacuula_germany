@@ -15,10 +15,10 @@ declare module 'axios' {
 
 /** GET /api/server */
 export interface ServerInfo {
-  /** IANA timezone the server runs in (what Gen4 robots get at login). */
   timezone: string
-  /** Offset of that timezone from UTC right now, in minutes (DST-aware). */
   utc_offset_minutes: number
+  version: string
+  gen4_port: number
 }
 
 // Store for loading state callback - will be set by AppContext

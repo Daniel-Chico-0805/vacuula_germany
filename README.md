@@ -61,7 +61,7 @@ For the repair there is two part
 
 ## Setup server
 
-There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./scripts/lxc.md)
+There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./build/lxc/lxc.md)
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
 1. Install docker

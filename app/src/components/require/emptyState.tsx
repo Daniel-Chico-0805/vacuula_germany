@@ -30,3 +30,22 @@ export default function EmptyState({ title, subtitle, children }: EmptyStateProp
         </div>
     )
 }
+
+interface ServerUnreachableProps {
+    onRetry: () => void
+}
+
+export function ServerUnreachable({ onRetry }: ServerUnreachableProps) {
+    const { t } = useTranslation()
+    const { mascot } = useMascot()
+    return (
+        <div className={styles.wrap} role="alert">
+            <img src={mascot.src} alt="" className={styles.mascot} />
+            <span className={styles.title}>{t('serverUnreachable.title')}</span>
+            <span className={styles.subtitle}>{t('serverUnreachable.subtitle')}</span>
+            <button type="button" className={styles.retry} onClick={onRetry}>
+                {t('serverUnreachable.retry')}
+            </button>
+        </div>
+    )
+}

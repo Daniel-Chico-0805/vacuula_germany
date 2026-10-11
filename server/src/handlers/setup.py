@@ -7,6 +7,7 @@ import subprocess
 from typing import TYPE_CHECKING
 
 from env import VACUULA_PORT, get_host_ip
+from constants import APP_VERSION
 if TYPE_CHECKING:
     from handlers.router import RouterHandler
 
@@ -76,7 +77,7 @@ class MDNSAdvertiser:
             server=MDNS_HOSTNAME,
             port=VACUULA_PORT,
             properties={
-                "version": "1.0.0", # TODO: dynamically set this to the actual server version, but not in initial release
+                "version": APP_VERSION,
                 "cert-path": "/api/cert",
                 "protocol": "http",
                 "url": "http://vacuula.local" + (f":{VACUULA_PORT}" if VACUULA_PORT != 80 else ""),

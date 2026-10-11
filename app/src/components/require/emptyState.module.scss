@@ -94,3 +94,26 @@
         font-family: 'Space Mono', monospace;
     }
 }
+
+.retry {
+    margin-top: 1rem;
+    padding: 0.9rem 2.2rem;
+    border-radius: 1rem;
+    border: 1px solid $accent;
+    background: transparent;
+    color: $accent;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+        background: $accent;
+        color: $bg;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $accent;
+        outline-offset: 2px;
+    }
+}
