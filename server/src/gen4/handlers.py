@@ -40,7 +40,7 @@ def handle_login(rc: RobotConn, msg):
         exists = session.get(Robot, serial)
 
         if not exists:
-            session.add(Robot(serial=serial, name="Gen4 robot"))
+            session.add(Robot(serial=serial, name=f"gen4-{serial}"))
             session.commit()
 
     notify_robots_changed()
