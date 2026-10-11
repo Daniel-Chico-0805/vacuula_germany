@@ -17,28 +17,13 @@ if [[ -d "$INSTALL_DIR/data" ]]; then
     fi
 fi
 
-# Version detection
+# Version detection (from server/pyproject.toml)
 detect_version() {
     local default="0.0.0-dev"
-    local msg version=""
+    local version
 
-    # No git, or not a git checkout -> default
-    command -v git >/dev/null 2>&1 || { echo "$default"; return; }
-    git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "$default"; return; }
-
-    # Same tags as the GitHub workflow
-    msg="$(git -C "$ROOT_DIR" log -1 --pretty=%B 2>/dev/null || true)"
-    if [[ "$msg" =~ release:([0-9A-Za-z._-]+) ]]; then
-        version="${BASH_REMATCH[1]}"
-    elif [[ "$msg" =~ dbuild:([0-9A-Za-z._-]+) ]]; then
-        version="${BASH_REMATCH[1]}"
-    fi
-
-    # strep
-    version="${version%%[._-]}"
-    if [[ -z "$version" ]]; then
-        version="$default"
-    fi
+    version="$(sed -nE 's/^version = "(.*)"/\1/p' "$ROOT_DIR/server/pyproject.toml" 2>/dev/null | head -1)"
+    version="${version:-$default}"
 
     # Local changes -> -dirty
     if [[ -n "$(git -C "$ROOT_DIR" status --porcelain 2>/dev/null)" ]]; then

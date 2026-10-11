@@ -63,6 +63,17 @@ jobs:
       - name: Checkout
         if: steps.parse.outputs.version != ''
         uses: actions/checkout@v4
+
+      - name: Check pyproject version matches
+        if: steps.parse.outputs.version != ''
+        env:
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          py_version="$(sed -nE 's/^version = "(.*)"/\1/p' server/pyproject.toml | head -1)"
+          if [[ "$py_version" != "$VERSION" ]]; then
+            echo "::error::server/pyproject.toml is '$py_version' but the commit message says '$VERSION'. Is the post-commit hook enabled?"
+            exit 1
+          fi
       
       - name: Set application version
         if: steps.parse.outputs.version != ''
