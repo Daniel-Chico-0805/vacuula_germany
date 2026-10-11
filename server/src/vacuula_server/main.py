@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from vacuula_server.constants import APP_VERSION
 import vacuula_server.gen3.init 
 import vacuula_server.gen4.init
 import vacuula_server.handlers.init
@@ -13,6 +14,7 @@ from vacuula_server.handlers.setup import MDNSAdvertiser, ensure_ssl_certificate
 # - better logging system for what is going on
 
 def main():
+    print("Starting Vacuula Server", APP_VERSION)
     ensure_ssl_certificate()
     threading.Thread(target=vacuula_server.gen3.init.start, daemon=True).start()
     threading.Thread(target=vacuula_server.gen4.init.start, daemon=True).start()
