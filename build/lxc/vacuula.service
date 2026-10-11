@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=root
 WorkingDirectory=/srv/vacuula
-ExecStart=/usr/bin/python3 /srv/vacuula/server/src/main.py
+ExecStart=/srv/vacuula/.venv/bin/python /srv/vacuula/src/main.py
 Restart=always
 RestartSec=5
 
