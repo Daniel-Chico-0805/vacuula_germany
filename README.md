@@ -40,15 +40,15 @@ _custom server for the undead robot vacuum cleaners_
 <i>Your robot not listed here? Get in touch!</i>
 <br><i>¹Sadly we were not able to fit the OG BotVac Connected into the initial release, sorry about this, support for this robot is in the works and here very soon!</i>
 
-| Feature          | Status              | <br> | Feature              | Status |
-|------------------|---------------------|------|----------------------|--------|
-| Setup/Status     | ✅                   | <br> | Notifications        | 🚧     |
-| Maps             | ✅                   | <br> | Home Assistant       | 🚧     |
-| Historical runs  | ✅                   | <br> | Drag to clean "here" | 🚧     |
-| Schedule         | ✅                   | <br> | Custom sounds        | 🚧     |
-| Settings         | ✅                   | <br> |                      |        |
-| Zones/NoGo Lines | ✅                   | <br> |                      |        |
-| MultiZones       | Gen4 ✅ Gen3/Gen2 🚧 |      |                      |        |
+| Feature          | Status              |   | Feature              | Status |
+|------------------|---------------------|---|----------------------|--------|
+| Setup/Status     | ✅                   |   | Notifications        | 🚧     |
+| Maps             | ✅                   |   | Home Assistant       | 🚧     |
+| Historical runs  | ✅                   |   | Drag to clean "here" | 🚧     |
+| Schedule         | ✅                   |   | Custom sounds        | 🚧     |
+| Settings         | ✅                   |   | QoL improvments      | 🚧     |
+| Zones/NoGo Lines | ✅                   |   | "Next day" Schedule  | 🚧     |
+| MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
 
 > [!NOTE]
 > Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
@@ -65,12 +65,13 @@ There is many ways to set this server up, however our recommended way is via Doc
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
 1. Install docker
+  - <i>This is probably the hardest part for anyone unfamiliar with self-hosting, so we have started writing a [guide in the FAQ](./FAQ.md#install-docker)</i>
 2. Donwload [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
 3. Run `docker compose up -d`
 
 - To see logs do `docker compose logs vacuula`
-- To stop vacuula `docker compose stop vacuula`
-- To start vacuula `docker compose stop vacuula`
+- To stop vacuula `docker compose down`
+- To start vacuula `docker compose -d`
 - To permanently remove stored data `docker volume rm vacuula-data` <i>Vacuula needs to be stopped first</i>
 
 

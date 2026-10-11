@@ -58,7 +58,10 @@ export default () => {
 
     // TODO: the dock marker should be moved to the usemap thing 
     const [dockReady, setDockReady] = useState(false)
-    useEffect(() => { onDockImageReady(() => setDockReady(true)) }, [])
+    useEffect(() => {
+        onDockImageReady(() => setDockReady(true))
+        updatePersistentMaps(); // get maps when this page is opened
+    }, [])
 
 
     const extraDraw = useCallback((ctx, canvas, currentZoom, currentOffset, mapSize) => {

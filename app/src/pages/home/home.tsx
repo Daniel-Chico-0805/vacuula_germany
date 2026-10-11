@@ -26,6 +26,7 @@ import { Http } from '../../http'
 import type { NoGoLine, Zone } from '../../components/map/types'
 import { usePersistentMaps } from '../../loaders/resources'
 import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Boundaries'
+import { isDocked } from '../../components/topbar/robotInfo'
 
 
 // ── Alert card ────────────────────────────────────────────────────────────────
@@ -82,6 +83,8 @@ const BELL_MS = 5 * 2500;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
+    const { lastHeartbeat } = useApp()
+    const { robot } = useRobot();
     const { t } = useTranslation()
     const timeAgoFormatter = useTimeAgoFormatter()
     const { formatLength } = useUnits()
@@ -90,7 +93,7 @@ export default function Home() {
 
     const [gen3__cleaningMode, gen3__setCleaningMode] = useState<CleaningMode>(CleaningMode.ECO)
     const [gen3__navigationMode, gen3__setNavigationMode] = useState<CleaningNavigationMode>(CleaningNavigationMode.NORMAL)
-    const [gen3__cleaningCategory, gen3__setCleaningCategory] = useState<CleaningCategory>(CleaningCategory.MAP)
+    const [gen3__cleaningCategory, gen3__setCleaningCategory] = useState<CleaningCategory>(isDocked(robot) ? CleaningCategory.MAP : CleaningCategory.HOUSE)
 
     const [gen4__cleaningMode, gen4__setCleaningMode] = useState<Neato.Gen4.CleaningMode>(Neato.Gen4.CleaningMode.ECO)
     const [gen4__navigationMode, gen4__setNavigationMode] = useState<Neato.Gen4.CleaningNavigationMode>(Neato.Gen4.CleaningNavigationMode.NORMAL)
@@ -98,10 +101,8 @@ export default function Home() {
     const [spotHeight, setSpotHeight] = useState(200)
     const [spotWidth, setSpotWidth] = useState(200)
     const [bellAnimating, setBellAnimating] = useState(false)
-    const { lastHeartbeat } = useApp()
-    const { robot } = useRobot();
-    const getPromotedFloorplan = useGetPromotedFloorplan()
 
+    const getPromotedFloorplan = useGetPromotedFloorplan()
     const [promotedFloorplan, setPromotedFloorplan] =
         useState<Neato.Gen4.Floorplan>()
     useEffect(() => {
@@ -273,7 +274,13 @@ export default function Home() {
                                         GEN3_COMMANDS.startCleaningSpot(robot.serial, spotHeight, spotWidth, gen3__cleaningMode, gen3__navigationMode)
                                         return;
                                     }
-                                    GEN3_COMMANDS.startCleaning(robot.serial, gen3__cleaningCategory, gen3__cleaningMode, gen3__navigationMode)
+
+                                    let cat = gen3__cleaningCategory;
+                                    if (
+                                        gen3__cleaningCategory === CleaningCategory.MAP 
+                                        && (persistentMaps ?? []).filter(m => 'enabled' in m && m.enabled).length === 0
+                                    ) cat = CleaningCategory.HOUSE; // fallback to house if no maps exist
+                                    GEN3_COMMANDS.startCleaning(robot.serial, cat, gen3__cleaningMode, gen3__navigationMode)
 
 
 
@@ -371,7 +378,7 @@ export default function Home() {
                                 </>
                             )}
 
-                            {robot.type === RobotType.NeatoGen3 && zoneOptions && (
+                            {robot.type === RobotType.NeatoGen3 && zoneOptions.length > 0 && (
                                 <Input
                                     type="select"
                                     label={t('schedule.selectZones')}
