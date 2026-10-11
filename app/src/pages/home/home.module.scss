@@ -27,7 +27,7 @@
     border-radius: 14px;
     padding: 11px 13px;
 
-    &.error {
+    &.error, &.critical {
         background: $err-bg;
 
         .alertIconWrap {
@@ -44,7 +44,7 @@
         }
     }
 
-    &.warning {
+    &.warning, &.invalid {
         background: $warn-bg;
 
         .alertIconWrap {

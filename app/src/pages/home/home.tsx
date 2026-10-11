@@ -5,7 +5,7 @@ import { IoMdPause, IoMdPlay } from 'react-icons/io'
 import { TbAdjustments, TbLeaf, TbHome } from 'react-icons/tb'
 import { FaBell, FaFan, FaStop } from 'react-icons/fa'
 import { HiMap } from "react-icons/hi2";
-import { CleaningCategory, CleaningMode, CleaningNavigationMode, RobotAction, RobotState } from '../../types/neato/gen3/state'
+import { CleaningCategory, CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { useEffect, useState } from 'react'
 import Drawer from '../../components/drawer/drawer'
 import { FaHouse } from 'react-icons/fa6'
@@ -14,7 +14,7 @@ import { useApp } from '../../context/useApp'
 import TimeAgo from 'react-timeago'
 import { GEN3_COMMANDS } from '../../http/gen3'
 import Input from '../../components/input/input'
-import { Neato, RobotType, type Gen4Robot, type Robot } from '../../types'
+import { Neato, RobotType } from '../../types'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { useRobot } from '../../context/useRobot'
 import { getRobotStateKey } from '../../utils/state'
@@ -29,8 +29,17 @@ import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Bounda
 import { isDocked } from '../../components/topbar/robotInfo'
 
 
-// ── Alert card ────────────────────────────────────────────────────────────────
-function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible = true }: { type?: 'error' | 'warning', icon: React.ReactNode, title: string, sub?: string, action?: string, onClick?: () => void, visible?: boolean }) {
+interface AlertCardProps {
+    type?: ('error' | 'warning') | Neato.Gen4.ErrorSeverity
+    icon: React.ReactNode
+    title: string
+    sub?: string
+    action?: string
+    onClick?: () => void
+    visible?: boolean
+    robotType: RobotType
+}
+function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible = true, robotType }: AlertCardProps) {
     const { t } = useTranslation()
     return (
         <div className={`${styles.alertCard} ${styles[type]}`} style={{ visibility: visible ? 'visible' : 'hidden' }}>
@@ -40,7 +49,7 @@ function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible 
             <div className={styles.alertText}>
                 <div className={styles.alertTitle}>{title}</div>
                 {/* Unclear of what the type should be, so as any ok */}
-                {sub && <div className={styles.alertSub}>{t(`robotErrorCode.neatoGen4.${sub}` as any)}</div>} 
+                {sub && <div className={styles.alertSub}>{t(`robotErrorCode.${robotType}.${sub}` as any)}</div>}
             </div>
             {action && <button className={styles.alertAction} onClick={onClick}>{action}</button>}
         </div>
@@ -59,13 +68,13 @@ function Gen4AlertCards({ errors }: { errors: Neato.Gen4.Error[] }) {
                     icon={<MdError size={17} />}
                     title={t('home.errorTitle')}
                     sub={error.code}
+                    robotType={RobotType.NeatoGen4}
                 />
             )}
         </>
     )
 }
 
-// ── Control button ────────────────────────────────────────────────────────────
 function CtrlBtn({ icon, label, disabled, onClick }: { icon: React.ReactNode, label: string, disabled?: boolean, onClick?: () => void }) {
     return (
         <button className={`${styles.ctrlBtn} ${disabled ? styles.disabled : ''}`} onClick={onClick} aria-label={label} disabled={disabled}>
@@ -74,8 +83,6 @@ function CtrlBtn({ icon, label, disabled, onClick }: { icon: React.ReactNode, la
         </button>
     )
 }
-
-var interval: number | undefined;
 
 // How long the "locate" bell icon keeps animating. The Neato Gen4 firmware
 // queues the find-me sound 5 times back-to-back (2.46 s file + <=0.1 s polling
@@ -139,24 +146,30 @@ export default function Home() {
             <div className={styles.alerts}>
                 {robot.type === RobotType.NeatoGen4 && robot.errors && <Gen4AlertCards errors={robot.errors} />}
 
-                <AlertCard
-                    visible={!!robot.error}
-                    type="error"
-                    icon={<MdError size={17} />}
-                    title="error"
-                    sub={robot.error}
-                />
-                <AlertCard
-                    visible={!!robot.alert}
-                    type="warning"
-                    icon={<MdWarning size={17} />}
-                    title="alert"
-                    sub={robot.alert}
-                    action="Dismiss"
-                    onClick={() => {
-                        GEN3_COMMANDS.dismissCurrentAlert(robot.serial)
-                    }}
-                />
+                {robot.type === RobotType.NeatoGen3 && (
+                    <>
+                        <AlertCard
+                            visible={!!robot.error}
+                            type="error"
+                            icon={<MdError size={17} />}
+                            title="error"
+                            sub={robot.error}
+                            robotType={RobotType.NeatoGen3}
+                        />
+                        <AlertCard
+                            visible={!!robot.alert}
+                            type="warning"
+                            icon={<MdWarning size={17} />}
+                            title="alert"
+                            sub={robot.alert}
+                            robotType={RobotType.NeatoGen3}
+                            action={t('home.dismissAlert')}
+                            onClick={() => {
+                                GEN3_COMMANDS.dismissCurrentAlert(robot.serial)
+                            }}
+                        />
+                    </>
+                )}
             </div>
 
             {/* ── Mascot + ring ── */}
@@ -280,7 +293,7 @@ export default function Home() {
 
                                     let cat = gen3__cleaningCategory;
                                     if (
-                                        gen3__cleaningCategory === CleaningCategory.MAP 
+                                        gen3__cleaningCategory === CleaningCategory.MAP
                                         && (persistentMaps ?? []).filter(m => 'enabled' in m && m.enabled).length === 0
                                     ) cat = CleaningCategory.HOUSE; // fallback to house if no maps exist
                                     GEN3_COMMANDS.startCleaning(robot.serial, cat, gen3__cleaningMode, gen3__navigationMode)
@@ -304,7 +317,7 @@ export default function Home() {
                     }
 
                     {/* if pause is possible, show the send to base, if gotobase is possible, also show the ctrlbtn */}
-                    <CtrlBtn 
+                    <CtrlBtn
                         disabled={
                             !robot.availableCommands.pause &&
                             !(
@@ -315,8 +328,8 @@ export default function Home() {
                                         : false
                             )
                         }
-                        icon={<TbHome size={22} />} 
-                        label={t('home.base')} 
+                        icon={<TbHome size={22} />}
+                        label={t('home.base')}
                         onClick={() => {
                             if (robot.availableCommands.pause) {
                                 (robot.type === RobotType.NeatoGen3 ? GEN3_COMMANDS : GEN4_COMMANDS).pauseCleaning(robot.serial).then(() => {
