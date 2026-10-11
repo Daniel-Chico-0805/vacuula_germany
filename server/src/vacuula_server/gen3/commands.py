@@ -2,11 +2,13 @@ from __future__ import annotations
 import hmac
 import hashlib
 from datetime import datetime, timezone
+import logging
 from vacuula_server.db import get_session
 from vacuula_server.generation import get_robot_by_serial
 import json
 import time
 
+logger = logging.getLogger(__name__)
 
 def hmac_sha256(message: str, secret: str) -> str:
     signature = hmac.new(
@@ -27,12 +29,12 @@ def sign_cmd(robot_serial: str, cmd: str):
 
     robot = get_robot_by_serial(robot_serial)
     if not robot:
-        print("ERROR! robot not found?") # TODO
+        logger.error("Robot with serial %s not found in database", robot_serial)
         return ""
     password = robot.password
 
     if not password:
-        print(f">> no password found for robot {robot_serial}, using empty string")
+        logger.warning("No password found for robot %s, using empty string", robot_serial)
         password = ""
 
     payload = (

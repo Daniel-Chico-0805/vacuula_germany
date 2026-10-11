@@ -1,5 +1,6 @@
 
 from __future__ import annotations
+import logging
 from vacuula_server.conn import RobotConn
 from vacuula_server.constants import MAPS_DIR
 from vacuula_server.db import get_session
@@ -13,17 +14,18 @@ from vacuula_server.handlers.events import notify_robots_changed
 from vacuula_server.generation import Generation
 
 from vacuula_server.state import pending_requests, client_connections
-
-# init
-# {
-#     'vendor': 'N',
-#     'datetime': '2026-06-11T09:12:53.548396Z',
-#     'serial': '2215LB04B13401976',
-#     'signature': <string signature>
-#     'firmware': '1.7.0-2933'
-# }
+from datetime import datetime, timezone
+import struct, json
+import os
+import base64
+import json
+import io
+from PIL import Image
 import uuid
+import time
 from vacuula_server.server_tz import server_timezone
+
+logger = logging.getLogger(__name__)
 
 
 def handle_login(rc: RobotConn, msg):
@@ -62,9 +64,8 @@ def handle_login(rc: RobotConn, msg):
     try:
         robot_send_request(rc, { "ability": "info.robot" })
     except Exception as e:
-        print("WARN", f"could not request info.robot after login: {e}")
+        logger.error("Failed to send info.robot request to %s: %s", serial, e)
 
-from datetime import datetime, timezone
 def now_iso():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -81,7 +82,6 @@ def get_send_lock(conn):
             _send_locks[key] = threading.Lock()
         return _send_locks[key]
 
-import struct, json
 def send_packet(sock, body_bytes):
     if not isinstance(body_bytes, (bytes, bytearray)):
         raise TypeError("send_packet expects bytes")
@@ -100,7 +100,7 @@ def heartbeat_thread(rc: RobotConn):
         try:
             send_heartbeat(rc.conn.socket)
         except Exception as e:
-            print("ERROR", f"heartbeat send failed for {rc.serial}: {e}")
+            logger.error("heartbeat send failed for %s: %s", rc.serial, e)
             rc.stop_event.set()
             try:
                 rc.conn.socket.close()
@@ -112,9 +112,6 @@ def heartbeat_thread(rc: RobotConn):
 def send_heartbeat(sock):
     send_packet(sock, b"\x06")
 
-
-
-import uuid
 def robot_send_request(rc: RobotConn, body: dict, slot=None):
     request_id = str(uuid.uuid4())
 
@@ -143,7 +140,6 @@ def robot_response(rc: RobotConn, data: dict):
         slot.fulfill(data, data["code"])
 
 
-import time, queue
 def robot_event(rc: RobotConn, data: dict):
     # broadcast to all clients subscribed to this robot
     clients_subscribed = [
@@ -163,15 +159,6 @@ def robot_event(rc: RobotConn, data: dict):
         put_drop_oldest(client["queue"], frame)
 
 
-import os
-
-import base64
-import zlib
-import json
-from pathlib import Path
-
-import io
-from PIL import Image
 
 def get_image_size(decoded: bytes):
     im = Image.open(io.BytesIO(decoded))
@@ -179,7 +166,7 @@ def get_image_size(decoded: bytes):
     return im.size  # (width, height) -> (2000, 2000)
 
 def maps_create(rc: RobotConn, data: dict):
-    print("add new map!")
+    logger.info("Received maps.create from robot %s", rc.serial)
     body = data["body"]
 
     compressed = base64.b64decode(body["map"]["rank_binary"])
@@ -192,7 +179,7 @@ def maps_create(rc: RobotConn, data: dict):
         with open(upload_file, 'wb') as f:
             f.write(compressed)
     except Exception:
-        # req.send_internal_error("Failed to save file")
+        logger.error("Failed to save file for robot %s, rank_uuid %s", rc.serial, body['rank_uuid'])
         return
 
     compressed = base64.b64decode(body["map"]["real_binary"])
@@ -208,50 +195,46 @@ def maps_create(rc: RobotConn, data: dict):
         with open(os.path.join(folder, 'msg.json'), 'w') as f:
             json.dump(data, f)
     except Exception:
-        # req.send_internal_error("Failed to save file")
+        logger.error("Failed to save file for robot %s, rank_uuid %s", rc.serial, body['rank_uuid'])
         return
-
-
 
     job_folder = f"{MAPS_DIR}/{rc.serial}/{body['rank_uuid']}"
     floor_map_path = f"{job_folder}/rank_binary.pgm.nz"
     run_map_path = f"{job_folder}/real_binary.pgm.nz"
-    # manifest_path = f"{job_folder}/manifest.json"
-    floormap_meta, run_meta = parse_session(floor_map_path, run_map_path, job_folder)
+    floormap_meta, _ = parse_session(floor_map_path, run_map_path, job_folder)
 
     with get_session() as session:
-        # if valid_as_persistent_map:
-            session.add(FloorPlan(
-                id=body['rank_uuid'],
-                robot=rc.serial,
-                name="(unnamed)",
-                promoted=False,
-                base=(body["robot"]["base"]["x"], body["robot"]["base"]["y"], body["robot"]["base"]["dir"]),
-                origin=(body["map"]["origin"]["x"], body["map"]["origin"]["y"]),
-                resolution=floormap_meta["metadata"]["resolution"],
-                alignment=floormap_meta["metadata"]["alignment"],
-                imgsize=floormap_meta["img_size"],
-                created_at=body["timing"]["end"],
-                in_maps_list=False
-            ))
+        session.add(FloorPlan(
+            id=body['rank_uuid'],
+            robot=rc.serial,
+            name="(unnamed)",
+            promoted=False,
+            base=(body["robot"]["base"]["x"], body["robot"]["base"]["y"], body["robot"]["base"]["dir"]),
+            origin=(body["map"]["origin"]["x"], body["map"]["origin"]["y"]),
+            resolution=floormap_meta["metadata"]["resolution"],
+            alignment=floormap_meta["metadata"]["alignment"],
+            imgsize=floormap_meta["img_size"],
+            created_at=body["timing"]["end"],
+            in_maps_list=False
+        ))
 
-            session.add(Gen4__Run(
-                id=body['rank_uuid'],
-                robot=rc.serial,
-                floorplan=body["rank_uuid"],
-                started_by=body["started_by"],
-                battery_consumed=body["battery_consumed"],
-                runs=body["runs"],
-                timing=body["timing"],
-                cleaning_complete=body["cleaning_complete"]
-            ))
+        session.add(Gen4__Run(
+            id=body['rank_uuid'],
+            robot=rc.serial,
+            floorplan=body["rank_uuid"],
+            started_by=body["started_by"],
+            battery_consumed=body["battery_consumed"],
+            runs=body["runs"],
+            timing=body["timing"],
+            cleaning_complete=body["cleaning_complete"]
+        ))
 
-            session.commit()
+        session.commit()
     
     return { "floorplan": False }, 201
 
 
-
+# TODO: implement all services robot uses
 request_map = {
     "maps.create": maps_create,
 }
@@ -261,7 +244,7 @@ def roboot_request(rc: RobotConn, msg_id: str, data: dict):
     service = data["to"]["service"]
     handler = request_map.get(service)
     if handler is None:
-        print("TODO: handle this at a later stage")
+        # TODO: after initial release
         return
     else:
         response_body, response_code = handler(rc, data)

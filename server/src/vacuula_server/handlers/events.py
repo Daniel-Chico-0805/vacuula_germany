@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import logging
 import queue
 import threading
 
@@ -19,6 +20,8 @@ CLIENT_QUEUE_MAX = 100       # frames buffered per client before the oldest is d
 
 _clients: list = []          # one bounded Queue per connected event-stream client
 _lock = threading.Lock()
+
+logger = logging.getLogger(__name__)
 
 
 def robots_snapshot() -> dict:
@@ -51,8 +54,8 @@ def notify_robots_changed() -> None:
     """Call after a robot connects, disconnects or is renamed."""
     try:
         broadcast("robots", robots_snapshot())
-    except Exception as e: # never let a notification break the caller
-        print("WARN", f"robots event not sent: {type(e).__name__}: {e}")
+    except Exception as e:
+        logger.warning("robots event not sent: %s: %s", type(e).__name__, e)
 
 
 def get_events(req: "RouterHandler") -> None:

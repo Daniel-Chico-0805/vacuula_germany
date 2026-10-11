@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from vacuula_server.env import GEN4_PORT
 from vacuula_server.tls import CERT, KEY
 import threading
@@ -7,7 +8,8 @@ from vacuula_server.generation import Generation
 from vacuula_server.conn import RobotConn, Gen4Conn
 from vacuula_server.gen4.handlers import handle_login, robot_response, heartbeat_thread, robot_event, roboot_request
 
-HOST = "0.0.0.0"
+logger = logging.getLogger(__name__)
+
 ROBOT_SOCKET_TIMEOUT_S = 20
 
 def start():
@@ -16,9 +18,9 @@ def start():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((HOST, GEN4_PORT))
+        sock.bind(('0.0.0.0', GEN4_PORT))
         sock.listen(5)
-        print(f"Gen4 listening on {HOST}:{GEN4_PORT}")
+        logger.info("Gen4 listening on 0.0.0.0:%d", GEN4_PORT)
 
         while True:
             client, addr = sock.accept()
@@ -26,7 +28,7 @@ def start():
             try:
                 tls = ctx.wrap_socket(client, server_side=True)
             except ssl.SSLError as e:
-                print(f"TLS handshake failed from {addr}: {e}")
+                logger.error("TLS handshake failed from %s: %s", addr, e)
                 client.close()
                 continue
 
@@ -74,21 +76,19 @@ def handle_robot(conn, addr):
                 break
 
             if raw == b"\x06":
-                print("hb")
+                logger.info("heartbeat from %s", rc.serial or addr)
                 continue
             if raw == b"\x00":
-                print("CLOSE", f"{rc.serial or addr} sent CLOSE")
+                logger.info("CLOSE from %s", rc.serial or addr)
                 break
 
             try:
                 msg = json.loads(raw)
             except Exception as e:
-                print("WARN", f"non-JSON packet: {e} raw={raw[:80]!r}")
+                logger.warning("non-JSON packet from %s: %s raw=%r", rc.serial or addr, e, raw[:80])
                 continue
 
-            json_count += 1
-
-
+            json_count += 1 # TODO: verify and remove that a counter does not need to be here, after initial release
             if json_count == 1 and "signature" in msg:
                 handle_login(rc, msg)
                 hb_t = threading.Thread(target=heartbeat_thread, args=(rc,), daemon=True)
@@ -104,10 +104,10 @@ def handle_robot(conn, addr):
             elif msg_type == "request":
                 roboot_request(rc, msg_id, msg)
             else:
-                print("WARN", f"unknown msg type {msg_type!r}: {json.dumps(msg)[:200]}")
+                logger.warning("unknown msg type %r from %s: %s", msg_type, rc.serial or addr, json.dumps(msg)[:200])
 
     except Exception as e:
-        print("ERROR", f"{addr}: {type(e).__name__}: {e}")
+        logger.error("error handling robot %s: %s", rc.serial or addr, e)
         import traceback
         traceback.print_exc()
     finally:
@@ -116,20 +116,4 @@ def handle_robot(conn, addr):
             conn.close()
         except Exception:
             pass
-        # forget this connection so the robot shows as offline until it logs in again
-        # if rc.serial and robot_connections.get(rc.serial) is rc:
-        #     robot_connections.pop(rc.serial, None)
-        #     notify_robots_changed()
-        # with robots_lock:
-        #     if rc.serial and robots.get(rc.serial) is rc:
-        #         robots.pop(rc.serial, None)
-        #         if active_robot[0] == rc.serial:
-        #             active_robot[0] = next(iter(robots), None)
-        #             print(
-        #                 "ACTIVE",
-        #                 f"target switched to {active_robot[0]}" if active_robot[0]
-        #                 else "no robots connected",
-        #             )
-        # print("DISCONN", f"{rc.serial or addr}")
-
 

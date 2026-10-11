@@ -31,7 +31,7 @@ class FloorPlan(Base):
     origin: Mapped[Point] = mapped_column(JSON, nullable=False) # x, y
     resolution: Mapped[float] = mapped_column(Float, nullable=False)
     alignment: Mapped[float] = mapped_column(Float, nullable=False)
-    imgsize: Mapped[Point] = mapped_column(JSON, nullable=False) # x, y
+    imgsize: Mapped[Tuple[int, int]] = mapped_column(JSON, nullable=False) # x, y
     created_at: Mapped[str] = mapped_column(String, nullable=False)
 
     __table_args__ = (

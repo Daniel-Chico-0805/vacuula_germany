@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 import re
 import os
 import tarfile
@@ -9,6 +10,7 @@ from vacuula_server.constants import UPLOADS_DIR
 if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
+logger = logging.getLogger(__name__)
 
 def parse_multipart_form_data(body: bytes, boundary: str) -> tuple[dict, bytes | None, str | None]:
     boundary_bytes = boundary.encode()
@@ -64,7 +66,7 @@ def s3_upload(req: RouterHandler) -> None:
     content_type = req.headers.get('Content-Type', '')
     boundary_match = re.search(r'boundary=([^\s;]+)', content_type)
     if not boundary_match:
-        print("boundary in Content")
+        logger.error("No boundary in Content-Type")
         req.send_bad_request("No boundary in Content-Type")
         return
 
@@ -76,12 +78,12 @@ def s3_upload(req: RouterHandler) -> None:
 
 
     if not robot_serial or not upload_id or upload_type not in ('maps', 'logs'):
-        print("Missing or bad")
+        logger.error("Missing or bad robot_serial, upload type or id")
         req.send_bad_request("Missing or bad robot_serial, upload type or id")
         return
 
     if not file_data or not filename:
-        print("Missing file")
+        logger.error("Missing file")
         req.send_bad_request("Missing file")
         return
 

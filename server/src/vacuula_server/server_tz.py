@@ -8,6 +8,7 @@ Resolution order:
   3. "Etc/UTC", logged as an ERROR - never silently.
 """
 
+import logging
 import os
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -18,6 +19,7 @@ FALLBACK_TZ = "Etc/UTC"
 
 _cached: str | None = None
 
+logger = logging.getLogger(__name__)
 
 def _resolve() -> str:
     tz = os.environ.get("VACUULA_TZ")
@@ -27,16 +29,14 @@ def _resolve() -> str:
             tz = tzlocal.get_localzone_name()
             source = "system"
         except Exception as e:  # tzlocal could not read the OS setting
-            print("ERROR", f"could not determine the system timezone ({type(e).__name__}: {e}); "
-                           f"using {FALLBACK_TZ}. Set the OS timezone or VACUULA_TZ.")
+            logger.error("could not determine the system timezone (%s: %s); using %s. Set the OS timezone or VACUULA_TZ.", type(e).__name__, e, FALLBACK_TZ)
             return FALLBACK_TZ
     try:
         ZoneInfo(tz)  # the robot needs a real IANA name
     except (ZoneInfoNotFoundError, ValueError):
-        print("ERROR", f"timezone {tz!r} (from {source}) is not a valid IANA zone; using {FALLBACK_TZ}. "
-                       "Fix the OS timezone or VACUULA_TZ.")
+        logger.error("timezone %r (from %s) is not a valid IANA zone; using %s. Fix the OS timezone or VACUULA_TZ.", tz, source, FALLBACK_TZ)
         return FALLBACK_TZ
-    print("INFO", f"server timezone: {tz} (from {source})")
+    logger.info("server timezone: %s (from %s)", tz, source)
     return tz
 
 

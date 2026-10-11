@@ -1,6 +1,6 @@
 [project]
 name = "vacuula-server"
-version = "1.0.0-b14"
+version = "1.0.0-b15"
 description = "Install Vacuula on your Neato robot"
 authors = [
     {   name = "Philip", email = "philipmagyar@proton.me" }
@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-vacuula-server = "vacuula_server.main:main"
+vacuula-server = "vacuula_server:main"
 
 [build-system]
 requires = ["uv_build>=0.12.15,<0.13.0"]

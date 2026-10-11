@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from zeroconf import Zeroconf, ServiceInfo
 import socket
 from pathlib import Path
@@ -12,11 +13,11 @@ if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
 
-
+logger = logging.getLogger(__name__)
 
 def ensure_ssl_certificate():
     if CERT.exists() and KEY.exists():
-        print("SSL certificate and key already exist, skipping generation.")
+        logger.info("SSL certificate and key already exist, skipping generation.")
         return
 
     SSL_DIR.mkdir(parents=True, exist_ok=True)
@@ -80,9 +81,11 @@ class MDNSAdvertiser:
 
     def start(self) -> None:
         self._zeroconf.register_service(self._info)
-        print(
-            f"mDNS: advertising {SERVICE_NAME} "
-            f"at {self._info.parsed_addresses()[0]}:{self._info.port}"
+        logger.info(
+            "mDNS: advertising %s at %s:%d",
+            SERVICE_NAME,
+            self._info.parsed_addresses()[0],
+            self._info.port,
         )
 
     def stop(self) -> None:

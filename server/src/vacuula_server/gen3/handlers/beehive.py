@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import logging
 from vacuula_server.constants import MAPS_DIR
 from vacuula_server.gen3.utils import get_robot_serial
 from vacuula_server.gen3.map_utils import parse_session
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
 
+logger = logging.getLogger(__name__)
 ip = get_host_ip()
 hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
 
@@ -29,7 +31,7 @@ def post_links(req: RouterHandler) -> None:
     name = data.get("name", "")
 
     if not password or not name:
-        print("[BEEHIVE ERROR] password or name not defined!")
+        logger.error("Password or name missing for robot %s", serial)
         req.send_bad_request("password or name missing")
         return
 
@@ -70,7 +72,7 @@ def upload_init(req: RouterHandler, upload_type: Literal["maps", "logs"]) -> Non
 
     map_id = data.get("group_id")
     if not map_id:
-        print("[BEEHIVE ERROR] upload id not defined!")
+        logger.error("Upload id not defined for robot %s", serial)
         req.send_bad_request("upload id missing")
         return
 
@@ -103,7 +105,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     if not (serial := get_robot_serial(req)): return
 
     if not data.get('success'):
-        print("[BEEHIVE ERROR] upload did not work")
+        logger.error("Upload failed for robot %s, job %s", serial, job_id)
         req.send_bad_request("You said upload failed?")
     
     
@@ -118,7 +120,7 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     manifest_path = f"{job_folder}/manifest.json"
     run_map_path = f"{job_folder}/RunMap.png"
     if not all(os.path.isfile(p) for p in [floor_map_path, manifest_path, run_map_path]):
-        print(f"[BEEHIVE ERROR]: Missing files for job {job_id}")
+        logger.error("Missing files for job %s", job_id)
         req.send_bad_request('files missing for upload')
         return
     
@@ -127,36 +129,27 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
         with open(manifest_path, 'r') as f:
             manifest = json.load(f)
     except Exception:
-        print("[BEEHIVE ERROR] manifest read error!")
+        logger.error("Manifest read error for job %s", job_id)
         req.send_internal_error()
         return
 
     robot_serial_in_manifest = manifest.get("robot_serial")
     run = manifest.get("run") or {}
     run_id = run.get("id")
-    valid_as_persistent_map = run.get("valid_as_persistent_map")
 
     if robot_serial_in_manifest != serial or run_id != job_id:
         req.send_bad_request("stuff no match")
-        print("[BEEHIVE ERROR] stuff didnt match!")
+        logger.error("Robot serial or run id mismatch for job %s: manifest serial=%s, run id=%s", job_id, robot_serial_in_manifest, run_id)
         return
 
     # we can now close the connection for the maps, further parsing can be done of data
     req.send_ok() # TODO: send ok for actaully closing the upload
 
-    print("add new map!")
-    # run = data['run']
-    # id = run['start_at']
-
     job_folder = f"{MAPS_DIR}/{serial}/{run_id}"
     floor_map_path = f"{job_folder}/FloorMap.png"
     run_map_path = f"{job_folder}/RunMap.png"
     manifest_path = f"{job_folder}/manifest.json"
-    floormap_meta, run_meta = parse_session(floor_map_path, run_map_path, job_folder)
-
-    print(floormap_meta)
-    print("---")
-    print(run_meta)
+    floormap_meta, _ = parse_session(floor_map_path, run_map_path, job_folder)
 
     with get_session() as session:
 

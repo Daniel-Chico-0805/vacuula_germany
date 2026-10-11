@@ -39,10 +39,8 @@ Importing as a module
 
 from __future__ import annotations
 
-import argparse
 import json
-import os
-import sys
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -111,6 +109,7 @@ DOCK_MARKER_VALUES = set(DOCK_MARKER_LABELS)
 #
 RUN_BACKGROUND_VALUE = 128
 
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------
 # Internal helpers
@@ -367,77 +366,38 @@ def parse_session(
             raise FileNotFoundError(f"Map file not found: {p}")
 
     # Step 1: detect dock from RunMap
-    print("── Detecting dock from RunMap ──────────────────────────")
+    logger.debug("Detecting dock from RunMap: %s", run_map_path)
     dock = detect_dock(run_map_path)
     if dock:
-        print(f"  ✓ Found {dock['marker_pixel_count']} marker pixels")
-        print(f"    pixel      : ({dock['pixel_x']}, {dock['pixel_y']})")
-        print(f"    normalised : ({dock['normalised_x']}, {dock['normalised_y']})")
+        logger.debug("Dock detected: %s", dock)
     else:
-        print("  ⚠ WARNING: no dock marker found in RunMap")
+        logger.warning("No dock marker found in RunMap: %s", run_map_path)
 
     # Step 2: parse FloorMap  (dock info embedded)
-    print("\n── Parsing FloorMap ────────────────────────────────────")
+    logger.debug("Parsing FloorMap: %s", floor_map_path)
     floor_data = _parse_floor_map(floor_map_path, map_type="floor", dock_info=dock)
     floor_file = out_dir / floor_out
     with open(floor_file, "w") as f:
         json.dump(floor_data, f)
-    _print_summary(floor_file, floor_data)
+    # _print_summary(floor_file, floor_data)
 
     # Step 3: parse RunMap as a path map (raw pixel values preserved)
-    print("\n── Parsing RunMap / path ───────────────────────────────")
+    logger.debug("Parsing RunMap: %s", run_map_path)
     run_data = _parse_path_map(run_map_path, map_type="run")
     run_file = out_dir / run_out
     with open(run_file, "w") as f:
         json.dump(run_data, f)
-    _print_summary(run_file, run_data)
+    # _print_summary(run_file, run_data)
 
-    print("\n✓ Session parsed successfully.\n")
+    logger.debug("Session parsed successfully: floor=%s, run=%s", floor_file, run_file)
     return floor_data, run_data
 
 
-def _print_summary(path: Path, data: dict) -> None:
-    print(f"  Saved      : {path}")
-    print(f"  Grid       : {data['width']} × {data['height']}")
-    print(f"  RLE entries: {len(data['rle'])}")
-    print(f"  Legend     : {data['legend']}")
-    if "dock" in data and data["dock"]:
-        d = data["dock"]
-        print(f"  Dock (norm): ({d['normalised_x']}, {d['normalised_y']})")
-
-
-# =========================================================
-# CLI
-# =========================================================
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument("floor_map", help="Path to FloorMap.png")
-    parser.add_argument("run_map",   help="Path to RunMap.png")
-    parser.add_argument(
-        "--out", default=".", metavar="DIR",
-        help="Output directory (default: current directory)",
-    )
-    parser.add_argument(
-        "--floor-out", default="floormap.json", metavar="FILE",
-        help="Floor map JSON filename (default: floormap.json)",
-    )
-    parser.add_argument(
-        "--run-out", default="runmap.json", metavar="FILE",
-        help="Run (path) map JSON filename (default: runmap.json)",
-    )
-    args = parser.parse_args()
-
-    try:
-        parse_session(
-            floor_map_path = args.floor_map,
-            run_map_path   = args.run_map,
-            out_dir        = args.out,
-            floor_out      = args.floor_out,
-            run_out        = args.run_out,
-        )
-    except FileNotFoundError as e:
-        print(f"\n✗ Error: {e}", file=sys.stderr)
-        sys.exit(1)
+# def _print_summary(path: Path, data: dict) -> None:
+#     print(f"  Saved      : {path}")
+#     print(f"  Grid       : {data['width']} x {data['height']}")
+#     print(f"  RLE entries: {len(data['rle'])}")
+#     print(f"  Legend     : {data['legend']}")
+#     if "dock" in data and data["dock"]:
+#         d = data["dock"]
+#         print(f"  Dock (norm): ({d['normalised_x']}, {d['normalised_y']})")

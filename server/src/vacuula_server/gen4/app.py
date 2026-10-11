@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from vacuula_server.constants import MAPS_DIR
 from vacuula_server.state import PendingRequest, robot_connections, pending_requests
 from vacuula_server.db import get_session, db_commit
@@ -10,6 +11,8 @@ from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
+
+logger = logging.getLogger(__name__)
 
 def post_update_floorplan_in_use(req: RouterHandler, serial: str, map_id: str) -> None:
     """POST /robot/<serial>/maps/<map_id>/use - update map data"""
@@ -186,7 +189,7 @@ def post_promote(req: RouterHandler, serial: str, map_id: str) -> None:
         return
 
     with get_session() as session:
-        floorplan: FloorPlan = session.execute(
+        floorplan: FloorPlan | None = session.execute(
             select(FloorPlan).where(FloorPlan.id == map_id)
         ).scalar_one_or_none()
 
@@ -293,11 +296,11 @@ def post_promote(req: RouterHandler, serial: str, map_id: str) -> None:
             pending_requests.pop(req_id, None)
 
             if not slot.event.is_set():
-                print(f"PROMOTE: robot did not acknowledge within {PROMOTE_TIMEOUT_S}s")
+                logger.error("Robot, %s, did not respond to promote without timeout")
                 req.send_error_response(504, "Robot did not acknowledge promote in time")
                 return
             if slot.status != 200:
-                print(f"PROMOTE: robot rejected promote: status={slot.status} body={slot.content}")
+                logger.error("Robot, %s, rejected promote: status=%s body=%s", serial, slot.status, slot.content)
                 req.send_error_response(502, f"Robot rejected promote (status {slot.status})")
                 return
 
@@ -328,7 +331,7 @@ def post_promote(req: RouterHandler, serial: str, map_id: str) -> None:
 
     
 
-# is this really needded???
+# is this really needded??? - if so it needs a major rewite lol
 def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):
     # Set byte==6 cells inside each cleaning-zone polygon to byte==4 in the
     # real.pgm payload, so the firmware's target finder has valid targets
@@ -366,19 +369,19 @@ def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):
             return toks
         toks = _pgm_tokens(raw, 4)          # P5, width, height, maxval
         if len(toks) < 4:
-            print("PROMOTE_PATCH: malformed PGM header %r; skipping" % toks)
+            logger.warning("malformed PGM header %r; skipping", toks)
             return real_blob
         try:
             maxval = int(toks[3])
         except ValueError:
-            print("PROMOTE_PATCH: bad PGM maxval %r; skipping" % toks[3])
+            logger.warning("bad PGM maxval %r; skipping", toks[3])
             return real_blob
         bpp = 2 if maxval > 255 else 1
         dtype = _np.dtype(">u2") if bpp == 2 else _np.uint8
         npix = W * H * bpp
         pixels_offset = len(raw) - npix
         if pixels_offset < 4 or pixels_offset > 1024:
-            print("PROMOTE_PATCH: real.pgm size mismatch (offset=%d, bpp=%d); skipping" % (pixels_offset, bpp))
+            logger.warning("real.pgm size mismatch (offset=%d, bpp=%d); skipping", pixels_offset, bpp)
             return real_blob
         arr = _np.frombuffer(raw[pixels_offset:pixels_offset + npix], dtype=dtype).reshape(H, W).copy()
         changed = 0
@@ -395,13 +398,13 @@ def _mark_targets_inside_zones(real_blob, cleaning_zones, floorplan):
                 arr[targets] = 4
                 changed += n
         if not changed:
-            print("PROMOTE_PATCH: no byte=6 cells inside cleaning polygons; unchanged")
+            logger.info("no byte=6 cells inside cleaning polygons; unchanged")
             return real_blob
         new_raw = raw[:pixels_offset] + arr.tobytes()
-        print("PROMOTE_PATCH: marked %d cells (6->4) inside cleaning polygons" % changed)
+        logger.info("marked %d cells (6->4) inside cleaning polygons", changed)
         return _zlib.compress(new_raw, level=9)
     except Exception as _e:
-        print("PROMOTE_PATCH failed (non-fatal): %s: %s" % (type(_e).__name__, _e))
+        logger.exception("failed (non-fatal): %s: %s", type(_e).__name__, _e)
         return real_blob
 
 
@@ -416,8 +419,6 @@ def demote_floorplan(serial: str, map_id: str) -> tuple[bool, str]:
         "ability": "maps.demote_floorplan",
         "rank_uuid":     map_id,
     }
-
-    print(payload)
 
     robot_send_request(conn, payload)
 

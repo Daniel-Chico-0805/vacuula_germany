@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import logging
 import json
 import sys
 import zlib
@@ -84,6 +85,7 @@ UNKNOWN = 0
 FREE    = 1
 WALL    = 2
 
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------
 # Internal helpers
@@ -344,64 +346,27 @@ def parse_session(
         if not p.exists():
             raise FileNotFoundError(f"Map file not found: {p}")
 
-    print("\n── Parsing FloorMap (rank_binary) ──────────────────────")
+    logger.debug("Parsing FloorMap: %s", floor_map_path)
     floor_data = _parse_floor_map(floor_map_path, map_type="floor")
     floor_file = out_dir / floor_out
     with open(floor_file, "w") as f:
         json.dump(floor_data, f)
-    _print_summary(floor_file, floor_data)
+    # _print_summary(floor_file, floor_data)
 
-    print("\n── Parsing RunMap / path (real_binary) ─────────────────")
+    logger.debug("Parsing RunMap: %s", run_map_path)
     run_data = _parse_path_map(run_map_path, map_type="path")
     run_file = out_dir / run_out
     with open(run_file, "w") as f:
         json.dump(run_data, f)
-    _print_summary(run_file, run_data)
+    # _print_summary(run_file, run_data)
 
-    print("\n✓ Session parsed successfully.\n")
+    logger.info("Session parsed successfully: %s", out_dir)
     return floor_data, run_data
 
 
-def _print_summary(path: Path, data: dict) -> None:
-    print(f"  Saved      : {path}")
-    print(f"  Grid       : {data['width']} × {data['height']}")
-    print(f"  RLE entries: {len(data['rle'])}")
-    print(f"  Legend     : {data['legend']}")
-    print(f"  Metadata   : {data['metadata']}")
-
-
-# =========================================================
-# CLI
-# =========================================================
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument("floor_map", help="Path to the FloorMap (rank_binary) file")
-    parser.add_argument("run_map",   help="Path to the RunMap (real_binary) file")
-    parser.add_argument(
-        "--out", default=".", metavar="DIR",
-        help="Output directory (default: current directory)",
-    )
-    parser.add_argument(
-        "--floor-out", default="floormap.json", metavar="FILE",
-        help="Floor map JSON filename (default: floormap.json)",
-    )
-    parser.add_argument(
-        "--run-out", default="runmap.json", metavar="FILE",
-        help="Path map JSON filename (default: runmap.json)",
-    )
-    args = parser.parse_args()
-
-    try:
-        parse_session(
-            floor_map_path = args.floor_map,
-            run_map_path   = args.run_map,
-            out_dir        = args.out,
-            floor_out      = args.floor_out,
-            run_out        = args.run_out,
-        )
-    except FileNotFoundError as e:
-        print(f"\n✗ Error: {e}", file=sys.stderr)
-        sys.exit(1)
+# def _print_summary(path: Path, data: dict) -> None:
+#     print(f"  Saved      : {path}")
+#     print(f"  Grid       : {data['width']} x {data['height']}")
+#     print(f"  RLE entries: {len(data['rle'])}")
+#     print(f"  Legend     : {data['legend']}")
+#     print(f"  Metadata   : {data['metadata']}")

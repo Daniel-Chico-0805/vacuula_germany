@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from vacuula_server.gen3.commands import send_chunk, build_command
 from vacuula_server.env import GEN4_PORT
 from vacuula_server.constants import APP_VERSION, MAPS_DIR
@@ -12,18 +13,19 @@ from sqlalchemy import select, update
 from vacuula_server.generation import Generation, get_robot_by_serial
 import json
 import queue
-
-# Longest wait for a robot to answer a command before the HTTP request fails
-COMMAND_TIMEOUT_S = 30
 import os
-
 from vacuula_server.gen4.handlers import robot_send_request
 from vacuula_server.server_tz import server_timezone, utc_offset_minutes
 
 from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
-    from router import RouterHandler
+    from vacuula_server.handlers.router import RouterHandler
 
+
+
+# Longest wait for a robot to answer a command before the HTTP request fails
+COMMAND_TIMEOUT_S = 30
+logger = logging.getLogger(__name__)
 
 def get_server_info(req: RouterHandler) -> None:
     """GET /server - static facts about this server the web app or installer needs."""
@@ -212,7 +214,7 @@ def connect_robot(req: RouterHandler, serial: str) -> None:
             req.wfile.flush()
 
     except (BrokenPipeError, ConnectionResetError, OSError):
-        print(f"Client disconnected: {serial}")
+        logger.info("Web app disconnected: %s", serial)
 
     finally:
         if conn in client_connections:
@@ -243,25 +245,15 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
     slot = PendingRequest()
     if (conn.gen == Generation.GEN4):
         # gen4
-        # req_id = robot_send_request(conn, data)
-        # pending_requests[str(req_id)] = req
-
         req_id, err = robot_send_request(conn, data, slot)
         if err:
             _send_quietly(lambda: req.send_error_response(502, "Failed to send command to robot"))
             return
     elif (conn.gen == Generation.GEN3):
+        # gen3
         req_id, msg = build_command(serial, data)
-        # pending_requests[str(req_id)] = req
-
-        # conn = robot_connections[serial]
-        # if conn:
-        #     try:
-        #         send_chunk(conn.conn.wfile, msg) # TODO
-        #     except Exception:
-        #         pass
-        pending_requests[str(req_id)] = slot  # register before sending
-        print(f"Sending command to robot {serial}: {data}")
+        pending_requests[str(req_id)] = slot
+        logger.debug("Sending command to robot %s: %s", serial, data)
         try:
             send_chunk(conn.conn.wfile, msg) # TODO
         except Exception:

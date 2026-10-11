@@ -1,6 +1,7 @@
 """Shared routing utilities for handler pattern matching"""
 from __future__ import annotations
 
+import logging
 import re
 from typing import Callable, Optional, Tuple, List
 
@@ -19,6 +20,8 @@ from vacuula_server.gen3.handlers.nucleo import nucleo_init
 from vacuula_server.gen3.handlers.s3_upload import s3_upload
 
 Handler = Callable[..., None]
+
+logger = logging.getLogger(__name__)
 
 
 # Route definitions: (method, pattern, handler)
@@ -103,6 +106,6 @@ def BrainslugHandler(ROUTES, req) -> None:
         else:
             handler(req)
     else:
-        print(f"No handler for {req.command} {req.path}")
+        logger.error("No handler for %s %s", req.command, req.path)
         req.send_not_found()
 

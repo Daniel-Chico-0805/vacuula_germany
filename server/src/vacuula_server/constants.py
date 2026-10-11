@@ -16,12 +16,13 @@ def _base_dir() -> Path:
 
 
 BASE_DIR = _base_dir()
-UPLOADS_DIR = BASE_DIR / "data" / "uploads"
+DATA_DIR = BASE_DIR / "data"
+UPLOADS_DIR = DATA_DIR / "uploads"
 MAPS_DIR = UPLOADS_DIR / "maps"
 
-SSL_DIR = BASE_DIR / "data" / "ssl"
+SSL_DIR = DATA_DIR / "ssl"
 CERT = SSL_DIR / "cert.pem"
 KEY = SSL_DIR / "privkey.pem"
 CERT_CONFIG = SSL_DIR / "vacuula.cnf"
 
-DB_PATH = BASE_DIR / "data" / "vacuula.db"
+DB_PATH = DATA_DIR / "vacuula.db"
