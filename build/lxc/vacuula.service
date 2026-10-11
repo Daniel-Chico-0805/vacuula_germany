@@ -8,7 +8,7 @@ Type=simple
 User=vacuula
 Group=vacuula
 WorkingDirectory=/srv/vacuula
-ExecStart=/srv/vacuula/.venv/bin/python /srv/vacuula/src/main.py
+ExecStart=/srv/vacuula/.venv/bin/vacuula-server
 Restart=always
 RestartSec=5
 
