@@ -43,6 +43,7 @@ export default function Map({ mapId, runId }: MapProps) {
     useEffect(() => { onDockImageReady(() => setDockReady(true)) }, [])
 
     const extraDraw = useCallback<ExtraDrawFn>((ctx, _canvas, zoom, offset, mapSize) => {
+        if (!persistantMapData) return
         const b = basePoseFromMapData(persistantMapData)
         if (b) drawBase(ctx, b.pose, zoom, offset, mapSize, b.resolution)
     }, [persistantMapData, dockReady])

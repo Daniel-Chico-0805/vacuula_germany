@@ -31,6 +31,7 @@ import { isDocked } from '../../components/topbar/robotInfo'
 
 // ── Alert card ────────────────────────────────────────────────────────────────
 function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible = true }: { type?: 'error' | 'warning', icon: React.ReactNode, title: string, sub?: string, action?: string, onClick?: () => void, visible?: boolean }) {
+    const { t } = useTranslation()
     return (
         <div className={`${styles.alertCard} ${styles[type]}`} style={{ visibility: visible ? 'visible' : 'hidden' }}>
             <div className={styles.alertIconWrap}>
@@ -38,7 +39,8 @@ function AlertCard({ type = 'error', icon, title, sub, action, onClick, visible 
             </div>
             <div className={styles.alertText}>
                 <div className={styles.alertTitle}>{title}</div>
-                {sub && <div className={styles.alertSub}>{sub}</div>}
+                {/* Unclear of what the type should be, so as any ok */}
+                {sub && <div className={styles.alertSub}>{t(`robotErrorCode.neatoGen4.${sub}` as any)}</div>} 
             </div>
             {action && <button className={styles.alertAction} onClick={onClick}>{action}</button>}
         </div>
@@ -111,6 +113,7 @@ export default function Home() {
 
     const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
     useEffect(() => {
+        console.log('promotedFloorplan', promotedFloorplan)
         if (!promotedFloorplan) return
         Http.getBoundaries(robot.serial, promotedFloorplan.id).then(res => setBoundaries(res.data))
     }, [promotedFloorplan])
@@ -355,6 +358,7 @@ export default function Home() {
                     {/* Map Settings */}
                     {gen3__cleaningCategory === CleaningCategory.MAP && (
                         <>
+                            {boundaries.length}
                             {promotedFloorplan && boundaries.length > 0 && (
                                 <>
                                     <Input
