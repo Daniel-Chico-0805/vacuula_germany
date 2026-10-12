@@ -2,7 +2,7 @@
 name: Vacuula
 version: "1.0.0-b18" # temporary until release
 slug: vacuula
-description: Vacuula server
+description: custom server for the undead robot vacuum cleaners - revive your Neato with the power of Vacuula
 url: "https://github.com/vacuula/vacuula"
 arch:
   - aarch64

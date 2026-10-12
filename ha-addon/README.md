@@ -2,7 +2,7 @@
 [buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
 
 <div align="center">
-  <img alt="vacuula Logo" src="./pics/logo.svg" width="250">
+  <img alt="vacuula Logo" src="https://github.com/vacuula/vacuula/raw/main/pics/logo.svg" width="250">
   <h1>vacuula</h1>
 </div>
 
@@ -18,13 +18,13 @@ _custom server for the undead robot vacuum cleaners_
         Discord
       </a>
       <span> | </span>
-      <a href="#repair-my-robot" style="font-size:32px">
-        Repiar my robot!
+      <a href="https://github.com/vacuula/vacuula#repair-my-robot" style="font-size:32px">
+        Repair my robot!
       </a>
-      <span> | </span>
+      <!-- <span> | </span>
       <a href="https://tools.vacuula.phma.dev">
         Vacuula Tools
-      </a>
+      </a> -->
 </div>
 
 > Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
@@ -46,12 +46,19 @@ _custom server for the undead robot vacuum cleaners_
 | Maps             | ✅                   |   | Home Assistant       | 🚧     |
 | Historical runs  | ✅                   |   | Drag to clean "here" | 🚧     |
 | Schedule         | ✅                   |   | Custom sounds        | 🚧     |
-| Settings         | ✅                   |   | QoL improvments      | 🚧     |
+| Settings         | ✅                   |   | QoL improvements      | 🚧     |
 | Zones/NoGo Lines | ✅                   |   | "Next day" Schedule  | 🚧     |
 | MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
 
 > [!NOTE]
 > Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
+
+
+
+
+
+
+
 
 ## Ports used
 | Port | Info                                  |
@@ -60,7 +67,10 @@ _custom server for the undead robot vacuum cleaners_
 | 443  | Gen3 robots, D3-D7 (Not customizable) |
 | 3443 | Gen4 robots, D8-D10 (Customizable)    |
 
-<i>Gen3 robots sadly require port 443, and if enabled, the vacuula server and webapp is also hosted here for PWAs to work <i>
+<i>Gen3 robots sadly require port 443, and if enabled, the vacuula server and webapp is also hosted here for PWAs to work </i>
+
+
+
 
 
 ## Configuration

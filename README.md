@@ -19,12 +19,12 @@ _custom server for the undead robot vacuum cleaners_
       </a>
       <span> | </span>
       <a href="#repair-my-robot" style="font-size:32px">
-        Repiar my robot!
+        Repair my robot!
       </a>
-      <span> | </span>
+      <!-- <span> | </span>
       <a href="https://tools.vacuula.phma.dev">
         Vacuula Tools
-      </a>
+      </a> -->
 </div>
 
 > Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
@@ -46,7 +46,7 @@ _custom server for the undead robot vacuum cleaners_
 | Maps             | ✅                   |   | Home Assistant       | 🚧     |
 | Historical runs  | ✅                   |   | Drag to clean "here" | 🚧     |
 | Schedule         | ✅                   |   | Custom sounds        | 🚧     |
-| Settings         | ✅                   |   | QoL improvments      | 🚧     |
+| Settings         | ✅                   |   | QoL improvements      | 🚧     |
 | Zones/NoGo Lines | ✅                   |   | "Next day" Schedule  | 🚧     |
 | MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
 
@@ -56,7 +56,7 @@ _custom server for the undead robot vacuum cleaners_
 # Repair my robot!
 
 For the repair there is two part
-1. [Setup a server](#setup-server) <i>(we are looking into a community server, however thay is not done in time for initial release, so you will need to set a server up)</i>
+1. [Setup a server](#setup-server) <i>(we are looking into a community server, however that is not done in time for initial release, so you will need to set a server up)</i>
 2. [Configure the robot](#configure-the-robot)
 
 ## Setup server
@@ -65,13 +65,14 @@ There is many ways to set this server up, however our recommended way is via Doc
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
 1. Install docker
-  - <i>This is probably the hardest part for anyone unfamiliar with self-hosting, so we have started writing a [guide in the FAQ](./FAQ.md#install-docker)</i>
-2. Donwload [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
+    - <i>This is probably the hardest part for anyone unfamiliar with self-hosting, so we have started writing a [guide in the FAQ](./FAQ.md#install-docker)</i>
+2. Download [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
 3. Run `docker compose up -d`
 
+- The server is configured by [envoriment variables](#configure-server)
 - To see logs do `docker compose logs vacuula`
 - To stop vacuula `docker compose down`
-- To start vacuula `docker compose -d`
+- To start vacuula `docker compose up -d`
 - To permanently remove stored data `docker volume rm vacuula-data` <i>Vacuula needs to be stopped first</i>
 
 
@@ -88,3 +89,23 @@ We have made an easy to use installer to set your robot up!
 
 <i>Source code is available at https://github.com/vacuula/installer</i>
 <br><i>If you have an more exotic setup and cannot run this installer in any way - get in touch and we will figure something out!</i>
+
+
+## Configure server
+### Ports used
+| Port | Info                                  |
+|------|---------------------------------------|
+| 80   | Server, Webapp (Customizable)         |
+| 443  | Gen3 robots, D3-D7 (Not customizable) |
+| 3443 | Gen4 robots, D8-D10 (Customizable)    |
+
+<i>Gen3 robots sadly require port 443, and if enabled, the vacuula server and webapp is also hosted here for PWAs to work </i>
+
+### Configuration
+| Option       | Default | Info                                                                                        |
+|--------------|---------|---------------------------------------------------------------------------------------------|
+| GEN4_PORT    | 3443    | Default port the Gen4 robots will connect to the server on                                  |
+| VACUULA_PORT | 80      | Default port that you can reach the webapp/api on                                           |
+| GEN3_ENABLED | True    | If server should support for Gen3 robots, can be useful since Gen3 devices require port 443 |
+| GEN4_ENABLED | True    | If server should support for Gen4 robots                                                    |
+| MDNS_ENABLED | True    | If server should run MDNS for autodiscovering                                               |
