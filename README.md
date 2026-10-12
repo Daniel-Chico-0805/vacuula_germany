@@ -62,8 +62,15 @@ For the repair there is two part
 ## Setup server
 
 There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./build/lxc/lxc.md)
+We provide you with a couple of ways to setup the server
+- [Docker Compose (see below)](#docker-compose)
+- As an App in Home Assistant
+  - [![Open home assistant app store with link to vacuula repo](https://my.home-assistant.io/badges/supervisor_store.svg)](https://my.home-assistant.io/redirect/supervisor_store/?repository_url=https%3A%2F%2Fgithub.com%2Fvacuula%2Fvacuula)
+- [LXC/standalone](./build/lxc/lxc.md)
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
+
+### Docker compose
 1. Install docker
     - <i>This is probably the hardest part for anyone unfamiliar with self-hosting, so we have started writing a [guide in the FAQ](./FAQ.md#install-docker)</i>
 2. Download [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
