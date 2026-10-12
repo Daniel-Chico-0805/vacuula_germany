@@ -43,6 +43,9 @@ export function ServerUnreachable({ onRetry }: ServerUnreachableProps) {
             <img src={mascot.src} alt="" className={styles.mascot} />
             <span className={styles.title}>{t('serverUnreachable.title')}</span>
             <span className={styles.subtitle}>{t('serverUnreachable.subtitle')}</span>
+            { location.host.includes('vacuula.local') && (
+                <span className={styles.subtitle}>{t('serverUnreachable.mdnsDisclaimer')}</span>
+            )}
             <button type="button" className={styles.retry} onClick={onRetry}>
                 {t('serverUnreachable.retry')}
             </button>

@@ -384,13 +384,13 @@ export default function Home() {
                                         value={nogoEnabled}
                                         onChange={setNogoEnabled}
                                     />
-                                    {boundaries.filter(b => b.type === 'polygon').length > 0 && (
+                                    {boundaries.filter(b => b.type === 'polygon' && b.function === 'cleaning').length > 0 && (
                                         <>
                                             <Input
                                                 type="multi-select"
                                                 label={t('schedule.selectZones')}
                                                 extraInfo={t('schedule.selectZonesHelp')}
-                                                options={boundaries.filter(b => b.type === 'polygon').map(b => ({ value: b.id, label: b.name }))}
+                                                options={boundaries.filter(b => b.type === 'polygon' && b.function === 'cleaning').map(b => ({ value: b.id, label: b.name }))}
                                                 value={selectedZones}
                                                 onChange={setSelectedZones}
                                             />

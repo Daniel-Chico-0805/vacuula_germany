@@ -55,7 +55,7 @@ export default () => {
 
             <div className={styles.featureList} style={{ overflow: drawerOpen ? 'hidden' : 'auto' }}>
                 {cleanings.map((item, i) => (
-                    <div key={i} className={styles.item} onClick={() => setSelectedCleaning(item)}>
+                    <div key={i} className={styles.item} onClick={() => item.id === selectedCleaning?.id ? setDrawerOpen(true) : setSelectedCleaning(item)}>
                         <div className={styles.info}>
                             <span>
                                 {t('runs.entryTitle', {

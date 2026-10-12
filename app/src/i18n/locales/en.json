@@ -127,6 +127,7 @@
     "editBoundary": "Edit boundary",
     "selectMap": "Select a map",
     "noMaps": "You don't have any explored maps yet, start an exploration to draw boundaries!",
+    "gen4SelectMapGuide": "After you have done an exploration, go to the history tab, select your run and mark map as floorplan!",
     "newMap": "New map",
     "exploreNewMap": "Explore new map",
     "cannotExploreNewMap": "Robot needs to be docked to start exploration.",
@@ -135,6 +136,8 @@
     "editMapDetails": "Edit map details",
     "addFeature": "Add feature",
     "zone": "Zone",
+    "cleaningZone": "Cleaning Zone",
+    "noGoZone": "No-Go Zone",
     "noGoLine": "No-Go Line",
     "noGo": "No-Go",
     "cleaning": "Cleaning",
@@ -147,7 +150,8 @@
     "lineHint": "To make a zone, move the cursor to the first point and click the zone button (blue, on the right); this connects the points and makes a zone.",
     "drawHint": "Drawing a line makes a no-go line; using the polygon button to connect the cursor with the first point makes a zone.",
     "promote": "Use map",
-    "demote": "Stop using map"
+    "demote": "Stop using map",
+    "gen4UpdateBugHint": "NOTE: modifying maps, zones, or lines may disable affected schedules. This is something that happens on the robot firmware, and we are looking into a workaround"
   },
   "settings": {
     "serial": "Serial nr: {{serial}}",
@@ -185,6 +189,7 @@
   "serverUnreachable": {
     "title": "Could not connect to the server",
     "subtitle": "The app could not connect to the Vacuula server! Please make sure the server is running and reachable from this device.",
+    "mdnsDisclaimer": "If you are using mDNS (viewing site via vacuula.local), then it may take some time for the device to load the ip of the server, if the issue persists, try restarting the browser.",
     "retry": "Try again"
   },
   "robotErrorCode": {

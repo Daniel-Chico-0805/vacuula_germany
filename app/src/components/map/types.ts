@@ -7,9 +7,12 @@ export interface Zone {
     id: string
     name: string
     color: string
-    type: 'polygon'
+    type: 'polygon' | 'polyline'
     vertices: Point[]
     enabled: boolean
+    
+    // only gen4, TODO: split types by type gen3 gen4 etc
+    function?: 'cleaning' | 'nogo'
 }
 
 export interface SetZone extends Zone {
