@@ -16,17 +16,17 @@ const outDir = path.join(publicDir, 'icons')
 
 // Must match MASCOTS in src/mascot/index.ts and --bg (dark) in src/theme/theme.css
 const MASCOTS = ['vacuula', 'robot']
-const BACKGROUND = '#0f1113'
+const BACKGROUND = 'transparent' // '#0f1113'
 
 // mascot size relative to the canvas: "any" icons fill most of it, maskable icons
 // keep the mascot inside the 80% safe circle that launchers may crop to
 const SCALE_ANY = 0.82
 const SCALE_MASKABLE = 0.60
 
-async function render(svg, size, scale, file) {
+async function render(svg, size, scale, file, background = BACKGROUND) {
     const inner = Math.round(size * scale)
     const mascot = await sharp(svg).resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
-    await sharp({ create: { width: size, height: size, channels: 4, background: BACKGROUND } })
+    await sharp({ create: { width: size, height: size, channels: 4, background } })
         .composite([{ input: mascot, gravity: 'centre' }])
         .png()
         .toFile(path.join(outDir, file))
