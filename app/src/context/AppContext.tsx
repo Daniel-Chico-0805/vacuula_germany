@@ -71,8 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => { loadServerInfo() }, [])
 
-    const connectToRobot = (serial: string, type: RobotType, name: string) => {
-        if (!robots) return
+    const connectToRobot = (robotsInfo: QuickRobotInfo, serial: string, type: RobotType, name: string) => {
         setRobot(undefined)
 
         if (type === RobotType.NeatoGen3) {
@@ -80,7 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 setRobot({
                     type: RobotType.NeatoGen3,
                     serial,
-                    name: name,
+                    name,
                     availableCommands: res.data.availableCommands,
                     details: res.data.details,
                     alert: res.data.alert,
@@ -92,18 +91,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else if (type === RobotType.NeatoGen4) {
             GEN4_COMMANDS.getRobotState(serial).then((res) => {
                 const body = res.data.body
-                const label_serial = robots[serial].label_serial
+                const label_serial = robotsInfo[serial]?.label_serial
                 if (!label_serial) return; // TODO? error?
                 setRobot({
                     type: RobotType.NeatoGen4,
                     serial,
-                    name: name,
+                    name,
                     availableCommands: body.available_commands,
                     details: body.details,
                     errors: body.errors ?? undefined,
                     state: body.state,
                     action: body.action,
-                    label_serial
+                    label_serial,
                 })
             })
         }
@@ -111,14 +110,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const selectRobot = (serial: string) => {
         const target = robots?.[serial]
-        if (!target || !target.connected) return; // guard: can't select an offline/unknown robot
-        connectToRobot(serial, target.type, target.name)
+        if (!robots || !target || !target.connected) return
+        connectToRobot(robots, serial, target.type, target.name)
     }
 
-    // Renames the currently-selected robot. Updates `robot` and `robots` immediately
-    // (optimistic) so every consumer — this component, the robots list, headers, etc. —
-    // reflects the new name right away rather than waiting on a refetch. Rolls both back
-    // if the request fails.
     const updateRobotName = async (name: string) => {
         if (!robot) return
         const serial = robot.serial
@@ -153,7 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Http.getRobots().then((res) => {
             setRobots(res.data)
             const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
-            if (firstOnline) connectToRobot(firstOnline[0], firstOnline[1].type, firstOnline[1].name)
+            if (firstOnline) connectToRobot(res.data, firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         });
 
         const events = new EventSource('/api/events')

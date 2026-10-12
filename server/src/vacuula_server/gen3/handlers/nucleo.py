@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from vacuula_server.gen3.commands import send_chunk, build_heartbeat
 from vacuula_server.state import robot_connections
 from vacuula_server.handlers.events import notify_robots_changed
@@ -14,6 +15,7 @@ import traceback
 if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
+logger = logging.getLogger(__name__)
 
 def nucleo_init(req: RouterHandler) -> None:
     """POST /vendors/neato/login - robot commands"""
@@ -31,6 +33,7 @@ def nucleo_init(req: RouterHandler) -> None:
     send_chunk(req.wfile, build_heartbeat())
     conn = RobotConn(serial, Generation.GEN3, Gen2Gen3Conn(gen3_data.password, req.wfile))
     robot_connections[serial] = conn
+    logger.info("Robot %s connected", serial)
     notify_robots_changed()
 
     try:
@@ -45,4 +48,5 @@ def nucleo_init(req: RouterHandler) -> None:
     finally:
         if robot_connections.get(serial) is conn:
             del robot_connections[serial]
+            logger.info("Robot %s disconnected", serial)
             notify_robots_changed()

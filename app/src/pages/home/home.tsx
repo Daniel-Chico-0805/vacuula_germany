@@ -376,7 +376,6 @@ export default function Home() {
                     {/* Map Settings */}
                     {gen3__cleaningCategory === CleaningCategory.MAP && (
                         <>
-                            {boundaries.length}
                             {promotedFloorplan && boundaries.length > 0 && (
                                 <>
                                     <Input

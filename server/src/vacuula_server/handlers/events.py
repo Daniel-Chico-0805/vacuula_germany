@@ -29,13 +29,17 @@ def robots_snapshot() -> dict:
     """Robot list with connection status, keyed by serial (also used by GET /app/robots)."""
     with get_session() as session:
         robots = session.execute(select(Robot)).scalars().all()
+        labels = {
+            robot: label
+            for robot, label in session.execute(select(Gen4Data.robot, Gen4Data.label_serial))
+        }
+
     return {
         robot.serial: {
             "type": robot.type,
             "connected": robot.serial in robot_connections,
             "name": robot.name,
-            # todo: better validation of label_serial
-            **({"label_serial": session.scalar(select(Gen4Data.label_serial).where(Gen4Data.robot == robot.serial))} if robot.type == "neato.gen4" else {}),
+            **({"label_serial": labels.get(robot.serial)} if robot.type == "neato.gen4" else {}),
         }
         for robot in robots
     }

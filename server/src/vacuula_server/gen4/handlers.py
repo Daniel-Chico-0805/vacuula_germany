@@ -90,6 +90,7 @@ def handle_login(rc: RobotConn, msg):
             session.add(Gen4Data(robot=serial, label_serial=label_serial))
             session.commit()
 
+    logger.info("Robot %s logged in with label_serial %s", serial, label_serial)
     notify_robots_changed()
 
 

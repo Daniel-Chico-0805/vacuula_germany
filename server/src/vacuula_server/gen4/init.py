@@ -1,12 +1,14 @@
 from __future__ import annotations
 import logging
 from vacuula_server.env import GEN4_PORT
+from vacuula_server.handlers.events import notify_robots_changed
 from vacuula_server.tls import CERT, KEY
 import threading
 import socket, ssl, struct, json
 from vacuula_server.generation import Generation
 from vacuula_server.conn import RobotConn, Gen4Conn
 from vacuula_server.gen4.handlers import handle_login, robot_response, heartbeat_thread, robot_event, roboot_request
+from vacuula_server.state import robot_connections
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +114,12 @@ def handle_robot(conn, addr):
         traceback.print_exc()
     finally:
         rc.stop_event.set()
+        del robot_connections[rc.serial]
+        logger.info("Robot %s disconnected", rc.serial or addr)
+        notify_robots_changed()
         try:
             conn.close()
         except Exception:
+            logger.error("error closing connection for robot %s", rc.serial or addr)
             pass
 
