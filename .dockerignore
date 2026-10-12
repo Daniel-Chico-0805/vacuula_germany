@@ -10,10 +10,7 @@ app/dist
 app/.vite
 app/.cache
 
-server/data/ssl/*.pem
-server/data/uploads/
-server/data/vacuula.db
-server/data/devdb
+server/data
 server/web
 
 .env

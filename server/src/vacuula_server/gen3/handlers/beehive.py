@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import logging
 from vacuula_server.constants import MAPS_DIR
+from vacuula_server.gen3.data import Gen3Data
 from vacuula_server.gen3.utils import get_robot_serial
 from vacuula_server.gen3.map_utils import parse_session
 from vacuula_server.db import get_session, db_commit
@@ -24,6 +25,7 @@ hostname = f"vacuula-local-{ip.replace('.', '-')}.nip.io"
 
 def post_links(req: RouterHandler) -> None:
     """POST /links - link robot to server"""
+    logger.debug("New GEN3 linking from %s", req.client_address)
     if not (data := req.read_json()): return
     if not (serial := get_robot_serial(req)): return
 
@@ -35,15 +37,21 @@ def post_links(req: RouterHandler) -> None:
         req.send_bad_request("password or name missing")
         return
 
+    logger.debug("Linking robot %s", serial)
+
     # if serial exists, update password, else create new robot
     with get_session() as session:
         robot = session.scalar(select(Robot).where(Robot.serial == serial))
-        if robot:
-            robot.password = password
+        gen3_data = session.scalar(select(Gen3Data).where(Gen3Data.robot == serial))
+        if robot and gen3_data:
+            logger.debug("Robot %s already exists, updating password", serial)
+            gen3_data.password = password
         else:
-            robot = Robot(serial=serial, name=name, password=password)
+            logger.debug("Creating new robot %s", serial)
+            robot = Robot(serial=serial, type="neato.gen3", name=name)
+            gen3_data = Gen3Data(robot=serial, password=password)
     
-        if not db_commit(session, req, robot):
+        if not db_commit(session, req, robot, gen3_data):
             return
 
     req.send_ok()

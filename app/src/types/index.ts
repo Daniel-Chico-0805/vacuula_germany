@@ -13,6 +13,7 @@ export interface QuickRobotInfo {
         type: RobotType,
         name: string,
         connected: boolean,
+        label_serial?: string, // only for gen4
     }
 }
 
@@ -40,7 +41,7 @@ export interface Gen4Robot {
 export type Robot = {
     name: string,
     serial: string
-} & (Gen3Robot | Gen4Robot)
+} & (Gen3Robot | (Gen4Robot & { label_serial: string }))
 
 
 

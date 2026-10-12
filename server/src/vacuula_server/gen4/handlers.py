@@ -1,15 +1,17 @@
 
 from __future__ import annotations
 import logging
+from sqlalchemy.util import b
 from vacuula_server.conn import RobotConn
 from vacuula_server.constants import MAPS_DIR
 from vacuula_server.db import get_session
+from vacuula_server.gen4.data import Gen4Data
 from vacuula_server.gen4.map_utils import parse_session
 from vacuula_server.models.robot import Robot
 from vacuula_server.models.persistent_map import FloorPlan
 import threading
 from vacuula_server.models.run import Gen4__Run
-from vacuula_server.state import put_drop_oldest, robot_connections
+from vacuula_server.state import PendingRequest, put_drop_oldest, robot_connections
 from vacuula_server.handlers.events import notify_robots_changed
 from vacuula_server.generation import Generation
 
@@ -27,7 +29,7 @@ from vacuula_server.server_tz import server_timezone
 
 logger = logging.getLogger(__name__)
 
-
+# todo: better validation of label_serial
 def handle_login(rc: RobotConn, msg):
     serial = msg.get("serial", "<unknown>")
     
@@ -35,36 +37,61 @@ def handle_login(rc: RobotConn, msg):
         # fail and show error
         return
     
-
     rc.serial = serial
     robot_connections[serial] = rc
 
-    with get_session() as session:
-        exists = session.get(Robot, serial)
-
-        if not exists:
-            session.add(Robot(serial=serial, name=f"gen4-{serial}"))
-            session.commit()
-
-    notify_robots_changed()
+    ip = rc.conn.socket.getpeername()[0]
 
     response = {
         "code": 200,
         "session": str(uuid.uuid4()),
         "datetime": now_iso(),
         "body": {
-            "ip_address": "192.168.205.113",
+            "ip_address": ip,
             "timezone": server_timezone(),
             "robot_id": serial,
-            "user_id": "local-user",
+            "user_id": "vacuula-user",
         },
     }
-    send_json(rc.conn.socket, response) # TODO
+    send_json(rc.conn.socket, response) # TODO cleanup
 
-    try:
-        robot_send_request(rc, { "ability": "info.robot" })
-    except Exception as e:
-        logger.error("Failed to send info.robot request to %s: %s", serial, e)
+    slot = PendingRequest()
+    req_id, err = robot_send_request(rc, { "ability": "info.robot" }, slot)
+    if req_id is None:
+        logger.error("Failed to send info.robot request to %s: %s", serial, err)
+        return
+
+    slot.event.wait(15) # robot has to respond within this time
+    pending_requests.pop(req_id, None)
+
+    if not slot.event.is_set():
+        logger.error("Robot, %s, did not respond to info.robot request in time", serial)
+        return
+    if slot.status != 200:
+        logger.error("Robot, %s, rejected info.robot request with status %s", serial, slot.status)
+        return
+
+    content = slot.content
+    if not content or "body" not in content:
+        logger.error("Robot, %s, responded to info.robot request with no body", serial)
+        return
+    
+    label_serial = content["body"].get("serial_number", "")
+    if not label_serial:
+        logger.error("Robot, %s, responded to info.robot request with no serial_number (label_serial)", serial)
+        return
+
+    with get_session() as session:
+        exists = session.get(Robot, serial)
+
+        # TODO: should label_serial be allowed0 to change? look into this, just not in initial release
+        if not exists:
+            session.add(Robot(serial=serial, type="neato.gen4", name=f"gen4-{label_serial}"))
+            session.add(Gen4Data(robot=serial, label_serial=label_serial))
+            session.commit()
+
+    notify_robots_changed()
+
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -127,6 +154,7 @@ def robot_send_request(rc: RobotConn, body: dict, slot=None):
     try:
         send_json(rc.conn.socket, msg)
     except Exception as e:
+        logger.error("Failed to send request to robot %s: %s", rc.serial, e)
         if slot is not None:
             pending_requests.pop(request_id, None)
         return None, e
@@ -240,19 +268,27 @@ request_map = {
 }
 
 
+# TODO: clean this up and test all paths more thoroughly but not in initial release
 def roboot_request(rc: RobotConn, msg_id: str, data: dict):
     service = data["to"]["service"]
     handler = request_map.get(service)
     if handler is None:
         # TODO: after initial release
         return
-    else:
+
+    try:
         response_body, response_code = handler(rc, data)
-    response = {
-        "type": "response",
-        "id": msg_id,
-        "code": response_code,
-        "body": response_body,
-    }
-    send_json(rc.conn.socket, response) # TODO
+    except Exception:
+        logger.exception("request failed for %s", rc.serial)
+        response_body, response_code = {}, 500
+    try:
+        response = {
+            "type": "response",
+            "id": msg_id,
+            "code": response_code,
+            "body": response_body,
+        }
+        send_json(rc.conn.socket, response) # TODO
+    except Exception:
+        logger.warning("could not send response to %s", rc.serial)
 

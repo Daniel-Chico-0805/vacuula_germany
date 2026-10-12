@@ -7,6 +7,7 @@ import threading
 from sqlalchemy import select
 
 from vacuula_server.db import get_session
+from vacuula_server.gen4.data import Gen4Data
 from vacuula_server.models.robot import Robot
 from vacuula_server.state import put_drop_oldest, robot_connections
 
@@ -30,9 +31,11 @@ def robots_snapshot() -> dict:
         robots = session.execute(select(Robot)).scalars().all()
     return {
         robot.serial: {
-            "type": "neato.gen4" if not robot.password else "neato.gen3",
+            "type": robot.type,
             "connected": robot.serial in robot_connections,
             "name": robot.name,
+            # todo: better validation of label_serial
+            **({"label_serial": session.scalar(select(Gen4Data.label_serial).where(Gen4Data.robot == robot.serial))} if robot.type == "neato.gen4" else {}),
         }
         for robot in robots
     }

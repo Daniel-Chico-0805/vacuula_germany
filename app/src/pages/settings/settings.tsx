@@ -57,7 +57,7 @@ export default () => {
                     onChange={setRobotName}
                     extraInfo={(
                         <>
-                            <span>{t('settings.serial', { serial: robot.serial })}</span>
+                            <span>{t('settings.serial', { serial: 'label_serial' in robot ? robot.label_serial : robot.serial })}</span>
                             {robot.type === RobotType.NeatoGen3 && (
                                 <>
                                     <br />

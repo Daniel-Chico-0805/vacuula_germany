@@ -49,7 +49,7 @@ ENV PATH="/server/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 
 COPY --from=python-build /server/.venv ./.venv
 
-COPY server/data/ssl/vacuula.cnf ./data/ssl/vacuula.cnf
+COPY server/ssl/vacuula.cnf ./ssl/vacuula.cnf
 COPY server/alembic.ini ./
 COPY server/migrations ./migrations
 

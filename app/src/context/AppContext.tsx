@@ -72,6 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => { loadServerInfo() }, [])
 
     const connectToRobot = (serial: string, type: RobotType, name: string) => {
+        if (!robots) return
         setRobot(undefined)
 
         if (type === RobotType.NeatoGen3) {
@@ -91,6 +92,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else if (type === RobotType.NeatoGen4) {
             GEN4_COMMANDS.getRobotState(serial).then((res) => {
                 const body = res.data.body
+                const label_serial = robots[serial].label_serial
+                if (!label_serial) return; // TODO? error?
                 setRobot({
                     type: RobotType.NeatoGen4,
                     serial,
@@ -100,6 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     errors: body.errors ?? undefined,
                     state: body.state,
                     action: body.action,
+                    label_serial
                 })
             })
         }
@@ -168,6 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
 
         events.onopen = () => {
+            if (!robots) return;
             if (robot.type === RobotType.NeatoGen3) {
                 GEN3_COMMANDS.getRobotState(robot.serial).then((res) => {
                     setRobot(cur => cur ? {
@@ -184,6 +189,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             } else if (robot.type === RobotType.NeatoGen4) {
                 GEN4_COMMANDS.getRobotState(robot.serial).then((res) => {
                     const body = res.data.body;
+                    const label_serial = robots[robot.serial].label_serial
+                    if (!label_serial) return; // TODO? error?
                     setRobot(cur => cur ? {
                         ...cur,
                         type: RobotType.NeatoGen4,
@@ -192,6 +199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                         errors: body.errors != null ? body.errors : undefined,
                         state: body.state,
                         action: body.action,
+                        label_serial
                     } : cur)
                 })
             }
@@ -226,7 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                             action: body.action,
                         } : cur)
                     },
-                    [OrbitalServices.ROBOTS_ERROR_CODES]: (body) => console.log('new errors', body),
+                    // [OrbitalServices.ROBOTS_ERROR_CODES]: (body) => console.log('new errors', body),
                 };
 
                 const handler = handlers[wrapper.data.to.service];

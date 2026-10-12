@@ -8,6 +8,8 @@ from alembic import context
 import sys
 from vacuula_server.db import DATABASE_URL, Base
 from vacuula_server.models import persistent_map, robot, run
+from vacuula_server.gen3 import data as gen3_data
+from vacuula_server.gen4 import data as gen4_data
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

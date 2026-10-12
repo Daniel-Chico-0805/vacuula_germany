@@ -217,9 +217,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Vacuula
-server/data/ssl/*.pem
-server/data/uploads/
-server/data/vacuula.db
-server/data/devdb
+server/data
 server/web
 data-dev

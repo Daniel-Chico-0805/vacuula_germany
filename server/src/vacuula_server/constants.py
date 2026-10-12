@@ -25,7 +25,7 @@ MAPS_DIR = UPLOADS_DIR / "maps"
 SSL_DIR = DATA_DIR / "ssl"
 CERT = SSL_DIR / "cert.pem"
 KEY = SSL_DIR / "privkey.pem"
-CERT_CONFIG = SSL_DIR / "vacuula.cnf"
+CERT_CONFIG = BASE_DIR / "ssl" / "vacuula.cnf"
 
 DB_PATH = DATA_DIR / "vacuula.db"
 

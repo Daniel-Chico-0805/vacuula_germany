@@ -22,6 +22,7 @@ import { dayKey } from '../../i18n/days'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import { useRobot } from '../../context/useRobot'
 import type { NoGoLine, Zone } from '../../components/map/types'
+import { isGen4D10 } from '../../components/topbar/robotInfo'
 
 // For now schduling will be only for cleaning.start for ONE run, later on scheduling can be more advanced
 
@@ -180,10 +181,13 @@ export default () => {
                         type="select"
                         label={t('common.mode')}
                         options={[
-                            { value: Neato.Gen4.CleaningMode.AUTO, label: t('modes.auto') },
                             { value: Neato.Gen4.CleaningMode.ECO, label: t('modes.eco') },
-                            { value: Neato.Gen4.CleaningMode.MAX, label: t('modes.max') },
                             { value: Neato.Gen4.CleaningMode.TURBO, label: t('modes.turbo') },
+                            // TODO: verify hardware in other gen4 robots, read more at the "isGen4D10" func
+                            ...( isGen4D10(robot) ? [
+                                { value: Neato.Gen4.CleaningMode.MAX, label: t('modes.max') },
+                                { value: Neato.Gen4.CleaningMode.AUTO, label: t('modes.auto') },
+                            ] : [])
                         ]}
                         value={scheduleFormCleaningMode}
                         onChange={(mode) => setScheduleCleaningMode(mode)}

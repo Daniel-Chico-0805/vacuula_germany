@@ -86,9 +86,8 @@ cp "$ROOT_DIR/server/pyproject.toml" \
    "$ROOT_DIR/server/uv.lock" \
    "$INSTALL_DIR/"
 
-mkdir -p "$INSTALL_DIR/data/ssl"
-
-cp "$ROOT_DIR/server/data/ssl/vacuula.cnf" "$INSTALL_DIR/data/ssl/vacuula.cnf"
+mkdir -p "$INSTALL_DIR/ssl"
+cp "$ROOT_DIR/server/ssl/vacuula.cnf" "$INSTALL_DIR/ssl/vacuula.cnf"
 
 cp -r "$ROOT_DIR/app/dist" "$INSTALL_DIR/web"
 

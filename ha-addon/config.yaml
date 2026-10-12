@@ -1,0 +1,17 @@
+# config for Home Assistant add-on
+name: Vacuula
+version: "latest"
+slug: vacuula
+description: Vacuula server
+url: "https://github.com/vacuula/vacuula"
+arch:
+  - aarch64
+  - amd64
+init: false
+host_network: true
+boot: auto
+image: "ghcr.io/vacuula/vacuula"
+map:
+  - type: addon_config
+    read_only: false
+    path: /server/data

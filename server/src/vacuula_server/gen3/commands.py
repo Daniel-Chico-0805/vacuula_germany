@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime, timezone
 import logging
 from vacuula_server.db import get_session
-from vacuula_server.generation import get_robot_by_serial
+from vacuula_server.generation import get_robot_by_serial, get_gen3_robot_data
 import json
 import time
 
@@ -27,11 +27,11 @@ def rfc822_date() -> str:
 def sign_cmd(robot_serial: str, cmd: str):
     date = rfc822_date()
 
-    robot = get_robot_by_serial(robot_serial)
-    if not robot:
-        logger.error("Robot with serial %s not found in database", robot_serial)
+    gen3_data = get_gen3_robot_data(robot_serial)
+    if not gen3_data:
+        logger.error("Gen3 data not found for serial %s", robot_serial)
         return ""
-    password = robot.password
+    password = gen3_data.password
 
     if not password:
         logger.warning("No password found for robot %s, using empty string", robot_serial)

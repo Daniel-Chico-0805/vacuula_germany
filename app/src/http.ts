@@ -1,10 +1,6 @@
 import axios from "axios";
 import i18n from "./i18n";
-// import type { PersistentMap, QuickRobotInfo } from "./types/robot";
-import { EVENT_CALLBACKS } from "./http/events";
 import { Neato, type QuickRobotInfo } from "./types";
-import type * as Gen3 from './types/neato/gen3'
-import type * as Gen4 from './types/neato/gen4'
 import type { NoGoLine, VacuulaMapData, Zone } from "./components/map/types";
 
 declare module 'axios' {
@@ -25,7 +21,7 @@ export interface ServerInfo {
 // let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
 const instance = axios.create({
-  baseURL: `http://${location.host}/api`, // IMPORTANT: keep like this for now, this will work perfectly when built and in dev. currently some issues with the vite proxy, will fix it after initial release!!
+  baseURL: `${location.origin}/api`, 
 });
 
 export type LoadingState = { isLoading: boolean; message?: string };

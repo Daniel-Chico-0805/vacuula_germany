@@ -1,6 +1,6 @@
 import styles from './home.module.scss'
 import { useMascot } from '../../mascot'
-import { MdAutoAwesome, MdCleaningServices, MdError, MdOutlineHealthAndSafety, MdWarning } from 'react-icons/md'
+import { MdAutoAwesome, MdCleaningServices, MdError, MdMotionPhotosAuto, MdOutlineHealthAndSafety, MdWarning } from 'react-icons/md'
 import { IoMdPause, IoMdPlay } from 'react-icons/io'
 import { TbAdjustments, TbLeaf, TbHome } from 'react-icons/tb'
 import { FaBell, FaFan, FaStop } from 'react-icons/fa'
@@ -8,7 +8,7 @@ import { HiMap } from "react-icons/hi2";
 import { CleaningCategory, CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { useEffect, useState } from 'react'
 import Drawer from '../../components/drawer/drawer'
-import { FaHouse } from 'react-icons/fa6'
+import { FaGaugeHigh, FaHouse } from 'react-icons/fa6'
 import { BiTargetLock } from "react-icons/bi";
 import { useApp } from '../../context/useApp'
 import TimeAgo from 'react-timeago'
@@ -26,7 +26,7 @@ import { Http } from '../../http'
 import type { NoGoLine, Zone } from '../../components/map/types'
 import { usePersistentMaps } from '../../loaders/resources'
 import { fetchAllGen3Boundaries, getCachedZones } from '../../loaders/gen3Boundaries'
-import { isDocked } from '../../components/topbar/robotInfo'
+import { isDocked, isGen4D10 } from '../../components/topbar/robotInfo'
 
 
 interface AlertCardProps {
@@ -120,7 +120,6 @@ export default function Home() {
 
     const [boundaries, setBoundaries] = useState<(NoGoLine | Zone)[]>([])
     useEffect(() => {
-        console.log('promotedFloorplan', promotedFloorplan)
         if (!promotedFloorplan) return
         Http.getBoundaries(robot.serial, promotedFloorplan.id).then(res => setBoundaries(res.data))
     }, [promotedFloorplan])
@@ -249,9 +248,15 @@ export default function Home() {
                             {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.NORMAL && (<CtrlBtn icon={<MdCleaningServices color='var(--accent)' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.GENTLE)} label={t('modes.normal')} />)}
                             {gen4__navigationMode === Neato.Gen4.CleaningNavigationMode.GENTLE && (<CtrlBtn icon={<MdOutlineHealthAndSafety color='var(--warn)' size={22} />} onClick={() => gen4__setNavigationMode(Neato.Gen4.CleaningNavigationMode.NORMAL)} label={t('modes.gentle')} />)}
 
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.MAX)} label={t('modes.eco')} />)}
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.MAX && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.TURBO)} label={t('modes.max')} />)}
-                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.TURBO && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.ECO)} label={t('modes.turbo')} />)}
+                            {/* TODO: verify hardware in other gen4 robots, read more at the "isGen4D10" func */}
+                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.ECO && (<CtrlBtn icon={<TbLeaf size={22} color='lime' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.TURBO)} label={t('modes.eco')} />)}
+                            {gen4__cleaningMode === Neato.Gen4.CleaningMode.TURBO && (<CtrlBtn icon={<FaFan size={22} color='orange' />} onClick={() => gen4__setCleaningMode(isGen4D10(robot) ? Neato.Gen4.CleaningMode.MAX : Neato.Gen4.CleaningMode.ECO)} label={t('modes.turbo')} />)}
+                            {isGen4D10(robot) && (
+                                <>
+                                    {gen4__cleaningMode === Neato.Gen4.CleaningMode.MAX && (<CtrlBtn icon={<FaGaugeHigh size={22} color='orange' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.AUTO)} label={t('modes.max')} />)}
+                                    {gen4__cleaningMode === Neato.Gen4.CleaningMode.AUTO && (<CtrlBtn icon={<MdMotionPhotosAuto size={22} color='purple' />} onClick={() => gen4__setCleaningMode(Neato.Gen4.CleaningMode.ECO)} label={t('modes.auto')} />)}
+                                </>
+                            )}
                         </>
                     )}
 

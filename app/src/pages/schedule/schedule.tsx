@@ -8,7 +8,6 @@ import Input from '../../components/input/input'
 import Button from '../../components/button/button'
 import { GEN3_COMMANDS } from '../../http/gen3'
 import { CleaningMode } from '../../types/neato/gen3/state'
-import { Http, type ServerInfo } from '../../http'
 import { useRobot } from '../../context/useRobot'
 import { RobotDay } from '../../types/neato/gen3/api'
 import { RobotType } from '../../types'
@@ -100,7 +99,6 @@ export default () => {
                         )}
                     </div>
                     <Input type="switch" skipSection={true} value={schedule.enabled} onChange={() => {
-                        console.log('schedule', schedule)
                         let cmd = GEN3_COMMANDS.enableSchedule;
                         if (schedule.enabled) cmd = GEN3_COMMANDS.disableSchedule;
                         cmd(robot.serial).then(() => getSchedule());
@@ -119,7 +117,7 @@ export default () => {
                 {schedule.events?.map((item, i) => {
                     const local = toLocal(item)
                     return (
-                        <div key={i} className={styles.item} onClick={() => alert(item)}>
+                        <div key={i} className={styles.item}>
                             <div className={styles.info}>
                                 <span>{local.time}</span>
                                 <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(local.day)}`), mode: CleaningMode[item.mode] })}</span>

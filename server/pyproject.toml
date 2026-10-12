@@ -1,9 +1,10 @@
 [project]
 name = "vacuula-server"
-version = "1.0.0-b16"
+version = "1.0.0-b17"
 description = "Install Vacuula on your Neato robot"
 authors = [
-    {   name = "Philip", email = "philipmagyar@proton.me" }
+    {   name = "Philip", email = "philipmagyar@proton.me" },
+    {   name = "Jairo", email = "diasjairo@hotmail.com" }
 ]
 requires-python = "==3.14.*"
 dependencies = [

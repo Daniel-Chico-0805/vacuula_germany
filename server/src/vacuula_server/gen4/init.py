@@ -90,7 +90,7 @@ def handle_robot(conn, addr):
 
             json_count += 1 # TODO: verify and remove that a counter does not need to be here, after initial release
             if json_count == 1 and "signature" in msg:
-                handle_login(rc, msg)
+                threading.Thread(target=handle_login, args=(rc, msg), daemon=True).start()
                 hb_t = threading.Thread(target=heartbeat_thread, args=(rc,), daemon=True)
                 hb_t.start()
                 continue
@@ -102,7 +102,7 @@ def handle_robot(conn, addr):
             elif msg_type == "response":
                 robot_response(rc, msg)
             elif msg_type == "request":
-                roboot_request(rc, msg_id, msg)
+                threading.Thread(target=roboot_request, args=(rc, msg_id, msg), daemon=True).start()
             else:
                 logger.warning("unknown msg type %r from %s: %s", msg_type, rc.serial or addr, json.dumps(msg)[:200])
 
