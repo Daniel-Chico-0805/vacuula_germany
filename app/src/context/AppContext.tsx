@@ -187,8 +187,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             } else if (robot.type === RobotType.NeatoGen4) {
                 GEN4_COMMANDS.getRobotState(robot.serial).then((res) => {
                     const body = res.data.body;
-                    const label_serial = robots[robot.serial].label_serial
-                    if (!label_serial) return; // TODO? error?
                     setRobot(cur => cur ? {
                         ...cur,
                         type: RobotType.NeatoGen4,
@@ -197,7 +195,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
                         errors: body.errors != null ? body.errors : undefined,
                         state: body.state,
                         action: body.action,
-                        label_serial
                     } : cur)
                 })
             }

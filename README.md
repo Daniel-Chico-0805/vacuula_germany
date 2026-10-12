@@ -51,7 +51,8 @@ _custom server for the undead robot vacuum cleaners_
 | MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
 
 > [!NOTE]
-> Do you have an Gen4 robot that is "rainbow-ing"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
+> Do you have an Gen4 robot that is in "$`\color{#A020F0}{\textsf{r}}\color{#802DF6}{\textsf{a}}\color{#6037FA}{\textsf{i}}\color{#403FFD}{\textsf{n}}\color{#2044FE}{\textsf{b}}\color{#0047FF}{\textsf{o}}\color{#3C3EE6}{\textsf{w}}\ \color{#7839D2}{\textsf{m}}\color{#AA37BE}{\textsf{o}}\color{#D23AAF}{\textsf{d}}\color{#FF3FA4}{\textsf{e}}`$"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
+
 
 # Repair my robot!
 
@@ -89,8 +90,17 @@ We have made an easy to use installer to set your robot up!
 
 > Dowload the latest version here for your OS here
 
-| [Windows]() | [Linux]() | [Mac]() |
-|---------|-------|-----|
+| [Windows][windows] | [Linux][linux] | [Mac (M1 and newer)][mac-arm] | [Mac (Intel based)][mac-intel] |
+|--------------------|----------------|-------------------------------|--------------------------------|
+| Win 10, Win 11     | Ubuntu         |                               | 15.4                           |
+| Gen3, Gen4         | Gen3, Gen4     |                               | Gen3 (Gen4 does not work)      |
+
+<i>Download by clicking the os link, table shows tested/verified systems</i>
+
+[windows]:   https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-windows.exe
+[linux]:     https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-linux.AppImage
+[mac-arm]:   https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-macos-arm64.zip
+[mac-intel]: https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-macos-intel.zip
 
 ![Vacuula installer main screen](pics/guide/installer.png)
 
