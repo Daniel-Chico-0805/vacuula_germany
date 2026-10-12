@@ -4,12 +4,6 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGE_CODES } from './languages'
 
 import en from './locales/en.json'
-import sv from './locales/sv.json'
-import pt from './locales/pt.json'
-import fr from './locales/fr.json'
-import de from './locales/de.json'
-import es from './locales/es.json'
-import it from './locales/it.json'
 
 // Key under which the chosen language is persisted in localStorage.
 export const LANGUAGE_STORAGE_KEY = 'vacuula.language'
@@ -20,12 +14,6 @@ i18n
     .init({
         resources: {
             en: { translation: en },
-            sv: { translation: sv },
-            pt: { translation: pt },
-            fr: { translation: fr },
-            de: { translation: de },
-            es: { translation: es },
-            it: { translation: it },
         },
         fallbackLng: DEFAULT_LANGUAGE,
         supportedLngs: SUPPORTED_LANGUAGE_CODES,
