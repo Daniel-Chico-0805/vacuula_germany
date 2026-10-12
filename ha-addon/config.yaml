@@ -1,6 +1,6 @@
 # config for Home Assistant add-on
 name: Vacuula
-version: "latest"
+version: "1.0.0-b17" # temporary until release
 slug: vacuula
 description: Vacuula server
 url: "https://github.com/vacuula/vacuula"
