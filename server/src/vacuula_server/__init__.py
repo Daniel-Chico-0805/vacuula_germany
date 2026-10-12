@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from vacuula_server.constants import APP_VERSION
+from vacuula_server.env import GEN3_ENABLED, GEN4_ENABLED, MDNS_ENABLED
 import vacuula_server.gen3.init 
 import vacuula_server.gen4.init
 import vacuula_server.handlers.init
@@ -21,12 +22,17 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Starting Vacuula Server %s", APP_VERSION)
     ensure_ssl_certificate()
-    threading.Thread(target=vacuula_server.gen3.init.start, daemon=True).start()
-    threading.Thread(target=vacuula_server.gen4.init.start, daemon=True).start()
+    if GEN3_ENABLED:
+        threading.Thread(target=vacuula_server.gen3.init.start, daemon=True).start()
+    if GEN4_ENABLED:
+        threading.Thread(target=vacuula_server.gen4.init.start, daemon=True).start()
+
     threading.Thread(target=vacuula_server.handlers.init.start, daemon=True).start()
 
-    mdns = MDNSAdvertiser()
-    mdns.start()
+    mdns: MDNSAdvertiser | None = None
+    if MDNS_ENABLED:
+        mdns = MDNSAdvertiser()
+        mdns.start()
 
     try:
         while True:
@@ -34,7 +40,8 @@ def main():
     except KeyboardInterrupt:
         logger.info("Server stopping")
     finally:
-        mdns.stop()
+        if mdns is not None:
+            mdns.stop()
         logger.info("Server stopped")
 
 

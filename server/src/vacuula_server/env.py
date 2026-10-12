@@ -1,41 +1,75 @@
+import json
 import os
 import socket
+from pathlib import Path
 
-DOCKER_HOST_NAME = "host.docker.internal"
+DOCKER_HOST_NAME = "host.docker.internal"  # this is probably not needed soon?
+HA_OPTIONS_PATH = Path(os.environ.get("HA_OPTIONS_PATH", "/data/options.json"))
 
-# Gen3 cannot have its port modified, it is hardcoded to 443. You can make the robot connect and accept commands,
-# however if that works then the maps upload will fail, if you make the maps upload work, then the connection will fail.
-DEFAULT_GEN4_PORT = 3443
-DEFAULT_VACUULA_PORT = 80
+
+def _load_ha_options() -> dict:
+    """Load Home Assistant add-on options, if running as an add-on."""
+    try:
+        with HA_OPTIONS_PATH.open() as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as e:
+        raise ValueError(f"Could not read Home Assistant options at {HA_OPTIONS_PATH}: {e}")
+
+
+_HA_OPTIONS = _load_ha_options()
+
+
+def _get_raw(name: str):
+    value = os.environ.get(name)
+    if value is not None and value.strip() != "":
+        return value
+    return _HA_OPTIONS.get(name)
+
+
+def _get_bool_env(name: str, default: bool) -> bool:
+    value = _get_raw(name)
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    if isinstance(value, bool):
+        return value
+    value_lower = str(value).lower()
+    if value_lower in ("true", "1", "yes"):
+        return True
+    elif value_lower in ("false", "0", "no"):
+        return False
+    raise ValueError(f"{name} must be a boolean (true/false), got {value!r}")
 
 
 def _get_int_env(name: str, default: int) -> int:
-    value = os.environ.get(name)
-    if value is None or value.strip() == "":
+    value = _get_raw(name)
+    if value is None or (isinstance(value, str) and value.strip() == ""):
         return default
     try:
         return int(value)
-    except ValueError:
-        raise ValueError(f"Environment variable {name} must be an integer, got {value!r}")
+    except (ValueError, TypeError):
+        raise ValueError(f"{name} must be an integer, got {value!r}")
 
 
-GEN4_PORT: int = _get_int_env("GEN4_PORT", DEFAULT_GEN4_PORT)
-VACUULA_PORT: int = _get_int_env("VACUULA_PORT", DEFAULT_VACUULA_PORT)
+# Gen3 cannot have its port modified, it is hardcoded to 443. You can make the robot connect and accept commands,
+# however if that works then the maps upload will fail, if you make the maps upload work, then the connection will fail.
+GEN4_PORT: int = _get_int_env("GEN4_PORT", 3443)
+VACUULA_PORT: int = _get_int_env("VACUULA_PORT", 80)
+GEN3_ENABLED: bool = _get_bool_env("GEN3_ENABLED", True)
+GEN4_ENABLED: bool = _get_bool_env("GEN4_ENABLED", True)
+MDNS_ENABLED: bool = _get_bool_env("MDNS_ENABLED", True)
 
 # Validations
-if len(set({GEN4_PORT, VACUULA_PORT})) != 2:
+if GEN4_PORT == VACUULA_PORT:
     raise ValueError(
-        f"GEN4_PORT, and VACUULA_PORT must be unique for the server to work"
+        "GEN4_PORT and VACUULA_PORT must be unique for the server to work. "
         f"Got GEN4_PORT={GEN4_PORT}, VACUULA_PORT={VACUULA_PORT}"
     )
-elif GEN4_PORT <= 0 or VACUULA_PORT <= 0:
+if not (1 <= GEN4_PORT <= 65535 and 1 <= VACUULA_PORT <= 65535):
     raise ValueError(
-        f"GEN4_PORT, and VACUULA_PORT must be positive integers"
-        f"Got GEN4_PORT={GEN4_PORT}, VACUULA_PORT={VACUULA_PORT}"
-    )
-elif GEN4_PORT > 65535 or VACUULA_PORT > 65535:
-    raise ValueError(
-        f"GEN4_PORT, and VACUULA_PORT must be in port range (1-65535)"
+        "GEN4_PORT and VACUULA_PORT must be in port range (1-65535). "
         f"Got GEN4_PORT={GEN4_PORT}, VACUULA_PORT={VACUULA_PORT}"
     )
 

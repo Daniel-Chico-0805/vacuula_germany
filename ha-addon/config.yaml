@@ -1,6 +1,6 @@
 # config for Home Assistant add-on
 name: Vacuula
-version: "1.0.0-b17" # temporary until release
+version: "1.0.0-b18" # temporary until release
 slug: vacuula
 description: Vacuula server
 url: "https://github.com/vacuula/vacuula"
@@ -11,7 +11,22 @@ init: false
 host_network: true
 boot: auto
 image: "ghcr.io/vacuula/vacuula"
+
 map:
   - type: addon_config
     read_only: false
     path: /server/data
+
+options:
+  GEN4_PORT: 3443
+  VACUULA_PORT: 80
+  GEN3_ENABLED: true
+  GEN4_ENABLED: true
+  MDNS_ENABLED: true
+
+schema:
+  GEN4_PORT: int
+  VACUULA_PORT: int
+  GEN3_ENABLED: bool
+  GEN4_ENABLED: bool
+  MDNS_ENABLED: bool

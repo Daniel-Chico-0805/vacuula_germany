@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections import deque
 import logging
 from vacuula_server.logger import get_log_files
-from zeroconf import Zeroconf, ServiceInfo
+from zeroconf import NonUniqueNameException, Zeroconf, ServiceInfo
 import socket
 from pathlib import Path
 import subprocess
@@ -121,7 +121,15 @@ class MDNSAdvertiser:
         )
 
     def start(self) -> None:
-        self._zeroconf.register_service(self._info)
+        try:
+            self._zeroconf.register_service(self._info)
+        except (NonUniqueNameException):
+            logger.error("mDNS: service name %s is already in use, mDNS advertisement failed", SERVICE_NAME)
+            return
+        except Exception as e:
+            logger.error("mDNS: failed to register service %s: %s", SERVICE_NAME, e)
+            return
+
         logger.info(
             "mDNS: advertising %s at %s:%d",
             SERVICE_NAME,
