@@ -44,7 +44,7 @@
         }
     }
 
-    &.warning, &.invalid {
+    &.warning {
         background: $warn-bg;
 
         .alertIconWrap {
@@ -59,6 +59,14 @@
             background: $warn-icon-bg;
             color: $warn-text;
             border: none;
+        }
+    }
+
+     &.invalid {
+        background: $info-bg;
+
+        .alertTitle {
+            color: $info;
         }
     }
 }

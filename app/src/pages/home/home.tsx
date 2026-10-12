@@ -66,7 +66,8 @@ function Gen4AlertCards({ errors }: { errors: Neato.Gen4.Error[] }) {
                     visible={true}
                     type={error.severity}
                     icon={<MdError size={17} />}
-                    title={t('home.errorTitle')}
+                    // TODO: how to type this in a nice way ?
+                    title={t('home.error.' + error.severity as any)} 
                     sub={error.code}
                     robotType={RobotType.NeatoGen4}
                 />

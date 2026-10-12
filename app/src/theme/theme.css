@@ -43,6 +43,7 @@
   --err-icon-bg: #cc2e38;
   --err-soft: rgba(240, 112, 112, 0.15);
   --info: #66b3ff;
+  --info-bg: #1a4672;
   --violet: #a78bfa;
 
   --overlay: rgba(0, 0, 0, 0.6);
@@ -87,6 +88,7 @@
   --err-icon-bg: #c4474f;
   --err-soft: rgba(232, 138, 138, 0.15);
   --info: #7db6f0;
+  --info-bg: #1a4672;
   --violet: #b39dfa;
 
   --overlay: rgba(0, 0, 0, 0.5);
@@ -127,7 +129,8 @@
   --err-text: #7a1f1f;
   --err-icon-bg: #e05252;
   --err-soft: rgba(209, 63, 63, 0.12);
-  --info: #1f6fd0;
+  --info: #0a458d;
+  --info-bg: #60a3e6;
   --violet: #7c3aed;
 
   --overlay: rgba(0, 0, 0, 0.35);
