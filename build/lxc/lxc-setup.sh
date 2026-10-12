@@ -102,11 +102,11 @@ cp "$ROOT_DIR/build/lxc/vacuula.service" /etc/systemd/system/vacuula.service
 systemctl daemon-reload
 systemctl enable vacuula
 
-# Database migrations
+# Data
 cd "$INSTALL_DIR"
-.venv/bin/alembic upgrade head
+mkdir -p "$INSTALL_DIR/data"
 
-# Perms
+.venv/bin/alembic upgrade head
 chown -R vacuula:vacuula "$INSTALL_DIR/data"
 
 # Start
