@@ -111,6 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const selectRobot = (serial: string) => {
         const target = robots?.[serial]
         if (!robots || !target || !target.connected) return
+        localStorage.setItem('vacuula.selectedRobot', serial)
         connectToRobot(robots, serial, target.type, target.name)
     }
 
@@ -147,7 +148,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         Http.getRobots().then((res) => {
             setRobots(res.data)
-            const firstOnline = Object.entries(res.data).find(([, info]) => info.connected)
+            const last = localStorage.getItem('vacuula.selectedRobot')
+            const entries = Object.entries(res.data)
+            const firstOnline = entries.find(([s, info]) => s === last && info.connected) ?? entries.find(([, info]) => info.connected)
             if (firstOnline) connectToRobot(res.data, firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         });
 

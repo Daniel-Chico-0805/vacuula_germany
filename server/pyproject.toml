@@ -1,6 +1,6 @@
 [project]
 name = "vacuula-server"
-version = "1.0.0-b18"
+version = "1.0.0-b19"
 description = "Install Vacuula on your Neato robot"
 authors = [
     {   name = "Philip", email = "philipmagyar@proton.me" },
