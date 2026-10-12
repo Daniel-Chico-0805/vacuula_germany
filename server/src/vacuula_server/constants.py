@@ -1,19 +1,21 @@
+import sys
+from pathlib import Path
+
+
 # --------------------------------------------------------------------------
 # Application metadata
 # --------------------------------------------------------------------------
 from vacuula_server._build_version import APP_VERSION
 
-import sys
-from pathlib import Path
-
-
+# --------------------------------------------------------------------------
+# Application data directories
+# --------------------------------------------------------------------------
 def _base_dir() -> Path:
     # Inside a venv
     if sys.prefix != sys.base_prefix:
         return Path(sys.prefix).parent
     # fallback working directory
     return Path.cwd()
-
 
 BASE_DIR = _base_dir()
 DATA_DIR = BASE_DIR / "data"
@@ -26,3 +28,12 @@ KEY = SSL_DIR / "privkey.pem"
 CERT_CONFIG = SSL_DIR / "vacuula.cnf"
 
 DB_PATH = DATA_DIR / "vacuula.db"
+
+
+
+# --------------------------------------------------------------------------
+# Application configuration
+# --------------------------------------------------------------------------
+LOG_BACKUP_COUNT = 3
+LOG_TAIL_LINES = 500
+

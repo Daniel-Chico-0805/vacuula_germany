@@ -7,9 +7,7 @@ import { useRobot } from '../../context/useRobot'
 import Button from '../../components/button/button'
 import { FaDiscord, FaGithub } from 'react-icons/fa'
 import { SiBuymeacoffee, SiKofi } from 'react-icons/si'
-import { Http } from '../../http'
 import { GEN3_COMMANDS } from '../../http/gen3'
-import type { UseState } from '../map/types'
 import { useTranslation } from 'react-i18next'
 import { APP_LANGUAGES, DEFAULT_LANGUAGE } from '../../i18n/languages'
 import { THEME_MODES, useTheme, type ThemeMode } from '../../theme'
@@ -17,6 +15,8 @@ import { UNITS, useUnits, type Units } from '../../units'
 import { MASCOTS, useMascot } from '../../mascot'
 import { GrCertificate } from 'react-icons/gr'
 import { VscFeedback } from 'react-icons/vsc'
+import { FaFileLines } from 'react-icons/fa6'
+import type { UseState } from '../../components/map/types'
 
 export default () => {
     const { t, i18n } = useTranslation()
@@ -135,6 +135,8 @@ export default () => {
 
                         <Button icon={<GrCertificate size={20} />} text={t('settings.downloadCert')} style='secondary' onClick={() => window.open("/api/cert")}/>
                         <Button icon={<VscFeedback size={20} />} text={t('settings.giveFeedback')} style='secondary' onClick={() => window.open("https://feedback.vacuula.phma.dev/")}/>
+                        
+                        <Button icon={<FaFileLines size={20} />} text={t('settings.downloadLogs')} style='secondary' onClick={() => window.open("/api/log/full?download=true")}/>
                     </div>
                 </Input>
 

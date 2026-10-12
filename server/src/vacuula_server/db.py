@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
@@ -10,6 +11,7 @@ from vacuula_server.constants import DB_PATH
 if typing.TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
@@ -32,6 +34,7 @@ def get_session() -> typing.Generator[Session, None, None]:
     finally:
         session.close()
 
+# TODO: fix commit stuff
 def db_commit2(session: Session, *instances):
     try:
         for instance in instances:
@@ -40,8 +43,7 @@ def db_commit2(session: Session, *instances):
         return True
     except Exception as e:
         session.rollback()
-        # TODO: logger.exception("DB commit failed")
-        # req.send_internal_error()
+        logger.exception("DB commit failed")
         return False
 
 def db_commit(session: Session, req: RouterHandler, *instances):
@@ -52,7 +54,7 @@ def db_commit(session: Session, req: RouterHandler, *instances):
         return True
     except Exception as e:
         session.rollback()
-        # TODO: logger.exception("DB commit failed")
+        logger.exception("DB commit failed on request %s %s", req.command, req.path)
         req.send_internal_error()
         return False
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from http.server import BaseHTTPRequestHandler
+import logging
 from vacuula_server.constants import BASE_DIR
 from vacuula_server.handlers.route_matcher import BrainslugHandler, BEEHIVE_ROUTES, NUCLEO_ROUTES, APP_ROUTES, S3_ROUTES
 import json
@@ -16,6 +17,8 @@ WEB_ROOT_RESOLVED = WEB_ROOT.resolve()
 # becomes stale the instant the server restarts (e.g. after a deploy),
 # even if max-age hasn't expired yet.
 SERVER_BOOT_ID = uuid.uuid4().hex[:12]
+
+logger = logging.getLogger(__name__)
 
 
 def _is_within_web_root(path: Path) -> bool:
@@ -42,10 +45,8 @@ class RouterHandler(BaseHTTPRequestHandler):
         """Handle CORS preflight requests"""
         self.send_ok()
 
-    # TODO - add better logging - default is good enough for initial release
-    # def log_message(self, format, *args):
-    #     # Silence default logging
-    #     return
+    def log_message(self, format, *args):
+        logger.info("%s - - [%s] %s" % (self.client_address[0], self.log_date_time_string(), format % args))
 
     def read_data(self):
         try:
@@ -160,7 +161,7 @@ class RouterHandler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         self.route()
 
-    def send_response_data(self, content, close=True, status=200, content_type="application/json"):
+    def send_response_data(self, content, close=True, status=200, content_type="application/json", cache_control: str | None = None, content_disposition: str | None = None):
         if isinstance(content, (dict, list)):
             content = json.dumps(content).encode("utf-8")
         elif isinstance(content, str):
@@ -169,6 +170,10 @@ class RouterHandler(BaseHTTPRequestHandler):
         self.send_response(status)
 
         self.send_header("Content-Type", content_type)
+        if cache_control is not None:
+            self.send_header("Cache-Control", cache_control)
+        if content_disposition is not None:
+            self.send_header("Content-Disposition", content_disposition)
         self.send_header("Content-Length", str(len(content)))
         if close:
             self.send_header("Connection", "close")
@@ -180,6 +185,11 @@ class RouterHandler(BaseHTTPRequestHandler):
         if not close:
             self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
+    def send_text(self, data: bytes):
+        self.send_response_data(data, close=True, status=200, content_type="text/plain; charset=utf-8", cache_control="no-store")
+
+    def download_text(self, data: bytes, filename: str, content_type: str = "text/plain; charset=utf-8"):
+        self.send_response_data(data, close=True, status=200, content_type=content_type, content_disposition=f'attachment; filename="{filename}"')
 
     def send_error_response(self, status, message):
         self.send_response_data({"error": message}, True, status=status)

@@ -1,10 +1,11 @@
 from __future__ import annotations
+from http.server import ThreadingHTTPServer
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from vacuula_server.constants import DATA_DIR
+from vacuula_server.constants import DATA_DIR, LOG_BACKUP_COUNT
 
 def get_log_file_path() -> Path:
     return DATA_DIR / "vacuula.log"
@@ -32,10 +33,27 @@ def setup_logging() -> None:
     handler = RotatingFileHandler(
         log_file,
         maxBytes=2 * 1024 * 1024,
-        backupCount=3,
+        backupCount=LOG_BACKUP_COUNT,
         encoding="utf-8",
     )
 
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(formatter)
     root_logger.addHandler(handler)
+
+def get_log_files() -> list[Path]:
+    base = get_log_file_path()
+    files = [base.with_name(f"{base.name}.{i}") for i in range(LOG_BACKUP_COUNT, 0, -1)]
+    files.append(base)
+    return [f for f in files if f.exists()]
+
+
+logger = logging.getLogger(__name__)
+
+
+class LoggingThreadingHTTPServer(ThreadingHTTPServer):
+    def handle_error(self, request, client_address):
+        logger.exception(
+            "Unhandled exception while processing HTTP request from %s",
+            client_address,
+        )

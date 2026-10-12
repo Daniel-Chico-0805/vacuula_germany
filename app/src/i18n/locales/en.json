@@ -179,6 +179,7 @@
     "mascot_robot": "Robot",
     "downloadCert": "Download cert",
     "giveFeedback": "Give feedback",
+    "downloadLogs": "Download logs",
     "comingSoon": "Lots more coming soon - stay tuned!"
   },
   "serverUnreachable": {

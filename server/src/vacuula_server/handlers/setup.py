@@ -1,5 +1,7 @@
 from __future__ import annotations
+from collections import deque
 import logging
+from vacuula_server.logger import get_log_files
 from zeroconf import Zeroconf, ServiceInfo
 import socket
 from pathlib import Path
@@ -8,7 +10,7 @@ import subprocess
 from typing import TYPE_CHECKING
 
 from vacuula_server.env import VACUULA_PORT, get_host_ip
-from vacuula_server.constants import APP_VERSION, CERT, CERT_CONFIG, KEY, SSL_DIR
+from vacuula_server.constants import APP_VERSION, CERT, CERT_CONFIG, KEY, SSL_DIR, LOG_TAIL_LINES
 if TYPE_CHECKING:
     from vacuula_server.handlers.router import RouterHandler
 
@@ -19,6 +21,8 @@ def ensure_ssl_certificate():
     if CERT.exists() and KEY.exists():
         logger.info("SSL certificate and key already exist, skipping generation.")
         return
+    
+    logger.info("Generating self-signed SSL certificate and key.")
 
     SSL_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -31,8 +35,8 @@ def ensure_ssl_certificate():
             "-sha256",
             "-days", "3650",
             "-nodes",
-            "-keyout", str(CERT),
-            "-out", str(KEY),
+            "-keyout", str(KEY),
+            "-out", str(CERT),
             "-config", str(CERT_CONFIG),
         ],
         check=True,
@@ -46,12 +50,49 @@ def get_cert(req: RouterHandler) -> None:
         req.send_internal_error("Failed to read certificate")
         return
 
-    req.send_response(200)
-    req.send_header("Content-Type", "application/x-x509-ca-cert")
-    req.send_header("Content-Disposition", 'attachment; filename="vacuula-ca.crt"')
-    req.send_header("Content-Length", str(len(data)))
-    req.end_headers()
-    req.wfile.write(data)
+    req.download_text(data, "vacuula-ca.crt", content_type="application/x-x509-ca-cert")
+
+def get_log(req: RouterHandler) -> None:
+    """GET /api/log - send last 500 lines of log."""
+    download = '?download=true' in req.path # good enough for now
+    lines: deque[bytes] = deque(maxlen=LOG_TAIL_LINES)
+    try:
+        for path in get_log_files():
+            try:
+                with open(path, "rb") as f:
+                    lines.extend(f)
+            except FileNotFoundError:
+                continue
+    except OSError:
+        logger.exception("Failed to read log")
+        req.send_internal_error("Failed to read log")
+        return
+
+    if download:
+        req.download_text(b"".join(lines), "vacuula.log")
+    else:
+        req.send_text(b"".join(lines))
+
+
+def get_log_full(req: RouterHandler) -> None:
+    """GET /api/log/full - send full log."""
+    download = '?download=true' in req.path # good enough for now
+    chunks: list[bytes] = []
+    try:
+        for path in get_log_files():
+            try:
+                chunks.append(path.read_bytes())
+            except FileNotFoundError:
+                continue
+    except OSError:
+        logger.exception("Failed to read log")
+        req.send_internal_error("Failed to read log")
+        return
+    
+    if download:
+        req.download_text(b"".join(chunks), "vacuula.log")
+    else:
+        req.send_text(b"".join(chunks))
 
 
 # mDNS stuff
