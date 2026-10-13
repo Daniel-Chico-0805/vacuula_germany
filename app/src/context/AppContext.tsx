@@ -157,6 +157,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         events.addEventListener('robots', (event) => {
             const data = JSON.parse(event.data) as QuickRobotInfo
             setRobots(data)
+
+            // only auto select a robot if one is already not selected
+            if (robot) return;
             const last = localStorage.getItem('vacuula.selectedRobot')
             const entries = Object.entries(data)
             const firstOnline = entries.find(([s, info]) => s === last && info.connected) ?? entries.find(([, info]) => info.connected)
