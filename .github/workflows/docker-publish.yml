@@ -103,7 +103,7 @@ jobs:
           context: .
           file: build/docker/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64, linux/arm/v7
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.img.outputs.name }}:${{ steps.parse.outputs.version }}
             ${{ steps.parse.outputs.latest == 'true' && format('{0}:latest', steps.img.outputs.name) || '' }}

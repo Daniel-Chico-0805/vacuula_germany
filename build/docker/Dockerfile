@@ -16,12 +16,7 @@ RUN pnpm vite build
 
 FROM python:3.14-slim AS python-build
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -LsSf "https://astral.sh/uv/0.12.0/install.sh" \
-    | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /uvx /bin/
 
 WORKDIR /server
 
