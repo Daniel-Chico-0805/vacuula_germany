@@ -265,7 +265,7 @@ wheels = [
 
 [[package]]
 name = "vacuula-server"
-version = "1.0.0b24"
+version = "1.0.0b25"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },

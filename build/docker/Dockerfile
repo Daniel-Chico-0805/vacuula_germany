@@ -38,12 +38,16 @@ RUN uv sync --frozen --no-dev --no-editable
 # final server image
 FROM python:3.14-slim
 
-WORKDIR /server
-
 # tools
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl openssl \
+    && apt-get install -y --no-install-recommends curl ca-certificates openssl \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LsSf "https://astral.sh/uv/0.12.0/install.sh" \
+    | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
+
+# server
+WORKDIR /server
 
 ENV PATH="/server/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 
