@@ -129,7 +129,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             await Http.updateRobot(serial, { name })
         } catch (err) {
-            console.error('Failed to update robot name', err)
             setRobot(cur => cur && cur.serial === serial ? { ...cur, name: previousName } : cur)
             setRobots(cur => {
                 if (!cur || !cur[serial]) return cur
@@ -156,7 +155,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const events = new EventSource('/api/events')
         events.addEventListener('robots', (event) => {
-            setRobots(JSON.parse((event as MessageEvent).data))
+            const data = JSON.parse(event.data) as QuickRobotInfo
+            setRobots(data)
+            const last = localStorage.getItem('vacuula.selectedRobot')
+            const entries = Object.entries(data)
+            const firstOnline = entries.find(([s, info]) => s === last && info.connected) ?? entries.find(([, info]) => info.connected)
+            if (firstOnline) connectToRobot(data, firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         })
         events.onerror = (err) => console.error('events stream error:', err)
         return () => events.close()
@@ -187,7 +191,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             } else if (robot.type === RobotType.NeatoGen4) {
                 GEN4_COMMANDS.getRobotState(robot.serial).then((res) => {
                     const body = res.data.body;
-                    setRobot(cur => cur ? {
+                    setRobot(cur => cur?.type === RobotType.NeatoGen4 ? {
                         ...cur,
                         type: RobotType.NeatoGen4,
                         availableCommands: body.available_commands,

@@ -12,11 +12,7 @@ import mimetypes
 WEB_ROOT = BASE_DIR / "web"
 WEB_ROOT_RESOLVED = WEB_ROOT.resolve()
 
-# Generated once, when the module is imported (i.e. once per server run).
-# It's folded into every ETag below, so any response a browser cached
-# becomes stale the instant the server restarts (e.g. after a deploy),
-# even if max-age hasn't expired yet.
-SERVER_BOOT_ID = uuid.uuid4().hex[:12]
+SERVER_BOOT_ID = f"\"{uuid.uuid4().hex[:12]}\""
 
 logger = logging.getLogger(__name__)
 
@@ -68,20 +64,17 @@ class RouterHandler(BaseHTTPRequestHandler):
             self.send_bad_request("Invalid JSON body")
             return None
 
+    # Serve index.html and other files once per boot
+    # Serve files from assets folder with long long cache
+    # hash will change on update, and since index.html is checked per boot, will be good
     def serve_web(self):
-        # Strip /web from the URL
-        relative = self.path.removeprefix("/web")
-        # Ignore query string
-        relative = relative.split("?", 1)[0]
-        # Resolve the requested file safely
+        relative = self.path.removeprefix("/web").split("?", 1)[0]
         requested = (WEB_ROOT / relative.lstrip("/")).resolve()
 
-        # Prevent access outside server/web
         if not _is_within_web_root(requested):
             self.send_not_found()
             return
 
-        # SPA fallback, react router takes over:
         if not requested.is_file():
             if Path(relative).suffix == "":
                 requested = WEB_ROOT_RESOLVED / "index.html"
@@ -89,17 +82,22 @@ class RouterHandler(BaseHTTPRequestHandler):
                 self.send_not_found()
                 return
 
-        # cache
-        cache_control = "public, max-age=3600, must-revalidate"
-        inm = self.headers.get("If-None-Match")
+        parts = requested.relative_to(WEB_ROOT_RESOLVED).parts
+        is_hashed_asset = len(parts) > 1 and parts[0] == "assets"
 
-        if inm and SERVER_BOOT_ID in (tag.strip() for tag in inm.split(",")):
-            self.send_response(304)
-            self.send_header("ETag", SERVER_BOOT_ID)
-            self.send_header("Cache-Control", cache_control)
-            self.send_header("Connection", "close")
-            self.end_headers()
-            return
+        if is_hashed_asset:
+            cache_control = "public, max-age=31536000, immutable"
+        else:
+            cache_control = "no-cache"
+            inm = self.headers.get("If-None-Match")
+            if inm and SERVER_BOOT_ID in (tag.strip() for tag in inm.split(",")):
+                self.send_response(304)
+                self.send_header("ETag", SERVER_BOOT_ID)
+                self.send_header("Cache-Control", cache_control)
+                self.send_header("Content-Length", "0")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                return
 
         try:
             content = requested.read_bytes()
@@ -108,13 +106,7 @@ class RouterHandler(BaseHTTPRequestHandler):
             return
 
         content_type, _ = mimetypes.guess_type(str(requested))
-        if content_type is None:
-            content_type = "application/octet-stream"
-
-        # Re-verify immediately before writing to the socket.
-        if not _is_within_web_root(requested):
-            self.send_not_found()
-            return
+        content_type = content_type or "application/octet-stream"
 
         self.send_response(200)
         self.send_header("Content-Type", content_type)
@@ -123,15 +115,13 @@ class RouterHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", cache_control)
         self.send_header("Connection", "close")
         self.end_headers()
-
         self.wfile.write(content)
         self.wfile.flush()
 
 
-
     # Routing logic
     def route(self):
-        if self.path == "/web" or self.path.startswith("/web/"):
+        if self.path == "/web" or self.path.startswith("/web/") or self.path == "/favicon.ico":
             return self.serve_web()
         accept = self.headers.get("Accept", "")
         

@@ -1,27 +1,18 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './schedule.module.scss'
 import Drawer from '../../components/drawer/drawer'
 
-import type { GetSchedule, ScheduleEvent } from './types'
-import { FaPlus, FaTimes, FaUndo, FaPen, FaCheckCircle, FaCircle, FaTrash } from 'react-icons/fa'
 import Input from '../../components/input/input'
-import { PiBoundingBox } from "react-icons/pi";
-import { biEnum } from '../../types/.helpers'
 import Button from '../../components/button/button'
-import { CleaningMode, CleaningNavigationMode } from '../../types/neato/gen3/state'
 import { Http } from '../../http'
-import { useApp } from '../../context/useApp'
-import { RobotDay } from '../../types/neato/gen3/api'
-import type { UseState } from '../map/types'
 import { GEN4_COMMANDS } from '../../http/gen4'
 import { Neato } from '../../types'
-import type { CommandEvent } from '../../types/neato/gen4'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { dayKey } from '../../i18n/days'
 import { useGetPromotedFloorplan } from '../../utils/floormaps'
 import { useRobot } from '../../context/useRobot'
-import type { NoGoLine, Zone } from '../../components/map/types'
+import type { NoGoLine, UseState, Zone } from '../../components/map/types'
 import { isGen4D10 } from '../../components/topbar/robotInfo'
 
 // For now schduling will be only for cleaning.start for ONE run, later on scheduling can be more advanced
@@ -269,6 +260,7 @@ export default () => {
                             }
                         }).finally(() => {
                             setDrawerOpen(false)
+                            getSchedule()
                         })
                     }} />
 

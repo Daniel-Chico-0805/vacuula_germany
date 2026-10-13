@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from vacuula_server.conn import Gen2Gen3Conn
 from vacuula_server.gen3.commands import send_chunk, build_command
 from vacuula_server.env import GEN4_PORT
 from vacuula_server.constants import APP_VERSION, MAPS_DIR
@@ -204,6 +205,8 @@ def connect_robot(req: RouterHandler, serial: str) -> None:
     client_connections.append(conn)
 
     try:
+        req.wfile.write(b": keepalive\n\n")
+        req.wfile.flush()
         while True:
             # Heartbeat every 15 seconds
             try:
@@ -249,7 +252,7 @@ def post_robot_command(req: RouterHandler, serial: str) -> None:
         if err:
             _send_quietly(lambda: req.send_error_response(502, "Failed to send command to robot"))
             return
-    elif (conn.gen == Generation.GEN3):
+    elif (conn.gen == Generation.GEN3) and isinstance(conn.conn, Gen2Gen3Conn):
         # gen3
         req_id, msg = build_command(serial, data)
         pending_requests[str(req_id)] = slot
