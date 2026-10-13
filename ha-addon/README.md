@@ -51,7 +51,7 @@ _custom server for the undead robot vacuum cleaners_
 | MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
 
 > [!NOTE]
-> Do you have an Gen4 robot that is in "$`\color{#A020F0}{\textsf{r}}\color{#802DF6}{\textsf{a}}\color{#6037FA}{\textsf{i}}\color{#403FFD}{\textsf{n}}\color{#2044FE}{\textsf{b}}\color{#0047FF}{\textsf{o}}\color{#3C3EE6}{\textsf{w}}\ \color{#7839D2}{\textsf{m}}\color{#AA37BE}{\textsf{o}}\color{#D23AAF}{\textsf{d}}\color{#FF3FA4}{\textsf{e}}`$"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
+> Do you have an Gen4 robot that is in "<span style="color: #A020F0;">r</span><span style="color: #802DF6;">a</span><span style="color: #6037FA;">i</span><span style="color: #403FFD;">n</span><span style="color: #2044FE;">b</span><span style="color: #0047FF;">o</span><span style="color: #3C3EE6;">w</span> <span style="color: #7839D2;">m</span><span style="color: #AA37BE;">o</span><span style="color: #D23AAF;">d</span><span style="color: #FF3FA4;">e</span>"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
 
 
 
