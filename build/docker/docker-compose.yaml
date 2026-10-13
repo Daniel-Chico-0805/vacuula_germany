@@ -1,10 +1,13 @@
 services:
   vacuula:
-    image: vacuula:latest # if you want a spesific version, you can change "latest" to the version number
+    image: ghcr.io/vacuula/vacuula:latest # if you want a spesific version, you can change "latest" to the version number
     network_mode: host
-    environment:
-      # GEN4_PORT - the port the gen4 robots will use to connect to the server
-      # VACUULA_PORT - the port the web interface will be available on
+    environment: # edit based on your needs
+      - GEN4_PORT=3443
+      - VACUULA_PORT=80
+      - GEN3_ENABLED=True
+      - GEN4_ENABLED=True
+      - MDNS_ENABLED=True
     volumes:
       - vacuula-data:/server/data
     restart: unless-stopped
