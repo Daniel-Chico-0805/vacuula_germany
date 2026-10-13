@@ -29,26 +29,23 @@ _custom server for the undead robot vacuum cleaners_
 
 > Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
 
-| Gen1    | Gen2                   | Gen3 | Gen4     |
-|---------|------------------------|------|----------|
-| No WiFi | BotVac Connected: WIP¹ | D3 ✅ | D800 ✅   |
-|         |                        | D4 ✅ | D8     ✅ |
-|         |                        | D5 ✅ | D9     ✅ |
-|         |                        | D6 ✅ | D10   ✅  |
-|         |                        | D7 ✅ |          |
+- Gen1 - No wifi
+- Gen2 - BotVac Connected 🚧
+- Gen3 - D3 ✅ D4 ✅ D5 ✅ D6 ✅ D7 ✅
+- Gen4 - D800 ✅ D8 ✅ D9 ✅ D10 ✅
 
 <i>Your robot not listed here? Get in touch!</i>
 <br><i>¹Sadly we were not able to fit the OG BotVac Connected into the initial release, sorry about this, support for this robot is in the works and here very soon!</i>
 
-| Feature          | Status              |   | Feature              | Status |
-|------------------|---------------------|---|----------------------|--------|
-| Setup/Status     | ✅                   |   | Notifications        | 🚧     |
-| Maps             | ✅                   |   | Home Assistant       | 🚧     |
-| Historical runs  | ✅                   |   | Drag to clean "here" | 🚧     |
-| Schedule         | ✅                   |   | Custom sounds        | 🚧     |
-| Settings         | ✅                   |   | QoL improvements      | 🚧     |
-| Zones/NoGo Lines | ✅                   |   | "Next day" Schedule  | 🚧     |
-| MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                      |        |
+| Feature          | Status               |   | Feature                | Status |
+|------------------|----------------------|---|------------------------|--------|
+| Setup/Status     | ✅                   |   | Notifications          | 🚧     |
+| Maps             | ✅                   |   | Home Assistant Entity  | 🚧     |
+| Historical runs  | ✅                   |   | Drag to clean "here"   | 🚧     |
+| Schedule         | ✅                   |   | Custom sounds          | 🚧     |
+| Settings         | ✅                   |   | QoL improvements       | 🚧     |
+| Zones/NoGo Lines | ✅                   |   | "Next day" Schedule    | 🚧     |
+| MultiZones       | Gen4 ✅ Gen2/Gen3 🚧 |   |                        |        |
 
 > [!NOTE]
 > Do you have an Gen4 robot that is in "$`\color{#A020F0}{\textsf{r}}\color{#802DF6}{\textsf{a}}\color{#6037FA}{\textsf{i}}\color{#403FFD}{\textsf{n}}\color{#2044FE}{\textsf{b}}\color{#0047FF}{\textsf{o}}\color{#3C3EE6}{\textsf{w}}\ \color{#7839D2}{\textsf{m}}\color{#AA37BE}{\textsf{o}}\color{#D23AAF}{\textsf{d}}\color{#FF3FA4}{\textsf{e}}`$"? Different colors flashing and the robot does not start? Contact us in the [discord](https://discord.gg/PAgwhWvyD8). There we can help you repair your robot!
@@ -57,15 +54,15 @@ _custom server for the undead robot vacuum cleaners_
 # Repair my robot!
 
 For the repair there is two part
-1. [Setup a server](#setup-server) <i>(we are looking into a community server, however that is not done in time for initial release, so you will need to set a server up)</i>
+1. [Setup a server](#set-up-server) <i>(we are looking into a community server, however that is not done in time for initial release, so you will need to set a server up)</i>
 2. [Configure the robot](#configure-the-robot)
 
-## Setup server
+## Set up server
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
 
 There is many ways to set this server up, if you are using Home Assistant we recommend to use the App Store repo we made, if not using Home Assistant, then Docker Compose is recommended.
-We provide you with a couple of ways to setup the server
+We provide you with a couple of ways to set up the server
 - [Docker Compose (see below)](#docker-compose)
 - As an App in Home Assistant
   - [![Open home assistant app store with link to vacuula repo](https://my.home-assistant.io/badges/supervisor_store.svg)](https://my.home-assistant.io/redirect/supervisor_store/?repository_url=https%3A%2F%2Fgithub.com%2Fvacuula%2Fvacuula)
@@ -77,7 +74,7 @@ We provide you with a couple of ways to setup the server
 2. Download [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or via `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to save file onto server
 3. Run `docker compose up -d`
 
-- The server is configured by [envoriment variables](#configure-server)
+- The server is configured by [environment variables](#configure-server)
 - To see logs do `docker compose logs vacuula`
 - To stop vacuula `docker compose down`
 - To start vacuula `docker compose up -d`
