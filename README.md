@@ -64,7 +64,7 @@ For the repair there is two part
 
 Since the server needs to always be on to work properly, you need some dedicated hardware for it. If you do not already have something to run the server on, please read about [hardware on the FAQ](./FAQ.md#dedicated-hardware)
 
-There is many ways to set this server up, however our recommended way is via Docker Compose. For users looking for standalone/lxc, please see [here](./build/lxc/lxc.md)
+There is many ways to set this server up, if you are using Home Assistant we recommend to use the App Store repo we made, if not using Home Assistant, then Docker Compose is recommended.
 We provide you with a couple of ways to setup the server
 - [Docker Compose (see below)](#docker-compose)
 - As an App in Home Assistant
@@ -92,7 +92,7 @@ We have made an easy to use installer to set your robot up!
 
 | [Windows][windows] | [Linux][linux] | [Mac (M1 and newer)][mac-arm] | [Mac (Intel based)][mac-intel] |
 |--------------------|----------------|-------------------------------|--------------------------------|
-| Win 10, Win 11     | Ubuntu         |                               | 15.4                           |
+| Win 10, Win 11     | Debian-based   |                               | 15.4                           |
 | Gen3, Gen4         | Gen3, Gen4     |                               | Gen3 (Gen4 does not work)      |
 
 <i>Download by clicking the os link, table shows tested/verified systems</i>
