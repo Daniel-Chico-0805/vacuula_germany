@@ -2,8 +2,8 @@
 [buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
 
 <div align="center">
-  <img alt="vacuula Logo" src="./pics/logo.svg" width="250">
-  <h1>vacuula</h1>
+  <img alt="Vacuula Logo" src="./pics/logo.svg" width="250">
+  <h1>Vacuula</h1>
 </div>
 
 <div align="center">
@@ -65,7 +65,8 @@ There are many ways to set this server up. If you are using Home Assistant, we r
 We provide you with a couple of ways to set up the server
 - [Docker Compose (see below)](#docker-compose)
 - As an App in Home Assistant
-  - [![Open home assistant app store with link to vacuula repo](https://my.home-assistant.io/badges/supervisor_store.svg)](https://my.home-assistant.io/redirect/supervisor_store/?repository_url=https%3A%2F%2Fgithub.com%2Fvacuula%2Fvacuula)
+  - [![Open home assistant app store with link to vacuula repo](https://my.home-assistant.io/badges/supervisor_store.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fvacuula%2Fvacuula)
+  - [Button above not working? Click here for instructions](./FAQ.md#install-as-an-app-in-home-assistant)
 - [LXC/standalone](./build/lxc/lxc.md)
 
 ### Docker Compose
@@ -113,7 +114,7 @@ We have made an easy to use installer to set your robot up!
 | 443  | Gen3 robots, D3-D7 (Not customizable) |
 | 3443 | Gen4 robots, D8-D10 (Customizable)    |
 
-<i>Gen3 robots sadly require port 443, and if enabled, the vacuula server and webapp are also hosted here for PWAs to work </i>
+<i>Gen3 robots sadly require port 443, and if enabled, the Vacuula server and webapp are also hosted here for PWAs to work </i>
 
 ### Configuration
 | Option       | Default | Info                                                                                        |

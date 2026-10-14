@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import socket
 from vacuula_server.gen3.commands import send_chunk, build_heartbeat
 from vacuula_server.state import robot_connections
 from vacuula_server.handlers.events import notify_robots_changed
@@ -24,6 +25,11 @@ def nucleo_init(req: RouterHandler) -> None:
     if not (gen3_data := get_gen3_robot_data(serial)):
         req.send_not_found("Robot not found")
         return
+
+    sock = req.connection
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, 20_000)
+    sock.settimeout(60)
 
     req.send_response(200)
     req.send_header("Transfer-Encoding", "chunked")

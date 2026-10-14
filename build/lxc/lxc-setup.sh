@@ -33,6 +33,37 @@ detect_version() {
     echo "$version"
 }
 
+NODE_VERSION="${NODE_VERSION:-22.23.3}"
+NODE_DIR="/opt/node-build"
+
+install_node() {
+    local arch
+    case "$(dpkg --print-architecture)" in
+        amd64) arch="x64" ;;
+        arm64) arch="arm64" ;;
+        armhf) arch="armv7l" ;;
+        *) echo "Unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;;
+    esac
+
+    local name="node-v${NODE_VERSION}-linux-${arch}"
+    local base="https://nodejs.org/dist/v${NODE_VERSION}"
+    local tmp
+    tmp="$(mktemp -d)"
+
+    curl -fsSL -o "$tmp/${name}.tar.xz" "$base/${name}.tar.xz"
+    curl -fsSL -o "$tmp/SHASUMS256.txt" "$base/SHASUMS256.txt"
+    (cd "$tmp" && grep " ${name}.tar.xz\$" SHASUMS256.txt | sha256sum -c -)
+
+    rm -rf "$NODE_DIR"
+    mkdir -p "$NODE_DIR"
+    tar -xJf "$tmp/${name}.tar.xz" -C "$NODE_DIR" --strip-components=1
+    rm -rf "$tmp"
+
+    export PATH="$NODE_DIR/bin:$PATH"
+    node --version
+}
+
+
 APP_VERSION="$(detect_version)"
 echo "Installing Vacuula version: $APP_VERSION"
 
@@ -42,9 +73,9 @@ sleep 1
 apt-get update
 apt-get install -y \
     curl \
+    ca-certificates \
     openssl \
-    nodejs \
-    npm
+    xz-utils
 
 # uv
 if ! command -v uv >/dev/null 2>&1; then
@@ -59,8 +90,19 @@ fi
 # Frontend
 cd "$ROOT_DIR/app"
 
-corepack enable
-npm install -g pnpm
+# install node if needed
+if ! command -v node >/dev/null 2>&1; then
+    install_node
+fi
+
+# corepack should always work?
+if command -v corepack >/dev/null 2>&1; then
+    corepack enable
+else # if not, install it this way
+    echo "corepack not found, installing pnpm manually"
+    npm install -g pnpm
+fi
+
 pnpm approve-builds @parcel/watcher
 pnpm install --frozen-lockfile
 pnpm vite build

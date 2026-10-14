@@ -2,8 +2,8 @@
 [buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
 
 <div align="center">
-  <img alt="vacuula Logo" src="https://github.com/vacuula/vacuula/raw/main/pics/logo.svg" width="250">
-  <h1>vacuula</h1>
+  <img alt="Vacuula Logo" src="https://github.com/vacuula/vacuula/raw/main/pics/logo.svg" width="250">
+  <h1>Vacuula</h1>
 </div>
 
 <div align="center">
@@ -66,7 +66,7 @@ _custom server for the undead robot vacuum cleaners_
 | 443  | Gen3 robots, D3-D7 (Not customizable) |
 | 3443 | Gen4 robots, D8-D10 (Customizable)    |
 
-<i>Gen3 robots sadly require port 443, and if enabled, the vacuula server and webapp is also hosted here for PWAs to work </i>
+<i>Gen3 robots sadly require port 443, and if enabled, the Vacuula server and webapp is also hosted here for PWAs to work </i>
 
 
 
