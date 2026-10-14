@@ -100,8 +100,6 @@ We have made an easy to use installer to set your robot up!
 [mac-arm]:   https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-macos-arm64.zip
 [mac-intel]: https://github.com/vacuula/installer/releases/latest/download/VacuulaInstaller-macos-intel.zip
 
-![Vacuula installer main screen](pics/guide/installer.png)
-
 <i>Source code is available at https://github.com/vacuula/installer</i>
 <br><i>If you have a more exotic setup and cannot run this installer in any way - get in touch and we will figure something out!</i>
 
