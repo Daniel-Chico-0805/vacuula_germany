@@ -91,6 +91,7 @@
         "modeMapInfo": "Limpa zonas específicas definidas no mapa.",
         "modeHouseInfo": "Limpa toda a área possível, ignorando zonas e linhas No-Go.",
         "modeSpotInfo": "Limpa uma área específica definida pela altura e largura.",
+        "mapModeHint": "O modo de limpeza Mapa está disponível quando o robot está na base.",
         "height": "Altura",
         "width": "Largura"
     },
@@ -116,6 +117,7 @@
         "noSchedules": "Ainda não tem agendamentos, porque não adicionar um?",
         "addEvent": "Adicionar evento",
         "gen3Summary": "Dia: {{day}} | Modo: {{mode}}",
+        "gen3SummaryZone": "Zona: {{zone}}",
         "gen4Summary": "Agendado {{when}} | Modo {{mode}} | Navegação {{navigation}}",
         "everyday": "Todos os dias",
         "weekends": "Aos fins de semana",
