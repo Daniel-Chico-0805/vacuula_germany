@@ -48,7 +48,7 @@
         "cleaningStandby": "A recarregar, já continuo...",
         "updating": "A atualizar",
         "test": "Teste de diagnóstico",
-        "copyingLogs": "A copiar registos",
+        "copyingLogs": "A copiar logs",
         "recoveringLocation": "A recuperar localização",
         "exploringMap": "A explorar o mapa",
         "acquiringPersistentMapIds": "A obter IDs do mapa",
@@ -190,7 +190,7 @@
         "mascot_robot": "Robot",
         "downloadCert": "Descarregar certificado",
         "giveFeedback": "Deixar feedback",
-        "downloadLogs": "Descarregar registos",
+        "downloadLogs": "Descarregar logs",
         "comingSoon": "Muito mais em breve - fique atento!"
     },
     "serverUnreachable": {
@@ -360,7 +360,7 @@
                 "swup_unsupported_version": "Erro de configuração do servidor ou do ficheiro. Peça ajuda.",
                 "swup_flash_fail": "Reinicie o robot e tente descarregar novamente. Se o problema persistir, peça ajuda.",
                 "swup_success": "Atualização de software concluída",
-                "log_upload_failed": "Falha ao copiar os registos. Peça ajuda.",
+                "log_upload_failed": "Falha ao copiar os logs. Peça ajuda.",
                 "invalid_json": "JSON inválido",
                 "bad_request": "Pedido inválido",
                 "command_not_found": "O comando não existe",
