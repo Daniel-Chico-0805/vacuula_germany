@@ -4,7 +4,7 @@ import styles from './button.module.scss'
 
 interface BaseInputProps {
     text: string,
-    onClick: () => void,
+    onClick?: () => void,
     style: 'primary' | 'secondary' | 'success' | 'fail'
     disabled?: boolean
     icon?: JSX.Element
@@ -19,7 +19,7 @@ export default (prop: ButtonProps) => {
         <button className={`${styles.button} ${styles[prop.style]}`} disabled={prop.disabled} onClick={e => {
             e.preventDefault();
             e.stopPropagation();
-            prop.onClick()
+            prop.onClick?.()
         }}>
             {prop.icon}
             <span>{prop.text}</span>

@@ -91,6 +91,7 @@
         "modeMapInfo": "Cleans specific zones defined on the map.",
         "modeHouseInfo": "Cleans the entire area it can, ignoring zones and no-go lines.",
         "modeSpotInfo": "Cleans a specific area defined by height and width.",
+        "mapModeHint": "Map cleaning mode is available when robot is docked.",
         "height": "Height",
         "width": "Width"
     },
@@ -116,6 +117,7 @@
         "noSchedules": "You don't have any schedules yet, why not add one?",
         "addEvent": "Add event",
         "gen3Summary": "Runs on: {{day}} | Mode: {{mode}}",
+        "gen3SummaryZone": "Zone: {{zone}}",
         "gen4Summary": "Runs {{when}} | {{mode}} mode | {{navigation}} navigation",
         "everyday": "every day",
         "weekends": "on weekends",

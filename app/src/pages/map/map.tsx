@@ -250,15 +250,16 @@ export default () => {
         }
     }
 
+    // TODO: user should be able to customize what modes etc
     const cleanZone = async (zone: Zone) => {
         if (!persistentMap) return
         if (robot.type === RobotType.NeatoGen3) {
-            GEN3_COMMANDS.startCleaningZone(robot.serial, persistentMap, zone.id, Neato.Gen3.CleaningMode.ECO, Neato.Gen3.CleaningNavigationMode.EXTRA_CARE)
+            GEN3_COMMANDS.startCleaningZone(robot.serial, persistentMap, zone.id, Neato.Gen3.CleaningMode.ECO, Neato.Gen3.CleaningNavigationMode.NORMAL)
             return;
         }
         const promotedFloorplan = await getPromotedFloorplan();
         if (!promotedFloorplan) return // TODO: ERROR (will do when i do gen3)
-        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.GENTLE, promotedFloorplan.id, true, [zone.id])
+        GEN4_COMMANDS.startCleaning(robot.serial, Neato.Gen4.CleaningMode.ECO, Neato.Gen4.CleaningNavigationMode.NORMAL, promotedFloorplan.id, true, [zone.id])
     }
 
     return (
@@ -381,6 +382,7 @@ export default () => {
                     <BoundaryDetails
                         map={persistentMaps?.find(p => p.id === persistentMap)}
                         boundary={boundaries.find(b => b.id === activeBoundaryId)!}
+                        docked={isDocked(robot)}
                         deleteBoundary={deleteBoundary}
                         editBoundary={() => {
                             setMode('boundary-edit');
@@ -421,7 +423,7 @@ export default () => {
                                     {('promoted' in (persistentMaps?.find(p => p.id === persistentMap) as Floorplan) ? (persistentMaps?.find(p => p.id === persistentMap) as Floorplan).promoted : true) && (
                                         <>
                                             {(item.type === 'polyline' || item.function === 'nogo') && (<Input type="switch" skipSection={true} value={item.enabled} onChange={() => toggleNoGo(item)} />)}
-                                            {item.type === 'polygon' && ('function' in item ? item.function === 'cleaning' : true) && (<Button style='primary' text={t('map.cleanZone')} onClick={() => cleanZone(item)} />)}
+                                            {item.type === 'polygon' && ('function' in item ? item.function === 'cleaning' : true) && (<Button style='primary' disabled={!isDocked(robot)} text={t('map.cleanZone')} onClick={() => cleanZone(item)} />)}
                                         </>
                                     )}
                                 </div>
@@ -443,6 +445,7 @@ export default () => {
 interface BoundaryDetailsProps {
     map?: Floorplan | Neato.Gen3.PersistentMap
     boundary: NoGoLine | Zone
+    docked: boolean
     editBoundary: (id: string) => void
     deleteBoundary: (id: string) => void
     onCleanZone: (boundary: Zone) => void
@@ -466,7 +469,7 @@ const BoundaryDetails = (props: BoundaryDetailsProps) => {
                     {(props.map && 'promoted' in props.map ? props.map.promoted : true) && (
                         <>
                             {(props.boundary.type === 'polyline' || props.boundary.function === 'nogo') && (<Input type="switch" skipSection={true} value={props.boundary.enabled} onChange={(value) => props.boundary.enabled = value} />)}
-                            {props.boundary.type === 'polygon' && ('function' in props.boundary ? props.boundary.function === 'cleaning' : true) && (<Button style='primary' text={t('map.cleanZone')} onClick={() => props.onCleanZone(props.boundary as Zone)} />)}
+                            {props.boundary.type === 'polygon' && ('function' in props.boundary ? props.boundary.function === 'cleaning' : true) && (<Button style='primary' disabled={!props.docked} text={t('map.cleanZone')} onClick={() => props.onCleanZone(props.boundary as Zone)} />)}
                         </>
                     )}
                 </div>

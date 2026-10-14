@@ -36,6 +36,10 @@ interface AppContextType {
 
     message: string | null
     setMessage: (msg: string | null) => void
+
+
+    // TEMP, todo this better
+    getGen3State: (serial: string, name: string) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -71,11 +75,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => { loadServerInfo() }, [])
 
-    const connectToRobot = (robotsInfo: QuickRobotInfo, serial: string, type: RobotType, name: string) => {
-        setRobot(undefined)
-
-        if (type === RobotType.NeatoGen3) {
-            GEN3_COMMANDS.getRobotState(serial).then((res) => {
+    const getGen3State = (serial: string, name: string) => {
+        GEN3_COMMANDS.getRobotState(serial).then((res) => {
                 setRobot({
                     type: RobotType.NeatoGen3,
                     serial,
@@ -88,6 +89,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     action: res.data.action,
                 })
             })
+    }
+
+    const connectToRobot = (robotsInfo: QuickRobotInfo, serial: string, type: RobotType, name: string) => {
+        setRobot(undefined)
+
+        if (type === RobotType.NeatoGen3) {
+            getGen3State(serial, name)
         } else if (type === RobotType.NeatoGen4) {
             GEN4_COMMANDS.getRobotState(serial).then((res) => {
                 const body = res.data.body
@@ -296,6 +304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCleanings,
 
         updateRobotName,
+        getGen3State
     }
 
     return (

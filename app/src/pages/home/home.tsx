@@ -67,7 +67,7 @@ function Gen4AlertCards({ errors }: { errors: Neato.Gen4.Error[] }) {
                     type={error.severity}
                     icon={<MdError size={17} />}
                     // TODO: how to type this in a nice way ?
-                    title={t('home.error.' + error.severity as any)} 
+                    title={t('home.error.' + error.severity as any)}
                     sub={error.code}
                     robotType={RobotType.NeatoGen4}
                 />
@@ -93,7 +93,7 @@ const BELL_MS = 5 * 2500;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
-    const { lastHeartbeat } = useApp()
+    const { lastHeartbeat, getGen3State } = useApp()
     const { robot } = useRobot();
     const { t } = useTranslation()
     const timeAgoFormatter = useTimeAgoFormatter()
@@ -137,7 +137,9 @@ export default function Home() {
 
     const zoneOptions = (persistentMaps ?? [])
         .filter(m => 'enabled' in m && m.enabled)
-        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: `${m.id}:${z.id}`, label: `${m.name} - ${z.name}` })))
+        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: `${m.id}||:||${z.id}`, label: `${m.name} - ${z.name}` })))
+
+    if (!isDocked(robot) && gen3__cleaningCategory === CleaningCategory.MAP ) gen3__setCleaningCategory(CleaningCategory.HOUSE)
 
     return (
         <div className={styles.home}>
@@ -165,7 +167,10 @@ export default function Home() {
                             robotType={RobotType.NeatoGen3}
                             action={t('home.dismissAlert')}
                             onClick={() => {
-                                GEN3_COMMANDS.dismissCurrentAlert(robot.serial)
+                                GEN3_COMMANDS.dismissCurrentAlert(robot.serial).then((data) => {
+                                    // TODO: type and so!
+                                    if (data.data.result === 'ok') getGen3State(robot.serial, robot.name)
+                                })
                             }}
                         />
                     </>
@@ -302,6 +307,13 @@ export default function Home() {
                                         gen3__cleaningCategory === CleaningCategory.MAP
                                         && (persistentMaps ?? []).filter(m => 'enabled' in m && m.enabled).length === 0
                                     ) cat = CleaningCategory.HOUSE; // fallback to house if no maps exist
+
+                                    // TODO: gen3 has no mutlizone yet
+                                    if (cat === CleaningCategory.MAP && selectedZones.length === 1 && isDocked(robot)) {
+                                        const [mapId, zoneId] = selectedZones[0].split('||:||')
+                                        GEN3_COMMANDS.startCleaningZone(robot.serial, mapId, zoneId, gen3__cleaningMode, gen3__navigationMode)
+                                        return
+                                    }
                                     GEN3_COMMANDS.startCleaning(robot.serial, cat, gen3__cleaningMode, gen3__navigationMode)
 
 
@@ -359,7 +371,7 @@ export default function Home() {
                         type="select"
                         label={t('common.mode')}
                         options={[
-                            { value: CleaningCategory.MAP, label: t('home.map') },
+                            ...(isDocked(robot) ? [{ value: CleaningCategory.MAP, label: t('home.map') }] : []),
                             { value: CleaningCategory.HOUSE, label: t('home.house') },
                             // once again here, we just piggyback off gen3 cleaning category for now, later make its own separate thing! TODO
                             ...(robot.type === RobotType.NeatoGen3 ? [{ value: CleaningCategory.SPOT, label: t('home.spot') }] : []),
@@ -375,7 +387,7 @@ export default function Home() {
 
 
                     {/* Map Settings */}
-                    {gen3__cleaningCategory === CleaningCategory.MAP && (
+                    {gen3__cleaningCategory === CleaningCategory.MAP && isDocked(robot) && (
                         <>
                             {promotedFloorplan && boundaries.length > 0 && (
                                 <>
@@ -455,6 +467,13 @@ export default function Home() {
                         {t('common.ok')}
                     </button>
                 </div>
+                
+                { !isDocked(robot) && (
+                    <span style={{ width: '90%', display: 'flex', margin: 'auto auto 0 auto', paddingTop: '1rem', opacity: 0.5, textAlign: 'center', fontSize: '1.3rem' }}>
+                        {t('home.mapModeHint')}
+                    </span>
+                )}
+
             </Drawer>
 
         </div>

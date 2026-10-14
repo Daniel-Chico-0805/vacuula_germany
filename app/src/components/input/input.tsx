@@ -48,7 +48,7 @@ interface SwitchInputProps {
 
 interface CustomInputProps {
     type: 'custom',
-    children: React.ReactNode
+    children?: React.ReactNode
 }
 
 interface BaseInputProps {

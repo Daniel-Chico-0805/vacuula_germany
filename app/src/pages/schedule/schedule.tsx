@@ -40,7 +40,7 @@ export default () => {
 
     const zoneOptions = (persistentMaps ?? [])
         .filter(m => 'enabled' in m && m.enabled)
-        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: `${m.id}:${z.id}`, label: `${m.name} - ${z.name}` })))
+        .flatMap(m => getCachedZones(robot.serial, m.id).map(z => ({ value: z.id, label: `${m.name} - ${z.name}` })))
 
 
     const [scheduleForm, SetScheduleForm] = useState<ScheduleEvent>({
@@ -53,8 +53,6 @@ export default () => {
         GEN3_COMMANDS.getSchedule(robot.serial).then(res => {
             setSchedule(res.data.data)
         })
-
-        // GEN4_COMMANDS.getSchedule(robot.serial);
     }
 
     useEffect(() => {
@@ -120,7 +118,10 @@ export default () => {
                         <div key={i} className={styles.item}>
                             <div className={styles.info}>
                                 <span>{local.time}</span>
-                                <span className={styles.type}>{t('schedule.gen3Summary', { day: t(`days.${dayKey(local.day)}`), mode: CleaningMode[item.mode] })}</span>
+                                <span className={styles.type}>
+                                    {t('schedule.gen3Summary', { day: t(`days.${dayKey(local.day)}`), mode: CleaningMode[item.mode] })}
+                                    {item.boundary && ` | ${t('schedule.gen3SummaryZone', { zone: item.boundary.name })}`}
+                                </span>
                             </div>
                             <FaTrash onClick={() => removeEvent(i)} />
                         </div>
@@ -179,7 +180,7 @@ export default () => {
                         options={zoneOptions}
                         allowDeselect
                         value={scheduleForm.boundaryId}
-                        onChange={(boundaryId) => updateForm(SetScheduleForm, { boundaryId })}
+                        onChange={(boundaryId) => boundaryId && updateForm(SetScheduleForm, { boundaryId })}
                     />
 
                     <Button text={t('common.save')} style='success' onClick={() => {
