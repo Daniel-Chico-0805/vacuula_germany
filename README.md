@@ -74,7 +74,7 @@ We provide you with a couple of ways to set up the server
 ### Docker Compose
 1. Install Docker
     - <i>This is probably the hardest part for anyone unfamiliar with self-hosting, so we have started writing a [guide in the FAQ](./FAQ.md#install-docker)</i>
-2. Download [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml) or run `wget https://github.com/vacuula/vacuula/releases/latest/docker-compose.yaml` to download and save the file
+2. Download [`docker-compose.yaml`](https://github.com/vacuula/vacuula/releases/latest/download/docker-compose.yaml) or run `wget https://github.com/vacuula/vacuula/releases/latest/download/docker-compose.yaml` to download and save the file
 3. Run `docker compose up -d`
 
 - The server is configured by [environment variables](#configure-server)
