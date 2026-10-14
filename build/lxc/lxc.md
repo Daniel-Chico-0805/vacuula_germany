@@ -5,6 +5,8 @@ We provide an lxc script that can be easily run to set your vacuula server up! T
 
 If the script detects that you already have data from a previous version, it will ask if you want to make a backup, we really do recommend that you make a backup.
 
+<i>Tested and works to install on Debian 12, Debian 13</i>
+
 ### Installation
 - `git clone https://github.com/vacuula/vacuula`
 - `./vacuula/build/lxc/lxc-setup.sh`
