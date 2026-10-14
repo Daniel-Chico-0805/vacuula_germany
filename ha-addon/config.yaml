@@ -1,6 +1,6 @@
 # config for Home Assistant add-on
 name: Vacuula
-version: "1.0.0-b27" # temporary until release
+version: "1.0.0-b28" # temporary until release
 slug: vacuula
 description: custom server for the undead robot vacuum cleaners - revive your Neato with the power of Vacuula
 url: "https://github.com/vacuula/vacuula"
