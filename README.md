@@ -90,7 +90,7 @@ We have made an easy to use installer to set your robot up!
 
 | [Windows][windows] | [Linux][linux]           | [Mac (M1 and newer)][mac-arm] | [Mac (Intel-based)][mac-intel] |
 |--------------------|--------------------------|-------------------------------|--------------------------------|
-| Win 10, Win 11     | Debian-based, Arch-based |                               | 15.4                           |
+| Win 10, Win 11     | Yes                      |                               | 15.4                           |
 | Gen3, Gen4         | Gen3, Gen4               | (Gen4 will not work)          | Gen3 (Gen4 does not work)      |
 
 <i>Download by clicking the os link, table shows tested/verified systems</i>
