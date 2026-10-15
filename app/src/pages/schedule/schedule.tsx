@@ -127,7 +127,7 @@ export default () => {
                         </div>
                     )
                 })}
-                {persistentMaps?.length === 0 && (
+                {schedule.events?.length === 0 && (
                     <span style={{ textAlign: 'center' }}>{t('schedule.noSchedules')}</span>
                 )}
             </div>
