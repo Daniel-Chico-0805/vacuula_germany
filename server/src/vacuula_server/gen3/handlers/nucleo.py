@@ -28,7 +28,8 @@ def nucleo_init(req: RouterHandler) -> None:
 
     sock = req.connection
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, 20_000)
+    if hasattr(socket, "TCP_USER_TIMEOUT"):
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, 20_000)
     sock.settimeout(60)
 
     req.send_response(200)
