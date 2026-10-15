@@ -30,7 +30,7 @@ _custom server for the undead robot vacuum cleaners_
 > Vacuula is made as an all-in-one solution to repair and control your broken Neato Robot vacuum. 
 
 - Gen1 - No wifi
-- Gen2 - BotVac Connected 🚧
+- Gen2 - BotVac Connected ❌ (not yet, on the todo ⏱️)
 - Gen3 - D3 ✅ D4 ✅ D5 ✅ D6 ✅ D7 ✅
 - Gen4 - D800 ✅ D8 ✅ D9 ✅ D10 ✅
 
