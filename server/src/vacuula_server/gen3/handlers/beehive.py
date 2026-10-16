@@ -102,6 +102,7 @@ def upload_init(req: RouterHandler, upload_type: Literal["maps", "logs"]) -> Non
 
 
 
+# TODO: this happens twice for new maps, later on don't rerun the parsing for already done hash checks! 
 def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_id: str) -> None:
     """PUT /maps/upload_jobs/{id} - update upload job status - robot done"""
     if not (data := req.read_json()): return
@@ -159,22 +160,33 @@ def upload_finish(req: RouterHandler, upload_type:Literal["maps", "logs"], job_i
     manifest_path = f"{job_folder}/manifest.json"
     floormap_meta, _ = parse_session(floor_map_path, run_map_path, job_folder)
 
+    base = (floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"])
+    valid = run['valid_as_persistent_map']
+
     with get_session() as session:
+        pmap = session.get(PersistentMap, run_id)
+        if pmap is None:
+            session.add(PersistentMap(
+                id=run_id,
+                robot=serial,
+                name="(unnamed)",
+                base=base,
+                enabled=valid,
+                in_maps_list=valid,
+            ))
+        else:
+            logger.debug("Persistent map %s exists, updating", run_id)
+            pmap.base = base
 
-        session.add(PersistentMap(
-            id=run_id,
-            robot=serial,
-            name="(unnamed)",
-            base=(floormap_meta["dock"]["normalised_x"], floormap_meta["dock"]["normalised_y"]),
-            enabled=run['valid_as_persistent_map'],
-            in_maps_list=run['valid_as_persistent_map']
-        ))
-
-        session.add(Gen3__Run(
-            id=run_id,
-            robot=serial,
-            persistent_map=run_id,
-            run=run
-        ))
+        grun = session.get(Gen3__Run, run_id)
+        if grun is None:
+            session.add(Gen3__Run(
+                id=run_id,
+                robot=serial,
+                persistent_map=run_id,
+                run=run,
+            ))
+        else:
+            grun.run = run
 
         session.commit()

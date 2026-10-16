@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from vacuula_server.env import GEN4_PORT
+from vacuula_server.env import GEN4_PORT, HOST_IP
 from vacuula_server.handlers.events import notify_robots_changed
 from vacuula_server.tls import CERT, KEY
 import threading
@@ -20,9 +20,9 @@ def start():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('0.0.0.0', GEN4_PORT))
+        sock.bind((HOST_IP, GEN4_PORT))
         sock.listen(5)
-        logger.info("Gen4 listening on 0.0.0.0:%d", GEN4_PORT)
+        logger.info("Gen4 listening on %s:%d", HOST_IP, GEN4_PORT)
 
         while True:
             client, addr = sock.accept()

@@ -53,6 +53,12 @@ def _get_int_env(name: str, default: int) -> int:
         raise ValueError(f"{name} must be an integer, got {value!r}")
 
 
+def _get_str_env(name: str, default: str) -> str:
+    value = _get_raw(name)
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    return str(value)
+
 # Gen3 cannot have its port modified, it is hardcoded to 443. You can make the robot connect and accept commands,
 # however if that works then the maps upload will fail, if you make the maps upload work, then the connection will fail.
 GEN4_PORT: int = _get_int_env("GEN4_PORT", 3443)
@@ -60,6 +66,7 @@ VACUULA_PORT: int = _get_int_env("VACUULA_PORT", 80)
 GEN3_ENABLED: bool = _get_bool_env("GEN3_ENABLED", True)
 GEN4_ENABLED: bool = _get_bool_env("GEN4_ENABLED", True)
 MDNS_ENABLED: bool = _get_bool_env("MDNS_ENABLED", True)
+HOST_IP: str = _get_str_env("HOST_IP", "0.0.0.0")
 
 # Validations
 if GEN4_PORT == VACUULA_PORT:
