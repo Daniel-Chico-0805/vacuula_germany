@@ -109,20 +109,22 @@ We have made an easy to use installer to set your robot up!
 
 ## Configure server
 ### Ports used
-| Port | Info                                  |
-|------|---------------------------------------|
-| 80   | Server, Webapp (Customizable)         |
-| 443  | Gen3 robots, D3-D7 (Not customizable) |
-| 3443 | Gen4 robots, D8-D10 (Customizable)    |
+| Port     | Option       | Used by                                                                   |
+|----------|--------------|---------------------------------------------------------------------------|
+| 80       | VACUULA_PORT | Server API and webapp (HTTP), installer, Gen4 robots (connectivity check) |
+| 443      | GEN3_PORT    | Gen3 robots, D3-D7; webapp over HTTPS (PWA)                               |
+| 3443     | GEN4_PORT    | Gen4 robots, D8-D10                                                       |
+| 5353/udp | -            | mDNS autodiscovery (`vacuula.local`), only when MDNS_ENABLED (fixed)      |
 
-<i>Gen3 robots sadly require port 443, and if enabled, the Vacuula server and webapp are also hosted here for PWAs to work </i>
+<i>The robots store the ports they use when the installer sets them up, so changing a port requires running the installer again on every robot that uses it: GEN3_PORT for Gen3 robots, GEN4_PORT and VACUULA_PORT for Gen4 robots. If enabled, the Vacuula server and webapp are also hosted on GEN3_PORT (HTTPS) for PWAs to work.</i>
 
 ### Configuration
 | Option       | Default | Info                                                                                        |
 |--------------|---------|---------------------------------------------------------------------------------------------|
+| GEN3_PORT    | 443     | Port the Gen3 robots will connect to the server on                                          |
 | GEN4_PORT    | 3443    | Default port the Gen4 robots will connect to the server on                                  |
 | VACUULA_PORT | 80      | Default port that you can reach the webapp/api on                                           |
-| GEN3_ENABLED | True    | If server should support for Gen3 robots, can be useful since Gen3 devices require port 443 |
+| GEN3_ENABLED | True    | If server should support for Gen3 robots (disable to free GEN3_PORT)                        |
 | GEN4_ENABLED | True    | If server should support for Gen4 robots                                                    |
 | MDNS_ENABLED | True    | If server should run MDNS for autodiscovering                                               |
 
