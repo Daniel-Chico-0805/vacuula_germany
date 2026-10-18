@@ -10,7 +10,7 @@ import threading
 logger = logging.getLogger(__name__)
 
 def start():
-    # HTTPS server on gen3 port (GEN3_PORT, 443 by default)
+    # HTTPS server on gen3 port
     context = create_ssl_context()
     https_server_1 = LoggingThreadingHTTPServer((HOST_IP, GEN3_PORT), RouterHandler)
     https_server_1.socket = context.wrap_socket(https_server_1.socket, server_side=True)

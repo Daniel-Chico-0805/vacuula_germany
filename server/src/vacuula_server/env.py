@@ -59,9 +59,7 @@ def _get_str_env(name: str, default: str) -> str:
         return default
     return str(value)
 
-# GEN3_PORT is the port the Gen3 robots use to connect to nucleo/beehive and upload maps
-# The Gen3 firmware (4.5.3 / 4.6.0) hardcodes 443 in two places: the astro binary (cloud connection) and /usr/lib/libNeatoUploader.so.1 (map/log uploads).
-GEN3_PORT: int = _get_int_env("GEN3_PORT", 443)
+GEN3_PORT: int = _get_int_env("GEN3_PORT", 335)
 GEN4_PORT: int = _get_int_env("GEN4_PORT", 3443)
 VACUULA_PORT: int = _get_int_env("VACUULA_PORT", 80)
 GEN3_ENABLED: bool = _get_bool_env("GEN3_ENABLED", True)
@@ -70,13 +68,22 @@ MDNS_ENABLED: bool = _get_bool_env("MDNS_ENABLED", True)
 HOST_IP: str = _get_str_env("HOST_IP", "0.0.0.0")
 
 # Validations
-# the three listening ports must be different and in range
-_PORTS = {"VACUULA_PORT": VACUULA_PORT, "GEN3_PORT": GEN3_PORT, "GEN4_PORT": GEN4_PORT}
-if len(set(_PORTS.values())) != len(_PORTS):
-    raise ValueError(f"VACUULA_PORT, GEN3_PORT and GEN4_PORT must be unique for the server to work. Got {_PORTS}")
-for _name, _port in _PORTS.items():
-    if not 1 <= _port <= 65535:
-        raise ValueError(f"{_name} must be in port range (1-65535). Got {_name}={_port}")
+if len(set([GEN3_PORT, GEN4_PORT, VACUULA_PORT])) != 3:
+    raise ValueError(
+        "GEN3_PORT, GEN4_PORT and VACUULA_PORT must be unique for the server to work. "
+        f"Got GEN3_PORT={GEN3_PORT}, GEN4_PORT={GEN4_PORT}, VACUULA_PORT={VACUULA_PORT}"
+    )
+if not (100 <= GEN3_PORT <= 999):
+    raise ValueError(
+        "GEN3_PORT must be in port range (100-999). "
+        f"Got GEN3_PORT={GEN3_PORT}"
+    )
+if not (1 <= GEN4_PORT <= 65535 and 1 <= VACUULA_PORT <= 65535):
+    raise ValueError(
+        "GEN4_PORT and VACUULA_PORT must be in port range (1-65535). "
+        f"Got GEN4_PORT={GEN4_PORT}, VACUULA_PORT={VACUULA_PORT}"
+    )
+
 
 def get_docker_host_ip() -> str | None:
     try:
