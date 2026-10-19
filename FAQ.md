@@ -98,7 +98,7 @@ If you are installing Vacuula Server as an Application on TrueNAS there are a co
 ### Allow Vacuula to start an mDNS server
 These instructions involve using Advanced TrueNAS configurations that can result in a broken TrueNAS installation. Proceed at your own risk.
 
-We will telling TrueNAS to modify the Avahi Service configuration to allow multiple Avahi stacks, so that Vacuula can start its own mDNS server to enable the auto discovery to work.
+We will be telling TrueNAS to modify the Avahi Service configuration to allow multiple Avahi stacks, so that Vacuula can start its own mDNS server to enable the auto discovery to work.
 1. Navigate to your TrueNAS UI
 2. Click on `System` > `Advanced Settings` on the side navigation
 3. Scroll to the `Init/Shutdown Scripts` section
