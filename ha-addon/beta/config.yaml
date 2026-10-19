@@ -33,5 +33,5 @@ schema:
   GEN3_ENABLED: bool
   GEN4_ENABLED: bool
   MDNS_ENABLED: bool
-  TZ: str
-  HOST_IP: str
+  TZ: str?
+  HOST_IP: str?
