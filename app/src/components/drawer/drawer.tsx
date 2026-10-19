@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from './drawer.module.scss'
 import { FaArrowLeft } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
@@ -23,33 +23,49 @@ export default function Drawer(props: DrawerProps) {
     const { t } = useTranslation()
     const [drawerHeight, setDrawerHeight] = useState(props.handle ? HANDLE_HEIGHT : 0)
     const [isDraggingDrawer, setIsDraggingDrawer] = useState(false)
-    const [dragStartY, setDragStartY] = useState(0)
-    const [lastDelta, setLastDelta] = useState(0)
+
+    // Per-gesture values the window listeners below are registered per gesture
+    // and would otherwise keep reading the values from the render in which the
+    // drag started.
+    const dragStartYRef = useRef(0)
+    const startHeightRef = useRef(0)
+    const currentHeightRef = useRef(0)
+    const lastYRef = useRef(0)
+    const lastDeltaRef = useRef(0)
+
+    const startDrag = (clientY: number) => {
+        dragStartYRef.current = clientY
+        lastYRef.current = clientY
+        startHeightRef.current = drawerHeight
+        currentHeightRef.current = drawerHeight
+        lastDeltaRef.current = 0
+        setIsDraggingDrawer(true)
+    }
 
     const handleDrawerMouseDown = (e: React.MouseEvent) => {
-        setIsDraggingDrawer(true)
-        setDragStartY(e.clientY)
+        startDrag(e.clientY)
     }
 
     const handleDrawerTouchStart = (e: React.TouchEvent) => {
-        setIsDraggingDrawer(true)
-        setDragStartY(e.touches[0].clientY)
+        startDrag(e.touches[0].clientY)
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-        if (!isDraggingDrawer) return
-        const delta = dragStartY - e.touches[0].clientY
-        const newHeight = Math.min(window.innerHeight * 0.9, Math.max(HANDLE_HEIGHT, drawerHeight + delta))
+        const y = e.touches[0].clientY
+        lastDeltaRef.current = lastYRef.current - y // flick detection
+        lastYRef.current = y
+        const total = dragStartYRef.current - y
+        const newHeight = Math.min(window.innerHeight * 0.9, Math.max(HANDLE_HEIGHT, startHeightRef.current + total))
+        currentHeightRef.current = newHeight
         setDrawerHeight(newHeight)
-        setDragStartY(e.touches[0].clientY)
-        setLastDelta(delta)
     }
 
     const handleMouseUp = () => {
         setIsDraggingDrawer(false)
+        const lastDelta = lastDeltaRef.current
         if (lastDelta < -15) closeDrawer()
         else if (lastDelta > 15) openDrawer()
-        else if ((drawerHeight - HANDLE_HEIGHT) > window.innerHeight * 0.2) openDrawer()
+        else if ((currentHeightRef.current - HANDLE_HEIGHT) > window.innerHeight * 0.2) openDrawer()
         else closeDrawer()
     }
 
