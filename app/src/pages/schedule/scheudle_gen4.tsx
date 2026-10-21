@@ -131,6 +131,8 @@ export default () => {
                     </div>
                 </div>
 
+                <hr style={{ width: '90%' }} />
+
                 <div className={`${styles.item} ${styles.actionItem}`} onClick={() => openCleanForm()}>
                     <div className={styles.info}>
                         <span>{t('schedule.newSchedule')}</span>
