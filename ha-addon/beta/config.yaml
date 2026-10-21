@@ -28,7 +28,6 @@ options:
   GEN3_ENABLED: true
   GEN4_ENABLED: true
   MDNS_ENABLED: true
-  HOST_IP: "0.0.0.0"
 
 schema:
   GEN3_PORT: int
