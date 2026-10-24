@@ -245,6 +245,7 @@
                 "nav_floorplan_not_created": "Der Etagenplan wurde noch nicht erstellt",
                 "nav_floorplan_zone_unreachable": "Zone konnte nicht erreicht werden",
                 "nav_floorplan_zone_wrong_floor": "Die Zone ist auf einer anderen Etage",
+                "training_map_sparse": Die Karte ist unvollständig - lasse den Roboter mehre erkunden",
                 "dustbin_emptied": "Schmutzbehälter geleert",
                 "dustbin_full": "Schmutzbehälter voll — bitte leere ihn",
                 "dustbin_missing": "Schmutzbehälter fehlt — setze ihn wieder ein ",
