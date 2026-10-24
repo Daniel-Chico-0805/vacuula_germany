@@ -174,7 +174,7 @@
         "batteryCycles": "Batteriezyklen: {{cycles}}",
         "robotModel": "Modell: {{model}}",
         "robotSettings": "Robotereinstellungen",
-        "forceFloorplan": "Etagenplan???",
+        "forceFloorplan": "Etagenplan erzwingen",
         "robotLanguage": "Sprache",
         "factoryReset": "Auf Werkseinstellungen zurücksetzen",
         "factoryResetInfo": "(Du wirst nach einer Bestätigung gefragt) Zurücksetzen auf Werkseinstellungen.",
